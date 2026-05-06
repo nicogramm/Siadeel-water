@@ -461,7 +461,6 @@
     (function initFlowLines() {
       var canvas = document.getElementById('flow-canvas');
       var ctx    = canvas.getContext('2d');
-      var lines  = [];
       var animId = null;
 
       function resize() {
@@ -471,76 +470,43 @@
         canvas.height = H;
       }
 
-      function buildLines() {
-        var H = canvas.height || screen.height;
-        lines = [];
-        var count = 12;
-        for (var i = 0; i < count; i++) {
-          lines.push({
-            y:         (H / (count + 1)) * (i + 1),
-            offset:    i * 0.42,
-            alpha:     0.10 + (i % 4) * 0.06,
-            thickness: 2.5 + (i % 3) * 1.5,
-            speed:     0.55 + (i % 5) * 0.18
-          });
-        }
-      }
-
       function loop(ts) {
         var t = ts / 1000;
         var W = canvas.width, H = canvas.height;
         ctx.clearRect(0, 0, W, H);
 
-        lines.forEach(function(fl) {
-          var phase = ((t * fl.speed + fl.offset) % 2.4);
-          if (phase > 1.3) return;
+        var rows = 10;
+        for (var row = 0; row < rows; row++) {
+          var yBase   = H * (0.06 + row * (0.92 / rows));
+          var amp     = 3 + row * 1.8;
+          var speed   = 0.7 + row * 0.28;
+          var alpha   = 0.07 + row * 0.045;
+          var pulse   = Math.sin(t * speed * 1.2) * 0.5 + 0.5;
+          var lwidth  = 1 + pulse * 1.8;
 
-          var drawProgress = Math.min(phase / 1.0, 1.0);
-          var endX = W * drawProgress;
-          if (endX < 1) return;
-
-          ctx.save();
           ctx.beginPath();
-          ctx.moveTo(0, fl.y);
-          for (var x = 0; x <= endX; x += 4) {
-            var wave = Math.sin(x * 0.022 + t * 1.8 + fl.offset) * 4.5
-                     + Math.sin(x * 0.009 + t * 1.1 + fl.offset * 0.5) * 2.5;
-            ctx.lineTo(x, fl.y + wave);
+          for (var x = 0; x <= W; x += 3) {
+            var wave = Math.sin(x * 0.018 - t * speed * 2.0) * amp
+                     + Math.sin(x * 0.032 - t * speed * 1.4) * (amp * 0.5);
+            if (x === 0) ctx.moveTo(x, yBase + wave);
+            else         ctx.lineTo(x, yBase + wave);
           }
-
-          var grad = ctx.createLinearGradient(0, 0, endX, 0);
-          grad.addColorStop(0,   'rgba(255,255,255,0)');
-          grad.addColorStop(0.3, 'rgba(255,255,255,' + fl.alpha + ')');
-          grad.addColorStop(1.0, 'rgba(255,255,255,' + fl.alpha + ')');
-          ctx.strokeStyle = grad;
-          ctx.lineWidth   = fl.thickness;
+          ctx.strokeStyle = 'rgba(255,255,255,' + (alpha + pulse * 0.12) + ')';
+          ctx.lineWidth   = lwidth;
           ctx.lineCap     = 'round';
           ctx.stroke();
-
-          if (drawProgress < 1.0) {
-            var tipX = endX;
-            var tipY = fl.y
-                     + Math.sin(tipX * 0.022 + t * 1.8 + fl.offset) * 4.5
-                     + Math.sin(tipX * 0.009 + t * 1.1 + fl.offset * 0.5) * 2.5;
-            ctx.beginPath();
-            ctx.arc(tipX, tipY, fl.thickness * 2.8, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255,255,255,' + (fl.alpha * 2.2) + ')';
-            ctx.fill();
-          }
-          ctx.restore();
-        });
+        }
 
         animId = requestAnimationFrame(loop);
       }
 
       function start() {
         resize();
-        buildLines();
         if (animId) cancelAnimationFrame(animId);
         animId = requestAnimationFrame(loop);
       }
 
-      window.addEventListener('resize', function() { resize(); buildLines(); });
+      window.addEventListener('resize', resize);
 
       new MutationObserver(function() {
         var loginScreen = document.getElementById('s-login');
