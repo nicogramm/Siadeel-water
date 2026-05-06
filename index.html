@@ -86,174 +86,154 @@
        WELCOME / LOGIN SCREEN
     ═══════════════════════════════════════ */
     #s-login {
-      background: linear-gradient(135deg, #0052A3 0%, #003d7a 50%, #0052A3 100%);
-      background-size: 200% 200%;
-      animation: gradientShift 8s ease infinite;
+      background: linear-gradient(135deg, #0052A3 0%, #003d7a 100%);
       overflow: hidden;
       justify-content: flex-end;
       position: relative;
     }
 
-    @keyframes gradientShift {
-      0%, 100% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-    }
-
-    /* ✅ FLOATING BUBBLES (parang water bubbles) */
-    .bubbles {
+    #s-login::before {
+      content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
+      inset: 0;
+      background: repeating-linear-gradient(
+        -55deg,
+        transparent 0,
+        transparent 38px,
+        rgba(0,0,0,0.03) 38px,
+        rgba(0,0,0,0.03) 40px
+      );
+      z-index: 0;
       pointer-events: none;
     }
 
-    .bubble {
+    /* ✅ PIPELINE STAGE */
+    .pipeline-stage {
       position: absolute;
-      bottom: -100px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 50%;
-      animation: rise 15s infinite ease-in;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 50%;
+      overflow: hidden;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
     }
 
-    .bubble:nth-child(1) {
-      width: 40px;
-      height: 40px;
-      left: 10%;
-      animation-delay: 0s;
-      animation-duration: 12s;
+    /* ✅ PIPELINE ANIMATION */
+    .pipeline {
+      position: relative;
+      width: 80%;
+      max-width: 400px;
+      height: 12px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      overflow: hidden;
+      opacity: 0;
+      transform: scaleX(0);
+      transform-origin: left;
+      animation: pipeGrow 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    .bubble:nth-child(2) {
-      width: 60px;
-      height: 60px;
-      left: 25%;
-      animation-delay: 2s;
-      animation-duration: 14s;
+    .pipeline:nth-child(1) {
+      animation-delay: 0.2s;
     }
 
-    .bubble:nth-child(3) {
-      width: 30px;
-      height: 30px;
-      left: 40%;
-      animation-delay: 4s;
-      animation-duration: 10s;
+    .pipeline:nth-child(2) {
+      animation-delay: 0.4s;
     }
 
-    .bubble:nth-child(4) {
-      width: 50px;
-      height: 50px;
-      left: 60%;
-      animation-delay: 1s;
-      animation-duration: 13s;
+    .pipeline:nth-child(3) {
+      animation-delay: 0.6s;
     }
 
-    .bubble:nth-child(5) {
-      width: 35px;
-      height: 35px;
-      left: 75%;
-      animation-delay: 3s;
-      animation-duration: 11s;
-    }
-
-    .bubble:nth-child(6) {
-      width: 45px;
-      height: 45px;
-      left: 85%;
-      animation-delay: 5s;
-      animation-duration: 15s;
-    }
-
-    @keyframes rise {
+    @keyframes pipeGrow {
       0% {
-        bottom: -100px;
         opacity: 0;
-        transform: translateX(0) scale(1);
-      }
-      10% {
-        opacity: 0.6;
-      }
-      90% {
-        opacity: 0.4;
+        transform: scaleX(0);
       }
       100% {
-        bottom: 110vh;
-        opacity: 0;
-        transform: translateX(50px) scale(0.8);
+        opacity: 1;
+        transform: scaleX(1);
+      }
+    }
+
+    /* ✅ WATER FLOW INSIDE PIPES */
+    .water-flow {
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.4) 50%,
+        transparent 100%
+      );
+      animation: waterFlow 1.5s linear infinite;
+      animation-delay: 1s;
+    }
+
+    @keyframes waterFlow {
+      0% {
+        left: -100%;
+      }
+      100% {
+        left: 100%;
       }
     }
 
     /* ✅ LOGO STAGE */
     .logo-stage {
       position: absolute;
-      top: 35%;
+      top: 32%;
       left: 50%;
       transform: translate(-50%, -50%);
       z-index: 3;
       text-align: center;
       opacity: 0;
-      animation: logoFadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      animation-delay: 0.5s;
+      animation: logoFadeIn 0.5s ease-out forwards;
+      animation-delay: 1.3s;
     }
 
     @keyframes logoFadeIn {
       0% {
         opacity: 0;
-        transform: translate(-50%, -50%) scale(0.9);
+        transform: translate(-50%, -50%) translateY(10px);
       }
       100% {
         opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
+        transform: translate(-50%, -50%) translateY(0);
       }
     }
 
     .logo-svg {
-      width: 140px;
+      width: 120px;
       height: auto;
-      margin-bottom: 24px;
-      filter: drop-shadow(0 8px 24px rgba(0,0,0,0.3));
-      animation: logoPulse 3s ease-in-out infinite;
-    }
-
-    @keyframes logoPulse {
-      0%, 100% {
-        transform: scale(1);
-      }
-      50% {
-        transform: scale(1.05);
-      }
+      margin-bottom: 16px;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
     }
 
     .logo-text {
       color: white;
-      font-size: 44px;
+      font-size: 36px;
       font-weight: 700;
-      letter-spacing: 3px;
-      margin-bottom: 10px;
-      text-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      opacity: 0;
-      animation: textFadeIn 1s ease forwards;
-      animation-delay: 1.2s;
-    }
-
-    @keyframes textFadeIn {
-      to {
-        opacity: 1;
-      }
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
 
     .logo-sub {
       color: rgba(255, 255, 255, 0.9);
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 500;
-      letter-spacing: 3px;
+      letter-spacing: 2.5px;
       text-transform: uppercase;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      opacity: 0;
-      animation: textFadeIn 1s ease forwards;
-      animation-delay: 1.5s;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.2);
     }
 
     /* ✅ LOGIN CARD */
@@ -262,13 +242,13 @@
       z-index: 4;
       width: 100%;
       background: var(--bg);
-      border-radius: 32px 32px 0 0;
-      padding: 36px 28px calc(48px + env(safe-area-inset-bottom, 0px));
-      box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
+      border-radius: 28px 28px 0 0;
+      padding: 32px 28px calc(44px + env(safe-area-inset-bottom, 0px));
+      box-shadow: 0 -8px 32px rgba(0,0,0,0.15);
       opacity: 0;
-      transform: translateY(60px);
-      animation: cardSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      animation-delay: 2s;
+      transform: translateY(50px);
+      animation: cardSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation-delay: 1.8s;
     }
 
     @keyframes cardSlideUp {
@@ -279,37 +259,37 @@
     }
 
     .login-card h2 {
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 700;
       color: var(--text);
       letter-spacing: -0.5px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .login-card p {
       font-size: 14px;
       color: var(--text2);
-      line-height: 1.7;
-      margin-bottom: 32px;
+      line-height: 1.65;
+      margin-bottom: 28px;
     }
 
     .google-btn {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 14px;
+      gap: 12px;
       width: 100%;
-      padding: 16px 22px;
+      padding: 15px 20px;
       background: var(--bg);
       color: var(--text);
       border: none;
-      border-radius: 18px;
+      border-radius: 16px;
       font-size: 15px;
       font-weight: 600;
       font-family: 'Inter', sans-serif;
       cursor: pointer;
       box-shadow: var(--neu-out);
-      transition: box-shadow 0.2s, transform 0.1s;
+      transition: box-shadow 0.15s, transform 0.1s;
     }
 
     .google-btn:active {
@@ -318,8 +298,8 @@
     }
 
     .google-btn svg {
-      width: 22px;
-      height: 22px;
+      width: 20px;
+      height: 20px;
       flex-shrink: 0;
     }
 
@@ -337,28 +317,28 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 16px 20px;
-      padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
+      padding: 14px 18px;
+      padding-top: calc(env(safe-area-inset-top, 0px) + 14px);
       flex-shrink: 0;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
     }
 
     .tb-brand {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .tb-logo {
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
     }
 
     /* ✅ TWO-COLOR BRAND NAME */
     .tb-brand-text {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
     }
 
     .tb-brand-text .siadeel {
@@ -372,24 +352,24 @@
     .tb-right {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
     }
 
     .tb-title {
       font-size: 10px;
       font-weight: 600;
-      letter-spacing: 2.5px;
+      letter-spacing: 2px;
       text-transform: uppercase;
       color: rgba(255, 255, 255, 0.8);
     }
 
     .tb-avatar {
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       border: 2px solid white;
       object-fit: cover;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
 
     /* PAGE WRAP */
@@ -397,72 +377,57 @@
       flex: 1;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: 20px;
-      padding-bottom: 100px;
+      padding: 16px;
+      padding-bottom: 90px;
     }
 
     /* ═══════════════════════════════════════
        DASHBOARD HEADER
     ═══════════════════════════════════════ */
     .dash-header {
-      margin-bottom: 28px;
-      padding: 0 4px;
+      margin-bottom: 22px;
+      padding: 0 2px;
     }
 
     .dash-eyebrow {
       font-size: 10px;
       font-weight: 600;
-      letter-spacing: 3px;
+      letter-spacing: 2.5px;
       text-transform: uppercase;
       color: var(--text3);
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
 
     .dash-name {
-      font-size: 28px;
+      font-size: 24px;
       font-weight: 700;
       color: var(--text);
-      letter-spacing: -0.8px;
+      letter-spacing: -0.5px;
       line-height: 1.2;
     }
 
     .dash-date {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--text2);
-      margin-top: 6px;
-      font-weight: 400;
+      margin-top: 4px;
     }
 
     /* ═══════════════════════════════════════
-       MODULE GRID
+       MODULE GRID — MIXED LAYOUT
     ═══════════════════════════════════════ */
     .mod-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
     }
 
     .mod-card {
       background: var(--bg);
-      border-radius: 22px;
+      border-radius: 18px;
       box-shadow: var(--neu-out);
-      padding: 24px 20px;
+      padding: 18px 14px;
       cursor: pointer;
-      transition: box-shadow 0.2s, transform 0.1s;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .mod-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 5px;
-      height: 100%;
-      background: var(--blue);
-      opacity: 0;
-      transition: opacity 0.3s;
+      transition: box-shadow 0.15s, transform 0.1s;
     }
 
     .mod-card:active {
@@ -470,78 +435,62 @@
       transform: scale(0.98);
     }
 
-    .mod-card:active::before {
-      opacity: 1;
-    }
-
-    .mod-header {
+    /* ✅ WIDE CARD (spans 2 columns) */
+    .mod-card.wide {
+      grid-column: span 2;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
+      gap: 16px;
+      padding: 16px 18px;
+    }
+
+    .mod-card.wide .mod-icon-box {
+      margin-bottom: 0;
+      flex-shrink: 0;
+    }
+
+    .mod-card.wide .mod-value {
+      font-size: 22px;
     }
 
     .mod-icon-box {
-      width: 48px;
-      height: 48px;
-      border-radius: 14px;
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
       background: var(--bg);
       box-shadow: var(--neu-xs);
       display: flex;
       align-items: center;
       justify-content: center;
+      margin-bottom: 12px;
     }
 
     .mod-icon-box svg {
-      width: 24px;
-      height: 24px;
+      width: 18px;
+      height: 18px;
     }
 
     .mod-label {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 600;
-      letter-spacing: 2px;
+      letter-spacing: 1.5px;
       text-transform: uppercase;
       color: var(--text3);
-      margin-bottom: 8px;
+      margin-bottom: 5px;
     }
 
     .mod-value {
-      font-size: 36px;
-      font-weight: 600;
+      font-size: 28px;
+      font-weight: 700;
       color: var(--blue);
       line-height: 1;
-      letter-spacing: -1.5px;
-      margin-bottom: 6px;
+      letter-spacing: -1px;
     }
 
     .mod-sub {
-      font-size: 12px;
-      color: var(--text2);
-      font-weight: 400;
-    }
-
-    .mod-trend {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 8px;
-      background: var(--bg2);
-      color: var(--text2);
-      margin-top: 8px;
-    }
-
-    .mod-trend.up {
-      color: #10b981;
-      background: rgba(16, 185, 129, 0.1);
-    }
-
-    .mod-trend.down {
-      color: #ef4444;
-      background: rgba(239, 68, 68, 0.1);
+      font-size: 10px;
+      color: var(--text3);
+      margin-top: 2px;
     }
 
     /* ═══════════════════════════════════════
@@ -553,26 +502,26 @@
       left: 0;
       right: 0;
       background: var(--bg);
-      padding: 12px 24px calc(12px + env(safe-area-inset-bottom, 0px));
+      padding: 10px 20px calc(10px + env(safe-area-inset-bottom, 0px));
       display: flex;
       align-items: center;
       justify-content: space-around;
-      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 -3px 14px rgba(0, 0, 0, 0.07);
       z-index: 40;
     }
 
     body.dark .bottom-nav {
-      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 -3px 14px rgba(0, 0, 0, 0.4);
     }
 
     .bnav {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
       font-size: 9px;
       font-weight: 600;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.5px;
       text-transform: uppercase;
       color: var(--text3);
       cursor: pointer;
@@ -587,9 +536,9 @@
     }
 
     .bnav-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 16px;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
       background: var(--bg);
       display: flex;
       align-items: center;
@@ -610,22 +559,22 @@
     ═══════════════════════════════════════ */
     .toast {
       position: fixed;
-      bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+      bottom: calc(80px + env(safe-area-inset-bottom, 0px));
       left: 50%;
       transform: translateX(-50%);
       background: var(--bg);
-      border-radius: 16px;
+      border-radius: 14px;
       box-shadow: var(--neu-out);
-      border-left: 4px solid var(--blue);
-      padding: 14px 24px;
+      border-left: 3px solid var(--blue);
+      padding: 13px 22px;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 500;
       color: var(--text);
       z-index: 300;
       white-space: nowrap;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.3s;
+      transition: opacity 0.25s;
       max-width: 90%;
     }
 
@@ -692,19 +641,21 @@
        WELCOME / LOGIN SCREEN
   ═══════════════════════════════════════ -->
   <div class="screen active" id="s-login">
-    <!-- ✅ FLOATING BUBBLES -->
-    <div class="bubbles">
-      <div class="bubble"></div>
-      <div class="bubble"></div>
-      <div class="bubble"></div>
-      <div class="bubble"></div>
-      <div class="bubble"></div>
-      <div class="bubble"></div>
+    <!-- ✅ PIPELINE ANIMATION -->
+    <div class="pipeline-stage">
+      <div class="pipeline">
+        <div class="water-flow"></div>
+      </div>
+      <div class="pipeline">
+        <div class="water-flow"></div>
+      </div>
+      <div class="pipeline">
+        <div class="water-flow"></div>
+      </div>
     </div>
 
     <!-- ✅ LOGO STAGE -->
     <div class="logo-stage">
-      <!-- ✅ SVG LOGO -->
       <svg class="logo-svg" viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg">
         <path d="M0,40 Q100,25 200,40 T400,40" stroke="white" stroke-width="10" fill="none" stroke-linecap="round"/>
         <path d="M0,60 Q100,45 200,60 T400,60" stroke="white" stroke-width="10" fill="none" stroke-linecap="round"/>
@@ -716,8 +667,8 @@
 
     <!-- ✅ LOGIN CARD -->
     <div class="login-card">
-      <h2>Welcome Back</h2>
-      <p>Sign in with your authorized Google account to access the Siadeel Water management dashboard.</p>
+      <h2>Water Management</h2>
+      <p>Sign in with your authorized Google account to access the Siadeel Water operations dashboard.</p>
       <button class="google-btn" onclick="signIn()">
         <svg viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -740,7 +691,6 @@
           <path d="M0,40 Q100,25 200,40 T400,40" stroke="white" stroke-width="8" fill="none" stroke-linecap="round"/>
           <path d="M0,60 Q100,45 200,60 T400,60" stroke="white" stroke-width="8" fill="none" stroke-linecap="round"/>
         </svg>
-        <!-- ✅ TWO-COLOR BRAND NAME -->
         <span class="tb-brand-text">
           <span class="siadeel">Siadeel</span><span class="water">Water</span>
         </span>
@@ -764,45 +714,45 @@
     <div class="bottom-nav">
       <button class="bnav active">
         <div class="bnav-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" stroke-width="2.5"/>
-            <path d="M9 22V12h6v10" stroke="currentColor" stroke-width="2.5"/>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" stroke-width="2"/>
+            <path d="M9 22V12h6v10" stroke="currentColor" stroke-width="2"/>
           </svg>
         </div>
         Home
       </button>
       <button class="bnav" onclick="showToast('Results module — coming soon')">
         <div class="bnav-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </div>
         Results
       </button>
       <button class="bnav" onclick="showToast('Trends module — coming soon')">
         <div class="bnav-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <polyline points="17 6 23 6 23 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="17 6 23 6 23 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
         Trends
       </button>
       <button class="bnav" onclick="showToast('Process Info — coming soon')">
         <div class="bnav-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5"/>
-            <path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </div>
         Process
       </button>
       <button class="bnav" onclick="showToast('Settings — coming soon')">
         <div class="bnav-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2.5"/>
-            <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </div>
         Settings
@@ -827,41 +777,68 @@
       { name: 'Nicolo', email: 'nicolobalonzo@gmail.com' }
     ];
 
-    // MODULES
+    // ✅ MODULES — MIXED LAYOUT
     const ALL_MODULES = [
+      // Small cards (2x2 grid)
       {
         id: 'results',
         icon: 'check',
         label: 'Results',
         stat: 'sv-results',
-        sub: 'Latest test results',
-        trend: '+12%',
-        trendType: 'up'
+        sub: 'Latest test results'
       },
       {
         id: 'trends',
         icon: 'trend',
         label: 'Trends',
         stat: 'sv-trends',
-        sub: 'Performance analytics',
-        trend: '+8%',
-        trendType: 'up'
+        sub: 'Performance analytics'
       },
+      
+      // Wide card
       {
         id: 'process',
         icon: 'info',
         label: 'Process Information',
         stat: 'sv-process',
         sub: 'System operations',
-        trend: 'Stable',
-        trendType: 'neutral'
+        wide: true
+      },
+      
+      // Small cards
+      {
+        id: 'water-quality',
+        icon: 'droplet',
+        label: 'Water Quality',
+        stat: 'sv-quality',
+        sub: 'Current status'
+      },
+      {
+        id: 'treatment',
+        icon: 'filter',
+        label: 'Treatment',
+        stat: 'sv-treatment',
+        sub: 'Active processes'
+      },
+      
+      // Wide card
+      {
+        id: 'settings',
+        icon: 'settings',
+        label: 'Settings',
+        stat: 'sv-settings',
+        sub: 'App configuration',
+        wide: true
       }
     ];
 
     const ICONS = {
-      check: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round"/></svg>',
-      trend: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="17 6 23 6 23 12" stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-      info: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="var(--blue)" stroke-width="2.5"/><path d="M12 16v-4M12 8h.01" stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round"/></svg>'
+      check: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"/></svg>',
+      trend: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="17 6 23 6 23 12" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      info: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="var(--blue)" stroke-width="2"/><path d="M12 16v-4M12 8h.01" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"/></svg>',
+      droplet: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      filter: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      settings: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="var(--blue)" stroke-width="2"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"/></svg>'
     };
 
     let token = null;
@@ -1046,17 +1023,24 @@
     function buildDashboard() {
       document.getElementById('mod-grid').innerHTML = ALL_MODULES.map(m => {
         const icon = ICONS[m.icon] || '';
-        const trendClass = m.trendType === 'up' ? 'up' : m.trendType === 'down' ? 'down' : '';
-        const trendIcon = m.trendType === 'up' ? '↑' : m.trendType === 'down' ? '↓' : '—';
-
-        return `<div class="mod-card" onclick="showToast('${m.label} — coming soon')">
-          <div class="mod-header">
+        const onclick = `showToast('${m.label} — coming soon')`;
+        
+        if (m.wide) {
+          return `<div class="mod-card wide" onclick="${onclick}">
             <div class="mod-icon-box">${icon}</div>
-          </div>
+            <div>
+              <div class="mod-label">${m.label}</div>
+              <div class="mod-value" id="${m.stat}">—</div>
+              <div class="mod-sub">${m.sub}</div>
+            </div>
+          </div>`;
+        }
+        
+        return `<div class="mod-card" onclick="${onclick}">
+          <div class="mod-icon-box">${icon}</div>
           <div class="mod-label">${m.label}</div>
           <div class="mod-value" id="${m.stat}">—</div>
           <div class="mod-sub">${m.sub}</div>
-          <div class="mod-trend ${trendClass}">${trendIcon} ${m.trend}</div>
         </div>`;
       }).join('');
     }
@@ -1068,6 +1052,9 @@
         document.getElementById('sv-results').textContent = '24';
         document.getElementById('sv-trends').textContent = '89%';
         document.getElementById('sv-process').textContent = '5';
+        document.getElementById('sv-quality').textContent = '98%';
+        document.getElementById('sv-treatment').textContent = '3';
+        document.getElementById('sv-settings').textContent = '—';
       }, 500);
     }
 
@@ -1080,7 +1067,7 @@
       t.textContent = msg;
       t.classList.add('show');
       clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
     }
 
     // ═══════════════════════════════════════
