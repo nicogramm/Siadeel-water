@@ -35,7 +35,7 @@
       --bg2:      #e9ecf1;
       --shadow-d: #c8d1dc;
       --shadow-l: #ffffff;
-      --text:     #0052A3; /* ← BLUE TEXT */
+      --text:     #0052A3;
       --text2:    #5a6c7d;
       --text3:    #8b98a5;
       --blue:     #0052A3;
@@ -74,7 +74,7 @@
       overflow:hidden; 
       background:var(--bg); 
       color:var(--text); 
-      font-family:'Inter',sans-serif; /* ← INTER ONLY */
+      font-family:'Inter',sans-serif;
       -webkit-font-smoothing:antialiased; 
       transition:background 0.4s,color 0.4s 
     }
@@ -86,57 +86,63 @@
        WELCOME / LOGIN SCREEN
     ═══════════════════════════════════════ */
     #s-login {
-      background: #0052A3; /* ← SOLID BLUE LIKE LOGO */
+      background: linear-gradient(135deg, #0052A3 0%, #003d7a 100%);
       overflow: hidden;
       justify-content: flex-end;
       position: relative;
     }
 
-    /* ✅ ANIMATED WAVY LINES (gaya ng logo) */
+    /* ✅ ANIMATED WATER WAVES */
     .wave-container {
       position: absolute;
-      top: 20%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 90%;
-      max-width: 400px;
-      z-index: 2;
-    }
-
-    .wave-svg {
+      bottom: 55%;
+      left: 0;
       width: 100%;
-      height: auto;
-      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
+      height: 200px;
+      overflow: hidden;
+      z-index: 1;
     }
 
-    .wave-svg path {
-      animation: waveMove 3s ease-in-out infinite;
+    .wave {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 200%;
+      height: 200%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 43%;
+      animation: wave 8s linear infinite;
     }
 
-    .wave-svg path:nth-child(1) {
-      animation-delay: 0s;
+    .wave:nth-child(2) {
+      background: rgba(255, 255, 255, 0.05);
+      animation: wave 12s linear infinite reverse;
+      animation-delay: -3s;
     }
 
-    .wave-svg path:nth-child(2) {
-      animation-delay: 0.5s;
+    .wave:nth-child(3) {
+      background: rgba(255, 255, 255, 0.03);
+      animation: wave 15s linear infinite;
+      animation-delay: -5s;
     }
 
-    @keyframes waveMove {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-8px); }
+    @keyframes wave {
+      0% { transform: translateX(-50%) rotate(0deg); }
+      100% { transform: translateX(-50%) rotate(360deg); }
     }
 
     /* ✅ LOGO STAGE */
     .logo-stage {
       position: absolute;
-      top: 35%;
+      top: 30%;
       left: 50%;
       transform: translate(-50%, -50%);
       z-index: 3;
       text-align: center;
       opacity: 0;
       animation: logoIn 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      animation-delay: 0.5s;
+      animation-delay: 0.3s;
     }
 
     @keyframes logoIn {
@@ -148,6 +154,13 @@
         opacity: 1;
         transform: translate(-50%, -50%) scale(1);
       }
+    }
+
+    .logo-svg {
+      width: 120px;
+      height: auto;
+      margin-bottom: 20px;
+      filter: drop-shadow(0 4px 16px rgba(0,0,0,0.25));
     }
 
     .logo-text {
@@ -178,7 +191,7 @@
       opacity: 0;
       transform: translateY(60px);
       animation: cardUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      animation-delay: 2.5s; /* ← Show after logo */
+      animation-delay: 1.8s;
     }
 
     @keyframes cardUp {
@@ -243,7 +256,7 @@
 
     /* ✅ TOPBAR — BLUE BACKGROUND */
     .topbar {
-      background: #0052A3; /* ← BLUE GAYA NG LOGO */
+      background: #0052A3;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -264,11 +277,19 @@
       height: 40px;
     }
 
+    /* ✅ TWO-COLOR BRAND NAME */
     .tb-brand-text {
       font-size: 18px;
       font-weight: 700;
       letter-spacing: 1px;
-      color: white; /* ← WHITE TEXT ON BLUE */
+    }
+
+    .tb-brand-text .siadeel {
+      color: #1a6bbf; /* ← lighter blue */
+    }
+
+    .tb-brand-text .water {
+      color: white;
     }
 
     .tb-right {
@@ -282,7 +303,7 @@
       font-weight: 600;
       letter-spacing: 2.5px;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.8); /* ← WHITE TEXT */
+      color: rgba(255, 255, 255, 0.8);
     }
 
     .tb-avatar {
@@ -410,7 +431,7 @@
 
     .mod-value {
       font-size: 36px;
-      font-weight: 600; /* ← LESS BOLD (was 800) */
+      font-weight: 600;
       color: var(--blue);
       line-height: 1;
       letter-spacing: -1.5px;
@@ -594,18 +615,21 @@
        WELCOME / LOGIN SCREEN
   ═══════════════════════════════════════ -->
   <div class="screen active" id="s-login">
-    <!-- ✅ ANIMATED WAVES (gaya ng logo) -->
+    <!-- ✅ ANIMATED WATER WAVES -->
     <div class="wave-container">
-      <svg class="wave-svg" viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg">
-        <!-- Top Wave -->
-        <path d="M0,50 Q100,30 200,50 T400,50" stroke="white" stroke-width="10" fill="none" stroke-linecap="round"/>
-        <!-- Bottom Wave -->
-        <path d="M0,70 Q100,50 200,70 T400,70" stroke="white" stroke-width="10" fill="none" stroke-linecap="round"/>
-      </svg>
+      <div class="wave"></div>
+      <div class="wave"></div>
+      <div class="wave"></div>
     </div>
 
     <!-- ✅ LOGO STAGE -->
     <div class="logo-stage">
+      <!-- ✅ SVG LOGO FROM SERVICE WORKER -->
+      <svg class="logo-svg" viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,40 Q100,25 200,40 T400,40" stroke="white" stroke-width="10" fill="none" stroke-linecap="round"/>
+        <path d="M0,60 Q100,45 200,60 T400,60" stroke="white" stroke-width="10" fill="none" stroke-linecap="round"/>
+      </svg>
+      
       <div class="logo-text">SIADEEL WATER</div>
       <div class="logo-sub">Treatment & Supply Services</div>
     </div>
@@ -636,7 +660,10 @@
           <path d="M0,40 Q100,25 200,40 T400,40" stroke="white" stroke-width="8" fill="none" stroke-linecap="round"/>
           <path d="M0,60 Q100,45 200,60 T400,60" stroke="white" stroke-width="8" fill="none" stroke-linecap="round"/>
         </svg>
-        <span class="tb-brand-text">SIADEEL</span>
+        <!-- ✅ TWO-COLOR BRAND NAME -->
+        <span class="tb-brand-text">
+          <span class="siadeel">Siadeel</span><span class="water">Water</span>
+        </span>
       </div>
       <div class="tb-right">
         <span class="tb-title">Dashboard</span>
