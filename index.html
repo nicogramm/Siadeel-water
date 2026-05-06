@@ -193,9 +193,9 @@
   <div class="toast" id="toast"></div>
   <script>
     // ═══════════════════════════════════════
-    // WAVE PULSE ANIMATION (Concentric Ripples)
+    // WATER WAVES ANIMATION (Flowing layers)
     // ═══════════════════════════════════════
-    (function initWavePulse() {
+    (function initWaterWaves() {
       var canvas = document.getElementById('flow-canvas');
       var ctx    = canvas.getContext('2d');
       var animId = null;
@@ -211,10 +211,19 @@
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       }
 
-      // Pulse configuration
-      var PULSE_COUNT    = 5;        // number of concurrent pulses
-      var PULSE_DURATION = 4.0;      // seconds per pulse cycle
-      var PULSE_STAGGER  = PULSE_DURATION / PULSE_COUNT;
+      // Multiple wave layers — each acts like a tide of water
+      // yBase  = vertical position (0 = top, 1 = bottom)
+      // amp    = wave height
+      // freq   = wave frequency (smaller = longer waves)
+      // speed  = how fast the wave flows
+      // alpha  = transparency of the fill
+      var WAVE_LAYERS = [
+        { yBase: 0.55, amp1: 14, amp2: 6,  freq1: 0.012, freq2: 0.028, speed: 0.35, alpha: 0.10, color: '255,255,255' },
+        { yBase: 0.62, amp1: 18, amp2: 8,  freq1: 0.010, freq2: 0.024, speed: 0.45, alpha: 0.13, color: '180,220,255' },
+        { yBase: 0.70, amp1: 22, amp2: 10, freq1: 0.009, freq2: 0.022, speed: 0.55, alpha: 0.16, color: '140,200,255' },
+        { yBase: 0.78, amp1: 26, amp2: 12, freq1: 0.008, freq2: 0.020, speed: 0.65, alpha: 0.20, color: '100,180,255' },
+        { yBase: 0.86, amp1: 30, amp2: 14, freq1: 0.007, freq2: 0.018, speed: 0.75, alpha: 0.26, color: '255,255,255' }
+      ];
 
       function loop(ts) {
         var t = ts / 1000;
@@ -222,53 +231,46 @@
         var H = canvas.height / dpr;
         ctx.clearRect(0, 0, W, H);
 
-        // Origin: center of screen, slightly above middle (where logo sits)
-        var cx = W / 2;
-        var cy = H * 0.32;
+        // Draw filled water layers (back to front)
+        for (var i = 0; i < WAVE_LAYERS.length; i++) {
+          var layer = WAVE_LAYERS[i];
+          var yCenter = H * layer.yBase;
+          var phase   = t * layer.speed;
 
-        // Maximum radius — reach corners
-        var maxR = Math.sqrt(W * W + H * H) * 0.7;
-
-        for (var i = 0; i < PULSE_COUNT; i++) {
-          // Each pulse has its own phase (0 to 1)
-          var phase = ((t + i * PULSE_STAGGER) % PULSE_DURATION) / PULSE_DURATION;
-
-          // Ease-out radius growth — fast start, slow finish
-          var eased  = 1 - Math.pow(1 - phase, 2);
-          var radius = eased * maxR;
-
-          // Fade out as pulse expands
-          var alpha = (1 - phase) * 0.55;
-
-          // Line width thins as it expands
-          var lineWidth = 3 * (1 - phase * 0.7);
-
-          // Outer ring
           ctx.beginPath();
-          ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(255,255,255,' + alpha + ')';
-          ctx.lineWidth   = lineWidth;
-          ctx.stroke();
-
-          // Inner glow ring (slightly smaller, softer)
-          ctx.beginPath();
-          ctx.arc(cx, cy, radius * 0.96, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(180,220,255,' + (alpha * 0.4) + ')';
-          ctx.lineWidth   = lineWidth * 0.6;
-          ctx.stroke();
+          ctx.moveTo(0, H);
+          for (var x = 0; x <= W; x += 2) {
+            var y = yCenter
+                  + Math.sin(x * layer.freq1 + phase * 2.0) * layer.amp1
+                  + Math.sin(x * layer.freq2 - phase * 1.4) * layer.amp2
+                  + Math.sin(x * 0.004 + phase * 0.6) * 4;
+            if (x === 0) ctx.lineTo(0, y);
+            else         ctx.lineTo(x, y);
+          }
+          ctx.lineTo(W, H);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(' + layer.color + ',' + layer.alpha + ')';
+          ctx.fill();
         }
 
-        // Soft pulsating core glow at origin
-        var corePulse = Math.sin(t * 2.5) * 0.5 + 0.5;
-        var coreRadius = 30 + corePulse * 18;
-        var grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius);
-        grad.addColorStop(0,   'rgba(255,255,255,' + (0.15 + corePulse * 0.1) + ')');
-        grad.addColorStop(0.6, 'rgba(255,255,255,0.04)');
-        grad.addColorStop(1,   'rgba(255,255,255,0)');
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(cx, cy, coreRadius, 0, Math.PI * 2);
-        ctx.fill();
+        // Draw highlighted crest lines on top of each layer
+        for (var k = 0; k < WAVE_LAYERS.length; k++) {
+          var L = WAVE_LAYERS[k];
+          var yC = H * L.yBase;
+          var ph = t * L.speed;
+          ctx.beginPath();
+          for (var xx = 0; xx <= W; xx += 2) {
+            var yy = yC
+                   + Math.sin(xx * L.freq1 + ph * 2.0) * L.amp1
+                   + Math.sin(xx * L.freq2 - ph * 1.4) * L.amp2
+                   + Math.sin(xx * 0.004 + ph * 0.6) * 4;
+            if (xx === 0) ctx.moveTo(xx, yy);
+            else          ctx.lineTo(xx, yy);
+          }
+          ctx.strokeStyle = 'rgba(255,255,255,' + (L.alpha * 1.4) + ')';
+          ctx.lineWidth   = 1.2;
+          ctx.stroke();
+        }
 
         animId = requestAnimationFrame(loop);
       }
@@ -290,7 +292,6 @@
       }).observe(document.getElementById('s-login'), { attributes: true, attributeFilter: ['class'] });
       setTimeout(start, 60);
     })();
-
     // ═══════════════════════════════════════
     // CONFIG
     // ═══════════════════════════════════════
