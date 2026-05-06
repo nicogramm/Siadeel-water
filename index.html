@@ -4,25 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   
-  <!-- ✅ PWA META TAGS -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Siadeel Water">
   <meta name="theme-color" content="#0052A3">
   
-  <!-- ✅ PWA MANIFEST -->
   <link rel="manifest" href="./manifest.json">
-  
-  <!-- ✅ APPLE TOUCH ICONS -->
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
   
   <title>Siadeel Water</title>
   
-  <!-- ✅ INTER FONT ONLY -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   
   <style>
@@ -30,7 +24,6 @@
        THEME VARIABLES
     ═══════════════════════════════════════ */
     :root {
-      /* LIGHT */
       --bg:       #f5f7fa;
       --bg2:      #e9ecf1;
       --shadow-d: #c8d1dc;
@@ -69,14 +62,14 @@
        BASE
     ═══════════════════════════════════════ */
     *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent }
-    html,body { 
-      height:100%; 
-      overflow:hidden; 
-      background:var(--bg); 
-      color:var(--text); 
+    html,body {
+      height:100%;
+      overflow:hidden;
+      background:var(--bg);
+      color:var(--text);
       font-family:'Inter',sans-serif;
-      -webkit-font-smoothing:antialiased; 
-      transition:background 0.4s,color 0.4s 
+      -webkit-font-smoothing:antialiased;
+      transition:background 0.4s,color 0.4s
     }
 
     .screen { display:none; flex-direction:column; height:100dvh; width:100%; position:absolute; top:0; left:0 }
@@ -86,105 +79,20 @@
        WELCOME / LOGIN SCREEN
     ═══════════════════════════════════════ */
     #s-login {
-      background: linear-gradient(135deg, #0052A3 0%, #003d7a 100%);
+      background: linear-gradient(160deg, #003d7a 0%, #0052A3 55%, #0066cc 100%);
       overflow: hidden;
       justify-content: flex-end;
       position: relative;
     }
 
-    #s-login::before {
-      content: '';
+    /* ✅ FLOW LINES CANVAS */
+    #flow-canvas {
       position: absolute;
       inset: 0;
-      background: repeating-linear-gradient(
-        -55deg,
-        transparent 0,
-        transparent 38px,
-        rgba(0,0,0,0.03) 38px,
-        rgba(0,0,0,0.03) 40px
-      );
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    /* ✅ PIPELINE STAGE */
-    .pipeline-stage {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 50%;
-      overflow: hidden;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-    }
-
-    /* ✅ PIPELINE ANIMATION */
-    .pipeline {
-      position: relative;
-      width: 80%;
-      max-width: 400px;
-      height: 12px;
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 6px;
-      overflow: hidden;
-      opacity: 0;
-      transform: scaleX(0);
-      transform-origin: left;
-      animation: pipeGrow 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    .pipeline:nth-child(1) {
-      animation-delay: 0.2s;
-    }
-
-    .pipeline:nth-child(2) {
-      animation-delay: 0.4s;
-    }
-
-    .pipeline:nth-child(3) {
-      animation-delay: 0.6s;
-    }
-
-    @keyframes pipeGrow {
-      0% {
-        opacity: 0;
-        transform: scaleX(0);
-      }
-      100% {
-        opacity: 1;
-        transform: scaleX(1);
-      }
-    }
-
-    /* ✅ WATER FLOW INSIDE PIPES */
-    .water-flow {
-      position: absolute;
-      top: 0;
-      left: -100%;
       width: 100%;
       height: 100%;
-      background: linear-gradient(
-        90deg,
-        transparent 0%,
-        rgba(255, 255, 255, 0.4) 50%,
-        transparent 100%
-      );
-      animation: waterFlow 1.5s linear infinite;
-      animation-delay: 1s;
-    }
-
-    @keyframes waterFlow {
-      0% {
-        left: -100%;
-      }
-      100% {
-        left: 100%;
-      }
+      pointer-events: none;
+      z-index: 1;
     }
 
     /* ✅ LOGO STAGE */
@@ -196,19 +104,13 @@
       z-index: 3;
       text-align: center;
       opacity: 0;
-      animation: logoFadeIn 0.5s ease-out forwards;
-      animation-delay: 1.3s;
+      animation: logoFadeIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation-delay: 1.8s;
     }
 
     @keyframes logoFadeIn {
-      0% {
-        opacity: 0;
-        transform: translate(-50%, -50%) translateY(10px);
-      }
-      100% {
-        opacity: 1;
-        transform: translate(-50%, -50%) translateY(0);
-      }
+      0%   { opacity: 0; transform: translate(-50%, -44%); }
+      100% { opacity: 1; transform: translate(-50%, -50%); }
     }
 
     .logo-svg {
@@ -247,15 +149,12 @@
       box-shadow: 0 -8px 32px rgba(0,0,0,0.15);
       opacity: 0;
       transform: translateY(50px);
-      animation: cardSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      animation-delay: 1.8s;
+      animation: cardSlideUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation-delay: 2.6s;
     }
 
     @keyframes cardSlideUp {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .login-card h2 {
@@ -311,7 +210,6 @@
       flex-direction: column;
     }
 
-    /* ✅ TOPBAR — BLUE BACKGROUND */
     .topbar {
       background: #0052A3;
       display: flex;
@@ -323,103 +221,25 @@
       box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
     }
 
-    .tb-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+    .tb-brand { display: flex; align-items: center; gap: 10px; }
+    .tb-logo  { width: 36px; height: 36px; }
 
-    .tb-logo {
-      width: 36px;
-      height: 36px;
-    }
+    .tb-brand-text { font-size: 16px; font-weight: 700; letter-spacing: 0.5px; }
+    .tb-brand-text .siadeel { color: #1a6bbf; }
+    .tb-brand-text .water   { color: white; }
 
-    /* ✅ TWO-COLOR BRAND NAME */
-    .tb-brand-text {
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
+    .tb-right  { display: flex; align-items: center; gap: 12px; }
+    .tb-title  { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.8); }
+    .tb-avatar { width: 32px; height: 32px; border-radius: 50%; border: 2px solid white; object-fit: cover; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
 
-    .tb-brand-text .siadeel {
-      color: #1a6bbf;
-    }
+    .page-wrap { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px; padding-bottom: 90px; }
 
-    .tb-brand-text .water {
-      color: white;
-    }
+    .dash-header  { margin-bottom: 22px; padding: 0 2px; }
+    .dash-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: var(--text3); margin-bottom: 5px; }
+    .dash-name    { font-size: 24px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; line-height: 1.2; }
+    .dash-date    { font-size: 12px; color: var(--text2); margin-top: 4px; }
 
-    .tb-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .tb-title {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.8);
-    }
-
-    .tb-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      border: 2px solid white;
-      object-fit: cover;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
-
-    /* PAGE WRAP */
-    .page-wrap {
-      flex: 1;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      padding: 16px;
-      padding-bottom: 90px;
-    }
-
-    /* ═══════════════════════════════════════
-       DASHBOARD HEADER
-    ═══════════════════════════════════════ */
-    .dash-header {
-      margin-bottom: 22px;
-      padding: 0 2px;
-    }
-
-    .dash-eyebrow {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
-      color: var(--text3);
-      margin-bottom: 5px;
-    }
-
-    .dash-name {
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--text);
-      letter-spacing: -0.5px;
-      line-height: 1.2;
-    }
-
-    .dash-date {
-      font-size: 12px;
-      color: var(--text2);
-      margin-top: 4px;
-    }
-
-    /* ═══════════════════════════════════════
-       MODULE GRID — MIXED LAYOUT
-    ═══════════════════════════════════════ */
-    .mod-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
+    .mod-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
     .mod-card {
       background: var(--bg);
@@ -429,13 +249,8 @@
       cursor: pointer;
       transition: box-shadow 0.15s, transform 0.1s;
     }
+    .mod-card:active { box-shadow: var(--neu-in); transform: scale(0.98); }
 
-    .mod-card:active {
-      box-shadow: var(--neu-in);
-      transform: scale(0.98);
-    }
-
-    /* ✅ WIDE CARD (spans 2 columns) */
     .mod-card.wide {
       grid-column: span 2;
       display: flex;
@@ -443,116 +258,50 @@
       gap: 16px;
       padding: 16px 18px;
     }
-
-    .mod-card.wide .mod-icon-box {
-      margin-bottom: 0;
-      flex-shrink: 0;
-    }
-
-    .mod-card.wide .mod-value {
-      font-size: 22px;
-    }
+    .mod-card.wide .mod-icon-box { margin-bottom: 0; flex-shrink: 0; }
+    .mod-card.wide .mod-value    { font-size: 22px; }
 
     .mod-icon-box {
-      width: 38px;
-      height: 38px;
+      width: 38px; height: 38px;
       border-radius: 12px;
       background: var(--bg);
       box-shadow: var(--neu-xs);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       margin-bottom: 12px;
     }
-
-    .mod-icon-box svg {
-      width: 18px;
-      height: 18px;
-    }
-
-    .mod-label {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--text3);
-      margin-bottom: 5px;
-    }
-
-    .mod-value {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--blue);
-      line-height: 1;
-      letter-spacing: -1px;
-    }
-
-    .mod-sub {
-      font-size: 10px;
-      color: var(--text3);
-      margin-top: 2px;
-    }
+    .mod-icon-box svg { width: 18px; height: 18px; }
+    .mod-label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); margin-bottom: 5px; }
+    .mod-value { font-size: 28px; font-weight: 700; color: var(--blue); line-height: 1; letter-spacing: -1px; }
+    .mod-sub   { font-size: 10px; color: var(--text3); margin-top: 2px; }
 
     /* ═══════════════════════════════════════
        BOTTOM NAV
     ═══════════════════════════════════════ */
     .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      position: fixed; bottom: 0; left: 0; right: 0;
       background: var(--bg);
       padding: 10px 20px calc(10px + env(safe-area-inset-bottom, 0px));
-      display: flex;
-      align-items: center;
-      justify-content: space-around;
-      box-shadow: 0 -3px 14px rgba(0, 0, 0, 0.07);
+      display: flex; align-items: center; justify-content: space-around;
+      box-shadow: 0 -3px 14px rgba(0,0,0,0.07);
       z-index: 40;
     }
-
-    body.dark .bottom-nav {
-      box-shadow: 0 -3px 14px rgba(0, 0, 0, 0.4);
-    }
+    body.dark .bottom-nav { box-shadow: 0 -3px 14px rgba(0,0,0,0.4); }
 
     .bnav {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      font-size: 9px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      color: var(--text3);
-      cursor: pointer;
-      border: none;
-      background: none;
-      font-family: 'Inter', sans-serif;
-      transition: color 0.2s;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      font-size: 9px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
+      color: var(--text3); cursor: pointer; border: none; background: none;
+      font-family: 'Inter', sans-serif; transition: color 0.2s;
     }
-
-    .bnav.active {
-      color: var(--blue);
-    }
-
+    .bnav.active { color: var(--blue); }
     .bnav-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 14px;
+      width: 42px; height: 42px; border-radius: 14px;
       background: var(--bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       transition: box-shadow 0.2s;
     }
-
-    .bnav:not(.active) .bnav-icon {
-      box-shadow: var(--neu-sm);
-    }
-
-    .bnav.active .bnav-icon {
-      box-shadow: var(--neu-in);
-    }
+    .bnav:not(.active) .bnav-icon { box-shadow: var(--neu-sm); }
+    .bnav.active .bnav-icon        { box-shadow: var(--neu-in); }
 
     /* ═══════════════════════════════════════
        TOAST
@@ -560,27 +309,14 @@
     .toast {
       position: fixed;
       bottom: calc(80px + env(safe-area-inset-bottom, 0px));
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--bg);
-      border-radius: 14px;
-      box-shadow: var(--neu-out);
-      border-left: 3px solid var(--blue);
-      padding: 13px 22px;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text);
-      z-index: 300;
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s;
-      max-width: 90%;
+      left: 50%; transform: translateX(-50%);
+      background: var(--bg); border-radius: 14px;
+      box-shadow: var(--neu-out); border-left: 3px solid var(--blue);
+      padding: 13px 22px; font-size: 13px; font-weight: 500; color: var(--text);
+      z-index: 300; white-space: nowrap;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s; max-width: 90%;
     }
-
-    .toast.show {
-      opacity: 1;
-    }
+    .toast.show { opacity: 1; }
 
     /* ═══════════════════════════════════════
        PULL TO REFRESH
@@ -588,51 +324,17 @@
     .ptr-indicator {
       position: fixed;
       top: calc(env(safe-area-inset-top, 0px) + 10px);
-      left: 50%;
-      transform: translateX(-50%) translateY(-80px);
-      background: var(--bg);
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      box-shadow: var(--neu-out);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 200;
-      transition: transform 0.2s ease;
-      pointer-events: none;
+      left: 50%; transform: translateX(-50%) translateY(-80px);
+      background: var(--bg); border-radius: 50%;
+      width: 40px; height: 40px; box-shadow: var(--neu-out);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200; transition: transform 0.2s ease; pointer-events: none;
     }
-
-    .ptr-indicator.visible {
-      transform: translateX(-50%) translateY(0px);
-    }
-
-    .ptr-spinner {
-      width: 18px;
-      height: 18px;
-      border: 2px solid var(--text3);
-      border-top-color: var(--blue);
-      border-radius: 50%;
-    }
-
-    .ptr-spinner.spinning {
-      animation: spin 0.7s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .ptr-arrow {
-      width: 18px;
-      height: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--blue);
-      font-size: 18px;
-      transition: transform 0.2s ease;
-    }
+    .ptr-indicator.visible { transform: translateX(-50%) translateY(0px); }
+    .ptr-spinner { width: 18px; height: 18px; border: 2px solid var(--text3); border-top-color: var(--blue); border-radius: 50%; }
+    .ptr-spinner.spinning { animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .ptr-arrow { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; color: var(--blue); font-size: 18px; transition: transform 0.2s ease; }
   </style>
 </head>
 <body>
@@ -641,18 +343,9 @@
        WELCOME / LOGIN SCREEN
   ═══════════════════════════════════════ -->
   <div class="screen active" id="s-login">
-    <!-- ✅ PIPELINE ANIMATION -->
-    <div class="pipeline-stage">
-      <div class="pipeline">
-        <div class="water-flow"></div>
-      </div>
-      <div class="pipeline">
-        <div class="water-flow"></div>
-      </div>
-      <div class="pipeline">
-        <div class="water-flow"></div>
-      </div>
-    </div>
+
+    <!-- ✅ FLOW LINES CANVAS -->
+    <canvas id="flow-canvas"></canvas>
 
     <!-- ✅ LOGO STAGE -->
     <div class="logo-stage">
@@ -660,9 +353,8 @@
         <path d="M0,40 Q100,25 200,40 T400,40" stroke="white" stroke-width="10" fill="none" stroke-linecap="round"/>
         <path d="M0,60 Q100,45 200,60 T400,60" stroke="white" stroke-width="10" fill="none" stroke-linecap="round"/>
       </svg>
-      
       <div class="logo-text">SIADEEL WATER</div>
-      <div class="logo-sub">Treatment & Supply Services</div>
+      <div class="logo-sub">Treatment &amp; Supply Services</div>
     </div>
 
     <!-- ✅ LOGIN CARD -->
@@ -710,7 +402,6 @@
       <div class="mod-grid" id="mod-grid"></div>
     </div>
 
-    <!-- BOTTOM NAV -->
     <div class="bottom-nav">
       <button class="bnav active">
         <div class="bnav-icon">
@@ -764,84 +455,134 @@
 
   <script>
     // ═══════════════════════════════════════
+    // FLOW LINES ANIMATION
+    // ═══════════════════════════════════════
+    (function initFlowLines() {
+      var canvas = document.getElementById('flow-canvas');
+      var ctx    = canvas.getContext('2d');
+      var lines  = [];
+      var animId = null;
+      var startTime = null;
+
+      function resize() {
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+
+      function buildLines() {
+        var H = canvas.height;
+        lines = [];
+        var count = 8;
+        for (var i = 0; i < count; i++) {
+          lines.push({
+            y:         40 + i * (H * 0.62 / count),
+            progress:  -0.05 - i * 0.1,
+            alpha:     0.13 + i * 0.075,
+            thickness: 6 - i * 0.45,
+            speed:     0.0028 + i * 0.0009
+          });
+        }
+      }
+
+      function loop(ts) {
+        if (!startTime) startTime = ts;
+        var t = (ts - startTime) / 1000;
+        var W = canvas.width, H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+
+        lines.forEach(function(fl) {
+          fl.progress = Math.min(fl.progress + fl.speed, 1.08);
+          var endX = W * Math.max(0, fl.progress);
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(0, fl.y);
+          for (var x = 0; x <= endX; x += 3) {
+            var wave = Math.sin(x * 0.025 + t * 2.0) * 3.5
+                     + Math.sin(x * 0.012 + t * 1.3) * 2.0;
+            ctx.lineTo(x, fl.y + wave);
+          }
+          ctx.strokeStyle = 'rgba(255,255,255,' + fl.alpha + ')';
+          ctx.lineWidth   = fl.thickness;
+          ctx.lineCap     = 'round';
+          ctx.stroke();
+
+          // glowing tip at leading edge
+          if (fl.progress < 1.0 && endX > 0) {
+            var tipX = endX;
+            var tipY = fl.y
+                     + Math.sin(tipX * 0.025 + t * 2.0) * 3.5
+                     + Math.sin(tipX * 0.012 + t * 1.3) * 2.0;
+            ctx.beginPath();
+            ctx.arc(tipX, tipY, fl.thickness * 2.4, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,' + (fl.alpha * 1.9) + ')';
+            ctx.fill();
+          }
+          ctx.restore();
+        });
+
+        animId = requestAnimationFrame(loop);
+      }
+
+      function start() {
+        resize();
+        buildLines();
+        startTime = null;
+        if (animId) cancelAnimationFrame(animId);
+        animId = requestAnimationFrame(loop);
+      }
+
+      window.addEventListener('resize', function() {
+        resize();
+        buildLines();
+      });
+
+      // Stop canvas when login screen is hidden — saves battery
+      new MutationObserver(function() {
+        var loginScreen = document.getElementById('s-login');
+        if (!loginScreen.classList.contains('active')) {
+          cancelAnimationFrame(animId);
+          animId = null;
+        } else if (!animId) {
+          start();
+        }
+      }).observe(document.getElementById('s-login'), { attributes: true, attributeFilter: ['class'] });
+
+      start();
+    })();
+
+    // ═══════════════════════════════════════
     // CONFIG
     // ═══════════════════════════════════════
     const CLIENT_ID = '390293022504-q788ime82mdj3fss169oeqbijodkkgon.apps.googleusercontent.com';
-    const SHEET_ID = '1-lhBa3FTi_gcFGS1Z0Q9w6yCYoq_BnToI3ZKBl8k8Cs';
-    const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file openid email profile';
+    const SHEET_ID  = '1-lhBa3FTi_gcFGS1Z0Q9w6yCYoq_BnToI3ZKBl8k8Cs';
+    const SCOPES    = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file openid email profile';
 
-    // AUTHORIZED USERS
     const AUTHORIZED_USERS = [
       { name: 'Siadeel', email: 'siadeel.homes@gmail.com' },
-      { name: 'Tricia', email: 'iamtriciasia@gmail.com' },
-      { name: 'Nicolo', email: 'nicolobalonzo@gmail.com' }
+      { name: 'Tricia',  email: 'iamtriciasia@gmail.com'  },
+      { name: 'Nicolo',  email: 'nicolobalonzo@gmail.com' }
     ];
 
-    // ✅ MODULES — MIXED LAYOUT
     const ALL_MODULES = [
-      // Small cards (2x2 grid)
-      {
-        id: 'results',
-        icon: 'check',
-        label: 'Results',
-        stat: 'sv-results',
-        sub: 'Latest test results'
-      },
-      {
-        id: 'trends',
-        icon: 'trend',
-        label: 'Trends',
-        stat: 'sv-trends',
-        sub: 'Performance analytics'
-      },
-      
-      // Wide card
-      {
-        id: 'process',
-        icon: 'info',
-        label: 'Process Information',
-        stat: 'sv-process',
-        sub: 'System operations',
-        wide: true
-      },
-      
-      // Small cards
-      {
-        id: 'water-quality',
-        icon: 'droplet',
-        label: 'Water Quality',
-        stat: 'sv-quality',
-        sub: 'Current status'
-      },
-      {
-        id: 'treatment',
-        icon: 'filter',
-        label: 'Treatment',
-        stat: 'sv-treatment',
-        sub: 'Active processes'
-      },
-      
-      // Wide card
-      {
-        id: 'settings',
-        icon: 'settings',
-        label: 'Settings',
-        stat: 'sv-settings',
-        sub: 'App configuration',
-        wide: true
-      }
+      { id: 'results',       icon: 'check',    label: 'Results',             stat: 'sv-results',   sub: 'Latest test results'   },
+      { id: 'trends',        icon: 'trend',    label: 'Trends',             stat: 'sv-trends',    sub: 'Performance analytics' },
+      { id: 'process',       icon: 'info',     label: 'Process Information', stat: 'sv-process',   sub: 'System operations',    wide: true },
+      { id: 'water-quality', icon: 'droplet',  label: 'Water Quality',       stat: 'sv-quality',   sub: 'Current status'        },
+      { id: 'treatment',     icon: 'filter',   label: 'Treatment',           stat: 'sv-treatment', sub: 'Active processes'      },
+      { id: 'settings',      icon: 'settings', label: 'Settings',            stat: 'sv-settings',  sub: 'App configuration',    wide: true }
     ];
 
     const ICONS = {
-      check: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"/></svg>',
-      trend: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="17 6 23 6 23 12" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-      info: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="var(--blue)" stroke-width="2"/><path d="M12 16v-4M12 8h.01" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"/></svg>',
-      droplet: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-      filter: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      check:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"/></svg>',
+      trend:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="17 6 23 6 23 12" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      info:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="var(--blue)" stroke-width="2"/><path d="M12 16v-4M12 8h.01" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"/></svg>',
+      droplet:  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      filter:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
       settings: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="var(--blue)" stroke-width="2"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"/></svg>'
     };
 
-    let token = null;
+    let token  = null;
     let isDark = false;
 
     // ═══════════════════════════════════════
@@ -858,38 +599,31 @@
     // INIT
     // ═══════════════════════════════════════
     (function init() {
-      // ✅ PWA Install Prompt
       let deferredPrompt;
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
         showToast('📲 Tap to install app');
-        
         setTimeout(() => {
           if (deferredPrompt) {
             deferredPrompt.prompt();
-            deferredPrompt.userChoice.then((choiceResult) => {
-              if (choiceResult.outcome === 'accepted') {
-                showToast('✅ App installed!');
-              }
+            deferredPrompt.userChoice.then((r) => {
+              if (r.outcome === 'accepted') showToast('✅ App installed!');
               deferredPrompt = null;
             });
           }
         }, 3000);
       });
 
-      // ✅ Service Worker
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js')
           .then(reg => {
-            console.log('[App] Service Worker registered');
             setInterval(() => reg.update(), 5 * 60 * 1000);
             reg.update();
             reg.addEventListener('updatefound', () => {
-              const newWorker = reg.installing;
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  console.log('[App] New version available, reloading...');
+              const nw = reg.installing;
+              nw.addEventListener('statechange', () => {
+                if (nw.state === 'installed' && navigator.serviceWorker.controller) {
                   window.location.reload();
                 }
               });
@@ -898,10 +632,9 @@
           .catch(err => console.error('[App] SW registration failed:', err));
       }
 
-      // ✅ CHECK TOKEN
       const savedToken = localStorage.getItem('siadeel-token');
-      const expiry = localStorage.getItem('siadeel-token-expiry');
-      const bufferMs = 5 * 60 * 1000;
+      const expiry     = localStorage.getItem('siadeel-token-expiry');
+      const bufferMs   = 5 * 60 * 1000;
 
       if (!savedToken || !expiry || Date.now() >= (parseInt(expiry) - bufferMs)) {
         localStorage.removeItem('siadeel-token');
@@ -930,34 +663,26 @@
         client_id: CLIENT_ID,
         scope: SCOPES,
         callback: function(res) {
-          if (res.error) {
-            showToast('❌ Login error: ' + res.error);
-            return;
-          }
-
+          if (res.error) { showToast('❌ Login error: ' + res.error); return; }
           token = res.access_token;
           const expiresAt = Date.now() + (res.expires_in * 1000);
-          localStorage.setItem('siadeel-token', token);
-          localStorage.setItem('siadeel-token-expiry', expiresAt);
+          localStorage.setItem('siadeel-token',         token);
+          localStorage.setItem('siadeel-token-expiry',  expiresAt);
           localStorage.setItem('siadeel-scope-granted', 'true');
-
           loadUser();
         }
-      }).requestAccessToken({
-        prompt: hasGranted ? '' : 'consent'
-      });
+      }).requestAccessToken({ prompt: hasGranted ? '' : 'consent' });
     }
 
     function loadUser() {
       fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
         headers: { 'Authorization': 'Bearer ' + token }
       })
-      .then(r => {
-        if (!r.ok) throw new Error('Auth failed');
-        return r.json();
-      })
+      .then(r => { if (!r.ok) throw new Error('Auth failed'); return r.json(); })
       .then(u => {
-        const authorized = AUTHORIZED_USERS.find(au => au.email.toLowerCase() === u.email.toLowerCase());
+        const authorized = AUTHORIZED_USERS.find(
+          au => au.email.toLowerCase() === u.email.toLowerCase()
+        );
 
         if (!authorized) {
           showToast('❌ Access denied. Your account is not authorized.');
@@ -968,12 +693,11 @@
           return;
         }
 
-        localStorage.setItem('siadeel-name', authorized.name);
-        localStorage.setItem('siadeel-email', u.email);
+        localStorage.setItem('siadeel-name',    authorized.name);
+        localStorage.setItem('siadeel-email',   u.email);
         localStorage.setItem('siadeel-picture', u.picture || '');
 
         document.getElementById('user-avatar').src = u.picture || '';
-
         document.getElementById('s-login').classList.remove('active');
         document.getElementById('s-app').classList.add('active');
 
@@ -983,34 +707,25 @@
 
         initPullToRefresh(
           document.querySelector('.page-wrap'),
-          function(done) {
-            loadDashboardStats();
-            setTimeout(done, 1000);
-          }
+          function(done) { loadDashboardStats(); setTimeout(done, 1000); }
         );
 
-        initAutoRefresh(function(done) {
-          loadDashboardStats();
-          done();
-        });
+        initAutoRefresh(function(done) { loadDashboardStats(); done(); });
       })
       .catch(function(err) {
         console.error('Load user error:', err);
         localStorage.removeItem('siadeel-token');
         localStorage.removeItem('siadeel-token-expiry');
-
         document.getElementById('s-login').classList.add('active');
         document.getElementById('s-app').classList.remove('active');
-
         showToast('❌ Session expired. Please sign in again.');
       });
     }
 
     function updateGreeting(firstName) {
       var now = new Date();
-      var h = now.getHours();
-      var gr = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-
+      var h   = now.getHours();
+      var gr  = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
       document.getElementById('dash-name').textContent = gr + ', ' + firstName + '!';
       document.getElementById('dash-date').textContent = now.toLocaleDateString('en-PH', {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
@@ -1022,9 +737,8 @@
     // ═══════════════════════════════════════
     function buildDashboard() {
       document.getElementById('mod-grid').innerHTML = ALL_MODULES.map(m => {
-        const icon = ICONS[m.icon] || '';
+        const icon    = ICONS[m.icon] || '';
         const onclick = `showToast('${m.label} — coming soon')`;
-        
         if (m.wide) {
           return `<div class="mod-card wide" onclick="${onclick}">
             <div class="mod-icon-box">${icon}</div>
@@ -1035,7 +749,6 @@
             </div>
           </div>`;
         }
-        
         return `<div class="mod-card" onclick="${onclick}">
           <div class="mod-icon-box">${icon}</div>
           <div class="mod-label">${m.label}</div>
@@ -1047,14 +760,13 @@
 
     function loadDashboardStats() {
       if (!token) return;
-
       setTimeout(() => {
-        document.getElementById('sv-results').textContent = '24';
-        document.getElementById('sv-trends').textContent = '89%';
-        document.getElementById('sv-process').textContent = '5';
-        document.getElementById('sv-quality').textContent = '98%';
+        document.getElementById('sv-results').textContent   = '24';
+        document.getElementById('sv-trends').textContent    = '89%';
+        document.getElementById('sv-process').textContent   = '5';
+        document.getElementById('sv-quality').textContent   = '98%';
         document.getElementById('sv-treatment').textContent = '3';
-        document.getElementById('sv-settings').textContent = '—';
+        document.getElementById('sv-settings').textContent  = '—';
       }, 500);
     }
 
@@ -1074,40 +786,32 @@
     // PULL TO REFRESH
     // ═══════════════════════════════════════
     function initPullToRefresh(scrollEl, onRefresh) {
-      var startY = 0;
-      var pulling = false;
-      var threshold = 70;
+      var startY = 0, pulling = false, threshold = 70;
       var indicator = document.createElement('div');
       indicator.className = 'ptr-indicator';
       indicator.innerHTML = '<div class="ptr-arrow" id="ptr-arrow">↓</div>';
       document.body.appendChild(indicator);
 
       scrollEl.addEventListener('touchstart', function(e) {
-        if (scrollEl.scrollTop === 0) {
-          startY = e.touches[0].clientY;
-          pulling = true;
-        }
+        if (scrollEl.scrollTop === 0) { startY = e.touches[0].clientY; pulling = true; }
       }, { passive: true });
 
       scrollEl.addEventListener('touchmove', function(e) {
         if (!pulling) return;
         var dist = e.touches[0].clientY - startY;
         if (dist < 0) { pulling = false; return; }
-
         var progress = Math.min(dist / threshold, 1);
         indicator.classList.add('visible');
-
         var arrow = document.getElementById('ptr-arrow');
         if (arrow) {
           arrow.style.transform = 'rotate(' + (progress * 180) + 'deg)';
-          arrow.style.color = progress >= 1 ? 'var(--blue)' : 'var(--text3)';
+          arrow.style.color     = progress >= 1 ? 'var(--blue)' : 'var(--text3)';
         }
       }, { passive: true });
 
       scrollEl.addEventListener('touchend', function(e) {
         if (!pulling) return;
         pulling = false;
-
         var dist = e.changedTouches[0].clientY - startY;
         if (dist >= threshold) {
           indicator.innerHTML = '<div class="ptr-spinner spinning"></div>';
@@ -1126,7 +830,7 @@
     // ═══════════════════════════════════════
     function initAutoRefresh(onRefresh) {
       setInterval(function() {
-        var expiry = parseInt(localStorage.getItem('siadeel-token-expiry') || '0');
+        var expiry   = parseInt(localStorage.getItem('siadeel-token-expiry') || '0');
         var bufferMs = 10 * 60 * 1000;
 
         if (token && Date.now() >= (expiry - bufferMs)) {
@@ -1138,7 +842,7 @@
                 if (!res.error) {
                   token = res.access_token;
                   const expiresAt = Date.now() + (res.expires_in * 1000);
-                  localStorage.setItem('siadeel-token', token);
+                  localStorage.setItem('siadeel-token',        token);
                   localStorage.setItem('siadeel-token-expiry', expiresAt);
                 }
               }
