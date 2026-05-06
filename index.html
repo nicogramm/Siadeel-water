@@ -85,15 +85,15 @@
       position: relative;
     }
 
+    /* ✅ FLOW LINES CANVAS */
     #flow-canvas {
-          position: absolute;
-          inset: 0;
-          width: 100%;
-          height: 100%;
-          pointer-events: none;
-          z-index: 2;
-          display: block;
-        }
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
 
     /* ✅ LOGO STAGE */
     .logo-stage {
@@ -468,66 +468,67 @@
         canvas.width  = window.innerWidth;
         canvas.height = window.innerHeight;
       }
-function buildLines() {
-  var H = canvas.height;
-  lines = [];
-  var count = 12;
-  for (var i = 0; i < count; i++) {
-    lines.push({
-      y:         (H / (count + 1)) * (i + 1),
-      offset:    i * 0.42,
-      alpha:     0.10 + (i % 4) * 0.06,
-      thickness: 2.5 + (i % 3) * 1.5,
-      speed:     0.55 + (i % 5) * 0.18
-    });
-  }
-}
 
-    function loop(ts) {
-      var t = ts / 1000;
-      var W = canvas.width, H = canvas.height;
-      ctx.clearRect(0, 0, W, H);
-
-      lines.forEach(function(fl) {
-        var phase = ((t * fl.speed + fl.offset) % 2.4);
-        if (phase > 1.3) return;
-
-        var drawProgress = Math.min(phase / 1.0, 1.0);
-        var endX = W * drawProgress;
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(0, fl.y);
-        for (var x = 0; x <= endX; x += 4) {
-          var wave = Math.sin(x * 0.022 + t * 1.8 + fl.offset) * 4.5
-                  + Math.sin(x * 0.009 + t * 1.1 + fl.offset * 0.5) * 2.5;
-          ctx.lineTo(x, fl.y + wave);
+      function buildLines() {
+        var H = canvas.height;
+        lines = [];
+        var count = 12;
+        for (var i = 0; i < count; i++) {
+          lines.push({
+            y:         (H / (count + 1)) * (i + 1),
+            offset:    i * 0.42,
+            alpha:     0.10 + (i % 4) * 0.06,
+            thickness: 2.5 + (i % 3) * 1.5,
+            speed:     0.55 + (i % 5) * 0.18
+          });
         }
+      }
 
-        var grad = ctx.createLinearGradient(0, 0, endX, 0);
-        grad.addColorStop(0,   'rgba(255,255,255,0)');
-        grad.addColorStop(0.3, 'rgba(255,255,255,' + fl.alpha + ')');
-        grad.addColorStop(1.0, 'rgba(255,255,255,' + fl.alpha + ')');
-        ctx.strokeStyle = grad;
-        ctx.lineWidth   = fl.thickness;
-        ctx.lineCap     = 'round';
-        ctx.stroke();
+      function loop(ts) {
+        var t = ts / 1000;
+        var W = canvas.width, H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
 
-        if (drawProgress < 1.0) {
-          var tipX = endX;
-          var tipY = fl.y
-                  + Math.sin(tipX * 0.022 + t * 1.8 + fl.offset) * 4.5
-                  + Math.sin(tipX * 0.009 + t * 1.1 + fl.offset * 0.5) * 2.5;
+        lines.forEach(function(fl) {
+          var phase = ((t * fl.speed + fl.offset) % 2.4);
+          if (phase > 1.3) return;
+
+          var drawProgress = Math.min(phase / 1.0, 1.0);
+          var endX = W * drawProgress;
+
+          ctx.save();
           ctx.beginPath();
-          ctx.arc(tipX, tipY, fl.thickness * 2.8, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(255,255,255,' + (fl.alpha * 2.2) + ')';
-          ctx.fill();
-        }
-        ctx.restore();
-      });
+          ctx.moveTo(0, fl.y);
+          for (var x = 0; x <= endX; x += 4) {
+            var wave = Math.sin(x * 0.022 + t * 1.8 + fl.offset) * 4.5
+                     + Math.sin(x * 0.009 + t * 1.1 + fl.offset * 0.5) * 2.5;
+            ctx.lineTo(x, fl.y + wave);
+          }
 
-      animId = requestAnimationFrame(loop);
-    }
+          var grad = ctx.createLinearGradient(0, 0, endX, 0);
+          grad.addColorStop(0,   'rgba(255,255,255,0)');
+          grad.addColorStop(0.3, 'rgba(255,255,255,' + fl.alpha + ')');
+          grad.addColorStop(1.0, 'rgba(255,255,255,' + fl.alpha + ')');
+          ctx.strokeStyle = grad;
+          ctx.lineWidth   = fl.thickness;
+          ctx.lineCap     = 'round';
+          ctx.stroke();
+
+          if (drawProgress < 1.0) {
+            var tipX = endX;
+            var tipY = fl.y
+                     + Math.sin(tipX * 0.022 + t * 1.8 + fl.offset) * 4.5
+                     + Math.sin(tipX * 0.009 + t * 1.1 + fl.offset * 0.5) * 2.5;
+            ctx.beginPath();
+            ctx.arc(tipX, tipY, fl.thickness * 2.8, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,' + (fl.alpha * 2.2) + ')';
+            ctx.fill();
+          }
+          ctx.restore();
+        });
+
+        animId = requestAnimationFrame(loop);
+      }
 
       function start() {
         resize();
@@ -649,8 +650,6 @@ function buildLines() {
       } else {
         token = savedToken;
         loadUser();
-        // OPTIONAL: Force re-login every session — i-uncomment ang line sa ibaba
-        // localStorage.removeItem('siadeel-token');
       }
     })();
 
