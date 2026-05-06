@@ -20,7 +20,7 @@
   
   <title>Siadeel Water</title>
   
-  <!-- ✅ MONTSERRAT FONT (similar sa logo) -->
+  <!-- ✅ MONTSERRAT FONT -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -84,7 +84,7 @@
       position: relative;
     }
 
-    /* ✅ ANIMATED WAVY LINES (inspired by Siadeel logo) */
+    /* ✅ ANIMATED WAVY LINES */
     .wave-container {
       position: absolute;
       top: 0;
@@ -129,7 +129,7 @@
       100% { left: 100%; }
     }
 
-    /* ✅ LOGO ANIMATION */
+    /* ✅ LOGO ANIMATION — SLOWER */
     .logo-stage {
       position: absolute;
       top: 50%;
@@ -143,8 +143,8 @@
       width: 140px;
       margin: 0 auto 28px;
       opacity: 0;
-      animation: logoIn 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      animation-delay: 0.3s;
+      animation: logoIn 2.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation-delay: 0.5s;
     }
 
     @keyframes logoIn {
@@ -171,8 +171,8 @@
       letter-spacing: 2px;
       margin-bottom: 8px;
       opacity: 0;
-      animation: textIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      animation-delay: 1s;
+      animation: textIn 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation-delay: 1.5s;
     }
 
     .logo-sub {
@@ -182,8 +182,8 @@
       letter-spacing: 3px;
       text-transform: uppercase;
       opacity: 0;
-      animation: textIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      animation-delay: 1.3s;
+      animation: textIn 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation-delay: 2s;
     }
 
     @keyframes textIn {
@@ -197,7 +197,7 @@
       }
     }
 
-    /* LOGIN CARD */
+    /* ✅ LOGIN CARD — SLOWER ANIMATION */
     .login-card {
       position: relative;
       z-index: 4;
@@ -208,8 +208,8 @@
       box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
       opacity: 0;
       transform: translateY(60px);
-      animation: cardUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      animation-delay: 2.2s;
+      animation: cardUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation-delay: 3.5s; /* ← INCREASED from 2.2s to 3.5s */
     }
 
     @keyframes cardUp {
@@ -834,54 +834,49 @@
         }, 3000);
       });
 
-
-              // ✅ Service Worker with force update
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('./sw.js')
-            .then(reg => {
-              console.log('[App] Service Worker registered');
-              
-              // ✅ Check for updates every 5 minutes
-              setInterval(() => {
-                reg.update();
-              }, 5 * 60 * 1000);
-              
-              // ✅ Force update on page load
-              reg.update();
-              
-              // ✅ Listen for new service worker
-              reg.addEventListener('updatefound', () => {
-                const newWorker = reg.installing;
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    // New service worker available, reload page
-                    console.log('[App] New version available, reloading...');
-                    window.location.reload();
-                  }
-                });
-              });
-            })
-            .catch(err => console.error('[App] SW registration failed:', err));
-        }
-
-
-      // ✅ Service Worker
+      // ✅ Service Worker — SINGLE REGISTRATION ONLY
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => {
+            console.log('[App] Service Worker registered');
+            
+            // ✅ Check for updates every 5 minutes
+            setInterval(() => {
+              reg.update();
+            }, 5 * 60 * 1000);
+            
+            // ✅ Force update on page load
+            reg.update();
+            
+            // ✅ Listen for new service worker
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  console.log('[App] New version available, reloading...');
+                  window.location.reload();
+                }
+              });
+            });
+          })
+          .catch(err => console.error('[App] SW registration failed:', err));
       }
 
+      // ✅ CHECK TOKEN — ALWAYS SHOW LOGIN FIRST
       const savedToken = localStorage.getItem('siadeel-token');
       const expiry = localStorage.getItem('siadeel-token-expiry');
       const bufferMs = 5 * 60 * 1000;
 
-      if (savedToken && expiry && Date.now() < (parseInt(expiry) - bufferMs)) {
-        token = savedToken;
-        loadUser();
-      } else {
+      // ✅ FORCE LOGIN SCREEN ON FIRST LOAD
+      if (!savedToken || !expiry || Date.now() >= (parseInt(expiry) - bufferMs)) {
         localStorage.removeItem('siadeel-token');
         localStorage.removeItem('siadeel-token-expiry');
         document.getElementById('s-login').classList.add('active');
         document.getElementById('s-app').classList.remove('active');
+      } else {
+        // Token valid, auto-login
+        token = savedToken;
+        loadUser();
       }
     })();
 
