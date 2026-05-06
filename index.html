@@ -88,12 +88,11 @@
     /* ✅ FLOW LINES CANVAS */
     #flow-canvas {
       position: absolute;
-      top: 0; left: 0;
+      inset: 0;
       width: 100%;
       height: 100%;
-      display: block;
       pointer-events: none;
-      z-index: 2;
+      z-index: 1;
     }
 
     /* ✅ LOGO STAGE */
@@ -226,8 +225,8 @@
     .tb-logo  { width: 36px; height: 36px; }
 
     .tb-brand-text { font-size: 16px; font-weight: 700; letter-spacing: 0.5px; }
-    .tb-brand-text .siadeel { color: #ffffff; }
-    .tb-brand-text .water   { color: #00e5cc; }
+    .tb-brand-text .siadeel { color: #1a6bbf; }
+    .tb-brand-text .water   { color: white; }
 
     .tb-right  { display: flex; align-items: center; gap: 12px; }
     .tb-title  { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.8); }
@@ -463,68 +462,60 @@
       var ctx    = canvas.getContext('2d');
       var lines  = [];
       var animId = null;
+      var startTime = null;
 
       function resize() {
-        var W = window.innerWidth  || document.documentElement.clientWidth  || screen.width;
-        var H = window.innerHeight || document.documentElement.clientHeight || screen.height;
-        canvas.width  = W;
-        canvas.height = H;
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
       }
 
       function buildLines() {
-        var H = canvas.height || screen.height;
+        var H = canvas.height;
         lines = [];
-        var count = 12;
+        var count = 8;
         for (var i = 0; i < count; i++) {
           lines.push({
-            y:         (H / (count + 1)) * (i + 1),
-            offset:    i * 0.42,
-            alpha:     0.10 + (i % 4) * 0.06,
-            thickness: 2.5 + (i % 3) * 1.5,
-            speed:     0.55 + (i % 5) * 0.18
+            y:         40 + i * (H * 0.62 / count),
+            progress:  -0.05 - i * 0.1,
+            alpha:     0.13 + i * 0.075,
+            thickness: 6 - i * 0.45,
+            speed:     0.0028 + i * 0.0009
           });
         }
       }
 
       function loop(ts) {
-        var t = ts / 1000;
+        if (!startTime) startTime = ts;
+        var t = (ts - startTime) / 1000;
         var W = canvas.width, H = canvas.height;
         ctx.clearRect(0, 0, W, H);
 
         lines.forEach(function(fl) {
-          var phase = ((t * fl.speed + fl.offset) % 2.4);
-          if (phase > 1.3) return;
-
-          var drawProgress = Math.min(phase / 1.0, 1.0);
-          var endX = W * drawProgress;
-          if (endX < 1) return;
+          fl.progress = Math.min(fl.progress + fl.speed, 1.08);
+          var endX = W * Math.max(0, fl.progress);
 
           ctx.save();
           ctx.beginPath();
           ctx.moveTo(0, fl.y);
-          for (var x = 0; x <= endX; x += 4) {
-            var wave = Math.sin(x * 0.022 + t * 1.8 + fl.offset) * 4.5
-                     + Math.sin(x * 0.009 + t * 1.1 + fl.offset * 0.5) * 2.5;
+          for (var x = 0; x <= endX; x += 3) {
+            var wave = Math.sin(x * 0.025 + t * 2.0) * 3.5
+                     + Math.sin(x * 0.012 + t * 1.3) * 2.0;
             ctx.lineTo(x, fl.y + wave);
           }
-
-          var grad = ctx.createLinearGradient(0, 0, endX, 0);
-          grad.addColorStop(0,   'rgba(255,255,255,0)');
-          grad.addColorStop(0.3, 'rgba(255,255,255,' + fl.alpha + ')');
-          grad.addColorStop(1.0, 'rgba(255,255,255,' + fl.alpha + ')');
-          ctx.strokeStyle = grad;
+          ctx.strokeStyle = 'rgba(255,255,255,' + fl.alpha + ')';
           ctx.lineWidth   = fl.thickness;
           ctx.lineCap     = 'round';
           ctx.stroke();
 
-          if (drawProgress < 1.0) {
+          // glowing tip at leading edge
+          if (fl.progress < 1.0 && endX > 0) {
             var tipX = endX;
             var tipY = fl.y
-                     + Math.sin(tipX * 0.022 + t * 1.8 + fl.offset) * 4.5
-                     + Math.sin(tipX * 0.009 + t * 1.1 + fl.offset * 0.5) * 2.5;
+                     + Math.sin(tipX * 0.025 + t * 2.0) * 3.5
+                     + Math.sin(tipX * 0.012 + t * 1.3) * 2.0;
             ctx.beginPath();
-            ctx.arc(tipX, tipY, fl.thickness * 2.8, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255,255,255,' + (fl.alpha * 2.2) + ')';
+            ctx.arc(tipX, tipY, fl.thickness * 2.4, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,' + (fl.alpha * 1.9) + ')';
             ctx.fill();
           }
           ctx.restore();
@@ -536,12 +527,17 @@
       function start() {
         resize();
         buildLines();
+        startTime = null;
         if (animId) cancelAnimationFrame(animId);
         animId = requestAnimationFrame(loop);
       }
 
-      window.addEventListener('resize', function() { resize(); buildLines(); });
+      window.addEventListener('resize', function() {
+        resize();
+        buildLines();
+      });
 
+      // Stop canvas when login screen is hidden — saves battery
       new MutationObserver(function() {
         var loginScreen = document.getElementById('s-login');
         if (!loginScreen.classList.contains('active')) {
@@ -552,8 +548,7 @@
         }
       }).observe(document.getElementById('s-login'), { attributes: true, attributeFilter: ['class'] });
 
-      // Delay so browser finishes layout before we read dimensions
-      setTimeout(start, 60);
+      start();
     })();
 
     // ═══════════════════════════════════════
