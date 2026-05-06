@@ -394,6 +394,10 @@
         }
       }).requestAccessToken({ prompt: hasGranted ? '' : 'consent' });
     }
+    // ═══════════════════════════════════════
+// UPDATED: Delayed Dashboard Loading
+// ═══════════════════════════════════════
+
     function loadUser() {
       fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { 'Authorization': 'Bearer ' + token } })
       .then(r => { if (!r.ok) throw new Error('Auth failed'); return r.json(); })
@@ -401,24 +405,43 @@
         const authorized = AUTHORIZED_USERS.find(au => au.email.toLowerCase() === u.email.toLowerCase());
         if (!authorized) {
           showToast('❌ Access denied. Your account is not authorized.');
-          localStorage.removeItem('siadeel-token'); localStorage.removeItem('siadeel-token-expiry');
+          localStorage.removeItem('siadeel-token'); 
+          localStorage.removeItem('siadeel-token-expiry');
           document.getElementById('s-login').classList.add('active');
           document.getElementById('s-app').classList.remove('active');
           return;
         }
+        
         localStorage.setItem('siadeel-name',    authorized.name);
         localStorage.setItem('siadeel-email',   u.email);
         localStorage.setItem('siadeel-picture', u.picture || '');
-        document.getElementById('user-avatar').src = u.picture || '';
-        document.getElementById('s-login').classList.remove('active');
-        document.getElementById('s-app').classList.add('active');
-        buildDashboard(); loadDashboardStats(); updateGreeting(authorized.name);
-        initPullToRefresh(document.querySelector('.page-wrap'), function(done) { loadDashboardStats(); setTimeout(done, 1000); });
-        initAutoRefresh(function(done) { loadDashboardStats(); done(); });
+        
+        // ✅ BAGO: Hintayin ang logo animation (2.5 seconds) bago mag-transition
+        const LOGO_ANIMATION_DURATION = 2500; // 1.8s delay + 0.7s animation
+        const FULL_WELCOME_DURATION = 3200; // 2.6s delay + 0.55s animation + 50ms buffer
+        
+        setTimeout(function() {
+          document.getElementById('user-avatar').src = u.picture || '';
+          document.getElementById('s-login').classList.remove('active');
+          document.getElementById('s-app').classList.add('active');
+          buildDashboard(); 
+          loadDashboardStats(); 
+          updateGreeting(authorized.name);
+          initPullToRefresh(document.querySelector('.page-wrap'), function(done) { 
+            loadDashboardStats(); 
+            setTimeout(done, 1000); 
+          });
+          initAutoRefresh(function(done) { 
+            loadDashboardStats(); 
+            done(); 
+          });
+        }, FULL_WELCOME_DURATION);
+        
       })
       .catch(function(err) {
         console.error('Load user error:', err);
-        localStorage.removeItem('siadeel-token'); localStorage.removeItem('siadeel-token-expiry');
+        localStorage.removeItem('siadeel-token'); 
+        localStorage.removeItem('siadeel-token-expiry');
         document.getElementById('s-login').classList.add('active');
         document.getElementById('s-app').classList.remove('active');
         showToast('❌ Session expired. Please sign in again.');
