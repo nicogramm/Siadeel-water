@@ -20,6 +20,9 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   
   <style>
+    /* ═══════════════════════════════════════
+       THEME VARIABLES
+    ═══════════════════════════════════════ */
     :root {
       --bg:       #f5f7fa;
       --bg2:      #e9ecf1;
@@ -55,10 +58,15 @@
       --neu-xs:   3px 3px 8px var(--shadow-d), -2px -2px 7px var(--shadow-l);
     }
 
+    /* ═══════════════════════════════════════
+       BASE
+    ═══════════════════════════════════════ */
     *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent }
     html,body {
-      height:100%; overflow:hidden;
-      background:var(--bg); color:var(--text);
+      height:100%;
+      overflow:hidden;
+      background:var(--bg);
+      color:var(--text);
       font-family:'Inter',sans-serif;
       -webkit-font-smoothing:antialiased;
       transition:background 0.4s,color 0.4s
@@ -67,9 +75,9 @@
     .screen { display:none; flex-direction:column; height:100dvh; width:100%; position:absolute; top:0; left:0 }
     .screen.active { display:flex }
 
-    /* ═══════════════════════
-       LOGIN SCREEN
-    ═══════════════════════ */
+    /* ═══════════════════════════════════════
+       WELCOME / LOGIN SCREEN
+    ═══════════════════════════════════════ */
     #s-login {
       background: linear-gradient(160deg, #003d7a 0%, #0052A3 55%, #0066cc 100%);
       overflow: hidden;
@@ -77,7 +85,7 @@
       position: relative;
     }
 
-    /* Canvas covers the ENTIRE login screen */
+    /* ✅ FLOW LINES CANVAS */
     #flow-canvas {
       position: absolute;
       inset: 0;
@@ -87,42 +95,50 @@
       z-index: 1;
     }
 
+    /* ✅ LOGO STAGE */
     .logo-stage {
       position: absolute;
-      top: 30%;
+      top: 32%;
       left: 50%;
       transform: translate(-50%, -50%);
       z-index: 3;
       text-align: center;
       opacity: 0;
       animation: logoFadeIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      animation-delay: 1.6s;
+      animation-delay: 1.8s;
     }
 
     @keyframes logoFadeIn {
-      from { opacity: 0; transform: translate(-50%, -44%); }
-      to   { opacity: 1; transform: translate(-50%, -50%); }
+      0%   { opacity: 0; transform: translate(-50%, -44%); }
+      100% { opacity: 1; transform: translate(-50%, -50%); }
     }
 
     .logo-svg {
-      width: 120px; height: auto;
+      width: 120px;
+      height: auto;
       margin-bottom: 16px;
       filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
     }
 
     .logo-text {
-      color: white; font-size: 36px; font-weight: 700;
-      letter-spacing: 2px; margin-bottom: 6px;
+      color: white;
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-bottom: 6px;
       text-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
 
     .logo-sub {
-      color: rgba(255,255,255,0.9); font-size: 10px;
-      font-weight: 500; letter-spacing: 2.5px;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 2.5px;
       text-transform: uppercase;
       text-shadow: 0 1px 4px rgba(0,0,0,0.2);
     }
 
+    /* ✅ LOGIN CARD */
     .login-card {
       position: relative;
       z-index: 4;
@@ -134,49 +150,84 @@
       opacity: 0;
       transform: translateY(50px);
       animation: cardSlideUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      animation-delay: 2.4s;
+      animation-delay: 2.6s;
     }
 
     @keyframes cardSlideUp {
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .login-card h2 { font-size: 24px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; margin-bottom: 6px; }
-    .login-card p  { font-size: 14px; color: var(--text2); line-height: 1.65; margin-bottom: 28px; }
+    .login-card h2 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+
+    .login-card p {
+      font-size: 14px;
+      color: var(--text2);
+      line-height: 1.65;
+      margin-bottom: 28px;
+    }
 
     .google-btn {
-      display: flex; align-items: center; justify-content: center; gap: 12px;
-      width: 100%; padding: 15px 20px;
-      background: var(--bg); color: var(--text);
-      border: none; border-radius: 16px;
-      font-size: 15px; font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      padding: 15px 20px;
+      background: var(--bg);
+      color: var(--text);
+      border: none;
+      border-radius: 16px;
+      font-size: 15px;
+      font-weight: 600;
       font-family: 'Inter', sans-serif;
       cursor: pointer;
       box-shadow: var(--neu-out);
       transition: box-shadow 0.15s, transform 0.1s;
     }
-    .google-btn:active { box-shadow: var(--neu-in); transform: scale(0.98); }
-    .google-btn svg    { width: 20px; height: 20px; flex-shrink: 0; }
 
-    /* ═══════════════════════
+    .google-btn:active {
+      box-shadow: var(--neu-in);
+      transform: scale(0.98);
+    }
+
+    .google-btn svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    /* ═══════════════════════════════════════
        APP SHELL
-    ═══════════════════════ */
-    #s-app { background: var(--bg); flex-direction: column; }
+    ═══════════════════════════════════════ */
+    #s-app {
+      background: var(--bg);
+      flex-direction: column;
+    }
 
     .topbar {
       background: #0052A3;
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       padding: 14px 18px;
       padding-top: calc(env(safe-area-inset-top, 0px) + 14px);
       flex-shrink: 0;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
     }
 
     .tb-brand { display: flex; align-items: center; gap: 10px; }
     .tb-logo  { width: 36px; height: 36px; }
+
     .tb-brand-text { font-size: 16px; font-weight: 700; letter-spacing: 0.5px; }
-    .tb-brand-text .siadeel { color: #1a6bbf; }
-    .tb-brand-text .water   { color: white; }
+    .tb-brand-text .siadeel { color: #ffffff; }
+    .tb-brand-text .water   { color: #00e5cc; }
+
     .tb-right  { display: flex; align-items: center; gap: 12px; }
     .tb-title  { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.8); }
     .tb-avatar { width: 32px; height: 32px; border-radius: 50%; border: 2px solid white; object-fit: cover; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
@@ -191,18 +242,30 @@
     .mod-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
     .mod-card {
-      background: var(--bg); border-radius: 18px;
-      box-shadow: var(--neu-out); padding: 18px 14px;
-      cursor: pointer; transition: box-shadow 0.15s, transform 0.1s;
+      background: var(--bg);
+      border-radius: 18px;
+      box-shadow: var(--neu-out);
+      padding: 18px 14px;
+      cursor: pointer;
+      transition: box-shadow 0.15s, transform 0.1s;
     }
     .mod-card:active { box-shadow: var(--neu-in); transform: scale(0.98); }
-    .mod-card.wide { grid-column: span 2; display: flex; align-items: center; gap: 16px; padding: 16px 18px; }
+
+    .mod-card.wide {
+      grid-column: span 2;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 18px;
+    }
     .mod-card.wide .mod-icon-box { margin-bottom: 0; flex-shrink: 0; }
     .mod-card.wide .mod-value    { font-size: 22px; }
 
     .mod-icon-box {
-      width: 38px; height: 38px; border-radius: 12px;
-      background: var(--bg); box-shadow: var(--neu-xs);
+      width: 38px; height: 38px;
+      border-radius: 12px;
+      background: var(--bg);
+      box-shadow: var(--neu-xs);
       display: flex; align-items: center; justify-content: center;
       margin-bottom: 12px;
     }
@@ -211,12 +274,16 @@
     .mod-value { font-size: 28px; font-weight: 700; color: var(--blue); line-height: 1; letter-spacing: -1px; }
     .mod-sub   { font-size: 10px; color: var(--text3); margin-top: 2px; }
 
+    /* ═══════════════════════════════════════
+       BOTTOM NAV
+    ═══════════════════════════════════════ */
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0;
       background: var(--bg);
       padding: 10px 20px calc(10px + env(safe-area-inset-bottom, 0px));
       display: flex; align-items: center; justify-content: space-around;
-      box-shadow: 0 -3px 14px rgba(0,0,0,0.07); z-index: 40;
+      box-shadow: 0 -3px 14px rgba(0,0,0,0.07);
+      z-index: 40;
     }
     body.dark .bottom-nav { box-shadow: 0 -3px 14px rgba(0,0,0,0.4); }
 
@@ -228,12 +295,17 @@
     }
     .bnav.active { color: var(--blue); }
     .bnav-icon {
-      width: 42px; height: 42px; border-radius: 14px; background: var(--bg);
-      display: flex; align-items: center; justify-content: center; transition: box-shadow 0.2s;
+      width: 42px; height: 42px; border-radius: 14px;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      transition: box-shadow 0.2s;
     }
     .bnav:not(.active) .bnav-icon { box-shadow: var(--neu-sm); }
     .bnav.active .bnav-icon        { box-shadow: var(--neu-in); }
 
+    /* ═══════════════════════════════════════
+       TOAST
+    ═══════════════════════════════════════ */
     .toast {
       position: fixed;
       bottom: calc(80px + env(safe-area-inset-bottom, 0px));
@@ -246,6 +318,9 @@
     }
     .toast.show { opacity: 1; }
 
+    /* ═══════════════════════════════════════
+       PULL TO REFRESH
+    ═══════════════════════════════════════ */
     .ptr-indicator {
       position: fixed;
       top: calc(env(safe-area-inset-top, 0px) + 10px);
@@ -264,9 +339,15 @@
 </head>
 <body>
 
+  <!-- ═══════════════════════════════════════
+       WELCOME / LOGIN SCREEN
+  ═══════════════════════════════════════ -->
   <div class="screen active" id="s-login">
+
+    <!-- ✅ FLOW LINES CANVAS -->
     <canvas id="flow-canvas"></canvas>
 
+    <!-- ✅ LOGO STAGE -->
     <div class="logo-stage">
       <svg class="logo-svg" viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg">
         <path d="M0,40 Q100,25 200,40 T400,40" stroke="white" stroke-width="10" fill="none" stroke-linecap="round"/>
@@ -276,6 +357,7 @@
       <div class="logo-sub">Treatment &amp; Supply Services</div>
     </div>
 
+    <!-- ✅ LOGIN CARD -->
     <div class="login-card">
       <h2>Water Management</h2>
       <p>Sign in with your authorized Google account to access the Siadeel Water operations dashboard.</p>
@@ -291,6 +373,9 @@
     </div>
   </div>
 
+  <!-- ═══════════════════════════════════════
+       DASHBOARD SCREEN
+  ═══════════════════════════════════════ -->
   <div class="screen" id="s-app">
     <div class="topbar">
       <div class="tb-brand">
@@ -377,6 +462,7 @@
       var ctx    = canvas.getContext('2d');
       var lines  = [];
       var animId = null;
+      var startTime = null;
 
       function resize() {
         canvas.width  = window.innerWidth;
@@ -386,64 +472,50 @@
       function buildLines() {
         var H = canvas.height;
         lines = [];
-        // 12 lines spread across the FULL screen height
-        var count = 12;
+        var count = 8;
         for (var i = 0; i < count; i++) {
           lines.push({
-            // evenly distributed top to bottom
-            y:         (H / (count + 1)) * (i + 1),
-            // stagger the starting offset so they don't all move together
-            offset:    i * 0.42,
-            alpha:     0.10 + (i % 4) * 0.06,
-            thickness: 2.5 + (i % 3) * 1.5,
-            speed:     0.55 + (i % 5) * 0.18
+            y:         40 + i * (H * 0.62 / count),
+            progress:  -0.05 - i * 0.1,
+            alpha:     0.13 + i * 0.075,
+            thickness: 6 - i * 0.45,
+            speed:     0.0028 + i * 0.0009
           });
         }
       }
 
       function loop(ts) {
-        var t = ts / 1000;
+        if (!startTime) startTime = ts;
+        var t = (ts - startTime) / 1000;
         var W = canvas.width, H = canvas.height;
         ctx.clearRect(0, 0, W, H);
 
         lines.forEach(function(fl) {
-          // Each line sweeps across using a sine-based progress so it loops forever
-          // phase goes 0→1 continuously; visible window is when phase is between 0 and 1
-          var phase = ((t * fl.speed + fl.offset) % 2.4);
-          // line is "drawing in" from 0→1, then invisible from 1→2.4 (pause), then repeats
-          if (phase > 1.3) return; // hidden portion of the loop
-
-          var drawProgress = Math.min(phase / 1.0, 1.0);
-          var endX = W * drawProgress;
+          fl.progress = Math.min(fl.progress + fl.speed, 1.08);
+          var endX = W * Math.max(0, fl.progress);
 
           ctx.save();
           ctx.beginPath();
           ctx.moveTo(0, fl.y);
-          for (var x = 0; x <= endX; x += 4) {
-            var wave = Math.sin(x * 0.022 + t * 1.8 + fl.offset) * 4.5
-                     + Math.sin(x * 0.009 + t * 1.1 + fl.offset * 0.5) * 2.5;
+          for (var x = 0; x <= endX; x += 3) {
+            var wave = Math.sin(x * 0.025 + t * 2.0) * 3.5
+                     + Math.sin(x * 0.012 + t * 1.3) * 2.0;
             ctx.lineTo(x, fl.y + wave);
           }
-
-          // Fade out the tail using a gradient along the line
-          var grad = ctx.createLinearGradient(0, 0, endX, 0);
-          grad.addColorStop(0,   'rgba(255,255,255,0)');
-          grad.addColorStop(0.3, 'rgba(255,255,255,' + fl.alpha + ')');
-          grad.addColorStop(1.0, 'rgba(255,255,255,' + fl.alpha + ')');
-          ctx.strokeStyle = grad;
+          ctx.strokeStyle = 'rgba(255,255,255,' + fl.alpha + ')';
           ctx.lineWidth   = fl.thickness;
           ctx.lineCap     = 'round';
           ctx.stroke();
 
-          // Glowing tip at leading edge
-          if (drawProgress < 1.0) {
+          // glowing tip at leading edge
+          if (fl.progress < 1.0 && endX > 0) {
             var tipX = endX;
             var tipY = fl.y
-                     + Math.sin(tipX * 0.022 + t * 1.8 + fl.offset) * 4.5
-                     + Math.sin(tipX * 0.009 + t * 1.1 + fl.offset * 0.5) * 2.5;
+                     + Math.sin(tipX * 0.025 + t * 2.0) * 3.5
+                     + Math.sin(tipX * 0.012 + t * 1.3) * 2.0;
             ctx.beginPath();
-            ctx.arc(tipX, tipY, fl.thickness * 2.8, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255,255,255,' + (fl.alpha * 2.2) + ')';
+            ctx.arc(tipX, tipY, fl.thickness * 2.4, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,' + (fl.alpha * 1.9) + ')';
             ctx.fill();
           }
           ctx.restore();
@@ -455,13 +527,17 @@
       function start() {
         resize();
         buildLines();
+        startTime = null;
         if (animId) cancelAnimationFrame(animId);
         animId = requestAnimationFrame(loop);
       }
 
-      window.addEventListener('resize', function() { resize(); buildLines(); });
+      window.addEventListener('resize', function() {
+        resize();
+        buildLines();
+      });
 
-      // Stop when login screen is hidden
+      // Stop canvas when login screen is hidden — saves battery
       new MutationObserver(function() {
         var loginScreen = document.getElementById('s-login');
         if (!loginScreen.classList.contains('active')) {
@@ -490,7 +566,7 @@
 
     const ALL_MODULES = [
       { id: 'results',       icon: 'check',    label: 'Results',             stat: 'sv-results',   sub: 'Latest test results'   },
-      { id: 'trends',        icon: 'trend',    label: 'Trends',              stat: 'sv-trends',    sub: 'Performance analytics' },
+      { id: 'trends',        icon: 'trend',    label: 'Trends',             stat: 'sv-trends',    sub: 'Performance analytics' },
       { id: 'process',       icon: 'info',     label: 'Process Information', stat: 'sv-process',   sub: 'System operations',    wide: true },
       { id: 'water-quality', icon: 'droplet',  label: 'Water Quality',       stat: 'sv-quality',   sub: 'Current status'        },
       { id: 'treatment',     icon: 'filter',   label: 'Treatment',           stat: 'sv-treatment', sub: 'Active processes'      },
@@ -509,6 +585,9 @@
     let token  = null;
     let isDark = false;
 
+    // ═══════════════════════════════════════
+    // THEME
+    // ═══════════════════════════════════════
     function applyTheme(dark) {
       isDark = dark;
       document.body.classList.toggle('dark', dark);
@@ -516,6 +595,9 @@
     }
     applyTheme(localStorage.getItem('siadeel-theme') === 'dark');
 
+    // ═══════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════
     (function init() {
       let deferredPrompt;
       window.addEventListener('beforeinstallprompt', (e) => {
@@ -541,7 +623,9 @@
             reg.addEventListener('updatefound', () => {
               const nw = reg.installing;
               nw.addEventListener('statechange', () => {
-                if (nw.state === 'installed' && navigator.serviceWorker.controller) window.location.reload();
+                if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+                  window.location.reload();
+                }
               });
             });
           })
@@ -560,16 +644,23 @@
       } else {
         token = savedToken;
         loadUser();
+        // OPTIONAL: Force re-login every session — i-uncomment ang line sa ibaba
+         localStorage.removeItem('siadeel-token');
       }
     })();
 
+    // ═══════════════════════════════════════
+    // AUTH
+    // ═══════════════════════════════════════
     function signIn() {
       if (typeof google === 'undefined' || !google.accounts) {
         showToast('Loading Google Sign-In...');
         setTimeout(signIn, 800);
         return;
       }
+
       var hasGranted = localStorage.getItem('siadeel-scope-granted');
+
       google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
         scope: SCOPES,
@@ -591,7 +682,10 @@
       })
       .then(r => { if (!r.ok) throw new Error('Auth failed'); return r.json(); })
       .then(u => {
-        const authorized = AUTHORIZED_USERS.find(au => au.email.toLowerCase() === u.email.toLowerCase());
+        const authorized = AUTHORIZED_USERS.find(
+          au => au.email.toLowerCase() === u.email.toLowerCase()
+        );
+
         if (!authorized) {
           showToast('❌ Access denied. Your account is not authorized.');
           localStorage.removeItem('siadeel-token');
@@ -600,16 +694,24 @@
           document.getElementById('s-app').classList.remove('active');
           return;
         }
+
         localStorage.setItem('siadeel-name',    authorized.name);
         localStorage.setItem('siadeel-email',   u.email);
         localStorage.setItem('siadeel-picture', u.picture || '');
+
         document.getElementById('user-avatar').src = u.picture || '';
         document.getElementById('s-login').classList.remove('active');
         document.getElementById('s-app').classList.add('active');
+
         buildDashboard();
         loadDashboardStats();
         updateGreeting(authorized.name);
-        initPullToRefresh(document.querySelector('.page-wrap'), function(done) { loadDashboardStats(); setTimeout(done, 1000); });
+
+        initPullToRefresh(
+          document.querySelector('.page-wrap'),
+          function(done) { loadDashboardStats(); setTimeout(done, 1000); }
+        );
+
         initAutoRefresh(function(done) { loadDashboardStats(); done(); });
       })
       .catch(function(err) {
@@ -623,7 +725,8 @@
     }
 
     function updateGreeting(firstName) {
-      var now = new Date(), h = now.getHours();
+      var now = new Date();
+      var h   = now.getHours();
       var gr  = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
       document.getElementById('dash-name').textContent = gr + ', ' + firstName + '!';
       document.getElementById('dash-date').textContent = now.toLocaleDateString('en-PH', {
@@ -631,9 +734,12 @@
       });
     }
 
+    // ═══════════════════════════════════════
+    // DASHBOARD
+    // ═══════════════════════════════════════
     function buildDashboard() {
       document.getElementById('mod-grid').innerHTML = ALL_MODULES.map(m => {
-        const icon = ICONS[m.icon] || '';
+        const icon    = ICONS[m.icon] || '';
         const onclick = `showToast('${m.label} — coming soon')`;
         if (m.wide) {
           return `<div class="mod-card wide" onclick="${onclick}">
@@ -666,6 +772,9 @@
       }, 500);
     }
 
+    // ═══════════════════════════════════════
+    // TOAST
+    // ═══════════════════════════════════════
     let toastTimer;
     function showToast(msg) {
       const t = document.getElementById('toast');
@@ -675,15 +784,20 @@
       toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
     }
 
+    // ═══════════════════════════════════════
+    // PULL TO REFRESH
+    // ═══════════════════════════════════════
     function initPullToRefresh(scrollEl, onRefresh) {
       var startY = 0, pulling = false, threshold = 70;
       var indicator = document.createElement('div');
       indicator.className = 'ptr-indicator';
       indicator.innerHTML = '<div class="ptr-arrow" id="ptr-arrow">↓</div>';
       document.body.appendChild(indicator);
+
       scrollEl.addEventListener('touchstart', function(e) {
         if (scrollEl.scrollTop === 0) { startY = e.touches[0].clientY; pulling = true; }
       }, { passive: true });
+
       scrollEl.addEventListener('touchmove', function(e) {
         if (!pulling) return;
         var dist = e.touches[0].clientY - startY;
@@ -691,32 +805,46 @@
         var progress = Math.min(dist / threshold, 1);
         indicator.classList.add('visible');
         var arrow = document.getElementById('ptr-arrow');
-        if (arrow) { arrow.style.transform = 'rotate(' + (progress * 180) + 'deg)'; arrow.style.color = progress >= 1 ? 'var(--blue)' : 'var(--text3)'; }
+        if (arrow) {
+          arrow.style.transform = 'rotate(' + (progress * 180) + 'deg)';
+          arrow.style.color     = progress >= 1 ? 'var(--blue)' : 'var(--text3)';
+        }
       }, { passive: true });
+
       scrollEl.addEventListener('touchend', function(e) {
         if (!pulling) return;
         pulling = false;
         var dist = e.changedTouches[0].clientY - startY;
         if (dist >= threshold) {
           indicator.innerHTML = '<div class="ptr-spinner spinning"></div>';
-          onRefresh(function() { indicator.innerHTML = '<div class="ptr-arrow" id="ptr-arrow">↓</div>'; indicator.classList.remove('visible'); });
-        } else { indicator.classList.remove('visible'); }
+          onRefresh(function() {
+            indicator.innerHTML = '<div class="ptr-arrow" id="ptr-arrow">↓</div>';
+            indicator.classList.remove('visible');
+          });
+        } else {
+          indicator.classList.remove('visible');
+        }
       });
     }
 
+    // ═══════════════════════════════════════
+    // AUTO REFRESH
+    // ═══════════════════════════════════════
     function initAutoRefresh(onRefresh) {
       setInterval(function() {
-        var expiry = parseInt(localStorage.getItem('siadeel-token-expiry') || '0');
+        var expiry   = parseInt(localStorage.getItem('siadeel-token-expiry') || '0');
         var bufferMs = 10 * 60 * 1000;
+
         if (token && Date.now() >= (expiry - bufferMs)) {
           if (typeof google !== 'undefined' && google.accounts) {
             google.accounts.oauth2.initTokenClient({
-              client_id: CLIENT_ID, scope: SCOPES,
+              client_id: CLIENT_ID,
+              scope: SCOPES,
               callback: function(res) {
                 if (!res.error) {
                   token = res.access_token;
                   const expiresAt = Date.now() + (res.expires_in * 1000);
-                  localStorage.setItem('siadeel-token', token);
+                  localStorage.setItem('siadeel-token',        token);
                   localStorage.setItem('siadeel-token-expiry', expiresAt);
                 }
               }
@@ -724,6 +852,7 @@
           }
           return;
         }
+
         if (!token || Date.now() >= expiry) return;
         onRefresh(function() {});
       }, 5 * 60 * 1000);
