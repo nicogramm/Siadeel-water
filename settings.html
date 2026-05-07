@@ -881,6 +881,15 @@
       document.getElementById('theme-toggle').checked = isDark;
       applyTheme(isDark);
 
+        // ✅ BAGO: Listen for theme changes
+      window.addEventListener('storage', function(e) {
+        if (e.key === 'siadeel-theme' || !e.key) {
+          const newTheme = localStorage.getItem('siadeel-theme') === 'dark';
+          document.getElementById('theme-toggle').checked = newTheme;
+          applyTheme(newTheme);
+        }
+      });
+
       const savedFont = localStorage.getItem('siadeel-font') || 'Inter';
       document.getElementById('font-select').value = savedFont;
       if (savedFont !== 'Inter') changeFont();
@@ -935,6 +944,9 @@
       const checked = document.getElementById('theme-toggle').checked;
       applyTheme(checked);
       showToast(checked ? '🌙 Dark mode enabled' : '☀️ Light mode enabled');
+      
+      // ✅ BAGO: Trigger storage event para sa ibang tabs/pages
+      window.dispatchEvent(new Event('storage'));
     }
 
     function changeFont() {
