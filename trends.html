@@ -13,6 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
   
   <style>
     :root {
@@ -20,7 +21,7 @@
       --text: #0052A3; --text2: #5a6c7d; --text3: #8b98a5;
       --blue: #0052A3; --blue-d: #003d7a; --blue-l: #1a6bbf; --card: #f5f7fa;
       --red: #e74c3c; --red-d: #c0392b; --green: #27ae60; --green-d: #229954;
-      --yellow: #f39c12; --purple: #9b59b6;
+      --yellow: #f39c12; --purple: #9b59b6; --orange: #e67e22;
       --neu-out: 8px 8px 16px var(--shadow-d), -6px -6px 12px var(--shadow-l);
       --neu-in:  inset 5px 5px 10px var(--shadow-d), inset -4px -4px 9px var(--shadow-l);
       --neu-sm:  5px 5px 10px var(--shadow-d), -4px -4px 8px var(--shadow-l);
@@ -119,6 +120,61 @@
       display:grid; grid-template-columns:1fr 1fr; gap:12px;
     }
     
+    /* ✅ NEW: Comparison Mode Toggle */
+    .comparison-toggle {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:12px; background:var(--bg); border-radius:12px;
+      box-shadow:var(--neu-xs); margin-bottom:16px;
+    }
+    .comparison-label {
+      font-size:13px; font-weight:600; color:var(--text2);
+    }
+    .toggle-switch {
+      position:relative; width:48px; height:26px;
+      background:var(--shadow-d); border-radius:13px;
+      cursor:pointer; transition:background 0.3s;
+    }
+    .toggle-switch.active { background:var(--blue); }
+    .toggle-slider {
+      position:absolute; top:3px; left:3px;
+      width:20px; height:20px; background:white;
+      border-radius:50%; transition:transform 0.3s;
+      box-shadow:0 2px 4px rgba(0,0,0,0.2);
+    }
+    .toggle-switch.active .toggle-slider { transform:translateX(22px); }
+    
+    /* ✅ NEW: Multi-select for comparison */
+    .multi-select-wrapper {
+      position:relative;
+    }
+    .multi-select-display {
+      width:100%; padding:14px; background:var(--bg);
+      border:none; border-radius:12px; box-shadow:var(--neu-in);
+      font-size:14px; color:var(--text); font-family:'Inter',sans-serif;
+      cursor:pointer; text-align:left;
+    }
+    .multi-select-dropdown {
+      position:absolute; top:calc(100% + 8px); left:0; right:0;
+      background:var(--bg); border-radius:12px; box-shadow:var(--neu-out);
+      max-height:200px; overflow-y:auto; z-index:50;
+      display:none;
+    }
+    .multi-select-dropdown.show { display:block; }
+    .multi-select-option {
+      padding:12px 16px; cursor:pointer;
+      font-size:13px; color:var(--text2);
+      border-bottom:1px solid var(--shadow-d);
+      display:flex; align-items:center; gap:10px;
+    }
+    .multi-select-option:last-child { border-bottom:none; }
+    .multi-select-option:hover { background:var(--bg2); }
+    .multi-select-checkbox {
+      width:18px; height:18px; border-radius:4px;
+      background:var(--bg); box-shadow:var(--neu-in);
+      display:flex; align-items:center; justify-content:center;
+      font-size:12px; color:var(--blue);
+    }
+    
     .parameter-grid {
       display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;
       margin-bottom:16px;
@@ -138,6 +194,24 @@
     .parameter-btn.active {
       background:var(--blue); color:white;
       box-shadow:0 4px 12px rgba(0,82,163,0.3);
+    }
+    
+    /* ✅ NEW: Advanced Options */
+    .advanced-options {
+      margin-top:16px; padding-top:16px;
+      border-top:1px solid var(--shadow-d);
+    }
+    .advanced-title {
+      font-size:13px; font-weight:600; color:var(--text3);
+      margin-bottom:12px; text-transform:uppercase;
+      letter-spacing:0.5px;
+    }
+    .option-row {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:10px 0;
+    }
+    .option-label {
+      font-size:13px; color:var(--text2);
     }
     
     .analyze-btn {
@@ -179,6 +253,11 @@
     .stat-item {
       background:var(--bg); border-radius:12px;
       box-shadow:var(--neu-xs); padding:14px;
+      position:relative;
+    }
+    .stat-item.outlier::before {
+      content:'⚠️'; position:absolute; top:8px; right:8px;
+      font-size:14px;
     }
     .stat-label {
       font-size:10px; font-weight:600; letter-spacing:1px;
@@ -219,6 +298,9 @@
     .chart-title {
       font-size:15px; font-weight:700; color:var(--text);
     }
+    .chart-controls {
+      display:flex; gap:8px;
+    }
     .chart-type-toggle {
       display:flex; gap:6px; background:var(--bg);
       padding:4px; border-radius:10px; box-shadow:var(--neu-in);
@@ -233,8 +315,44 @@
       background:var(--blue); color:white;
       box-shadow:var(--neu-xs);
     }
+    .export-btn {
+      width:36px; height:36px; border-radius:10px;
+      background:var(--bg); border:none; box-shadow:var(--neu-sm);
+      color:var(--text); cursor:pointer; font-size:18px;
+      display:flex; align-items:center; justify-content:center;
+      transition:all 0.15s;
+    }
+    .export-btn:active {
+      box-shadow:var(--neu-in); transform:scale(0.95);
+    }
     .chart-container {
       position:relative; height:300px; width:100%;
+    }
+    
+    /* ✅ NEW: Prediction Card */
+    .prediction-card {
+      background:var(--bg); border-radius:12px;
+      box-shadow:var(--neu-xs); padding:16px;
+      margin-top:16px; display:none;
+    }
+    .prediction-card.show { display:block; }
+    .prediction-title {
+      font-size:12px; font-weight:600; color:var(--text3);
+      margin-bottom:12px; text-transform:uppercase;
+      letter-spacing:0.5px; display:flex; align-items:center; gap:6px;
+    }
+    .prediction-grid {
+      display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;
+    }
+    .prediction-item {
+      background:var(--bg); border-radius:8px;
+      box-shadow:var(--neu-xs); padding:10px;
+    }
+    .prediction-date {
+      font-size:10px; color:var(--text3); margin-bottom:4px;
+    }
+    .prediction-value {
+      font-size:16px; font-weight:700; color:var(--purple);
     }
     
     /* Weather Overlay */
@@ -315,11 +433,33 @@
           <span>Analysis Filters</span>
         </div>
         
-        <div class="form-group">
+        <!-- ✅ NEW: Comparison Mode Toggle -->
+        <div class="comparison-toggle" onclick="toggleComparisonMode()">
+          <div class="comparison-label">Compare Multiple Points</div>
+          <div class="toggle-switch" id="comparison-toggle">
+            <div class="toggle-slider"></div>
+          </div>
+        </div>
+        
+        <!-- Single Point Select (default) -->
+        <div class="form-group" id="single-point-group">
           <label class="form-label">Sample Point *</label>
           <select class="form-select" id="filter-point" required>
             <option value="">Select sample point...</option>
           </select>
+        </div>
+        
+        <!-- ✅ NEW: Multi-Point Select (comparison mode) -->
+        <div class="form-group" id="multi-point-group" style="display:none;">
+          <label class="form-label">Sample Points * (Select 2-4)</label>
+          <div class="multi-select-wrapper">
+            <div class="multi-select-display" id="multi-select-display" onclick="toggleMultiSelect()">
+              Select points...
+            </div>
+            <div class="multi-select-dropdown" id="multi-select-dropdown">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
         </div>
         
         <div class="form-group">
@@ -354,6 +494,32 @@
           </div>
         </div>
         
+        <!-- ✅ NEW: Advanced Options -->
+        <div class="advanced-options">
+          <div class="advanced-title">Advanced Options</div>
+          
+          <div class="option-row">
+            <div class="option-label">Show Outliers</div>
+            <div class="toggle-switch active" id="outliers-toggle" onclick="toggleOption('outliers')">
+              <div class="toggle-slider"></div>
+            </div>
+          </div>
+          
+          <div class="option-row">
+            <div class="option-label">Show Trend Line</div>
+            <div class="toggle-switch active" id="trendline-toggle" onclick="toggleOption('trendline')">
+              <div class="toggle-slider"></div>
+            </div>
+          </div>
+          
+          <div class="option-row">
+            <div class="option-label">7-Day Prediction</div>
+            <div class="toggle-switch" id="prediction-toggle" onclick="toggleOption('prediction')">
+              <div class="toggle-slider"></div>
+            </div>
+          </div>
+        </div>
+        
         <button class="analyze-btn" id="analyze-btn" onclick="analyzeData()">
           📊 Generate Trends
         </button>
@@ -372,14 +538,29 @@
       <div class="chart-card" id="chart-card">
         <div class="chart-header">
           <div class="chart-title" id="chart-title">Trend Chart</div>
-          <div class="chart-type-toggle">
-            <button class="chart-type-btn active" data-type="line" onclick="changeChartType('line')">Line</button>
-            <button class="chart-type-btn" data-type="bar" onclick="changeChartType('bar')">Bar</button>
+          <div class="chart-controls">
+            <div class="chart-type-toggle">
+              <button class="chart-type-btn active" data-type="line" onclick="changeChartType('line')">Line</button>
+              <button class="chart-type-btn" data-type="bar" onclick="changeChartType('bar')">Bar</button>
+            </div>
+            <button class="export-btn" onclick="exportChart()" title="Export Chart">
+              📥
+            </button>
           </div>
         </div>
         <div class="chart-container">
           <canvas id="trend-chart"></canvas>
         </div>
+        
+        <!-- ✅ NEW: Prediction Card -->
+        <div class="prediction-card" id="prediction-card">
+          <div class="prediction-title">
+            <span>🔮</span>
+            <span>7-Day Forecast (Linear Regression)</span>
+          </div>
+          <div class="prediction-grid" id="prediction-grid"></div>
+        </div>
+        
         <div class="weather-overlay" id="weather-overlay" style="display:none;">
           <div class="weather-overlay-title">Weather Conditions During Tests</div>
           <div class="weather-chips" id="weather-chips"></div>
@@ -404,7 +585,7 @@
     // ═══════════════════════════════════════
     // CONFIGURATION
     // ═══════════════════════════════════════
-    const CODE_VERSION = '1.0';
+    const CODE_VERSION = '2.0';
     console.log('🚀 Trends version:', CODE_VERSION);
     
     const SHEET_ID = '1-lhBa3FTi_gcFGS1Z0Q9w6yCYoq_BnToI3ZKBl8k8Cs';
@@ -416,8 +597,15 @@
     let entries = [];
     let samplePoints = [];
     let selectedParameters = [];
+    let selectedPoints = [];
     let currentChart = null;
     let currentChartType = 'line';
+    let comparisonMode = false;
+    
+    // Advanced options
+    let showOutliers = true;
+    let showTrendLine = true;
+    let showPrediction = false;
     
     // ═══════════════════════════════════════
     // THEME SYNC
@@ -531,6 +719,15 @@
       setupParameterButtons();
       setupDateDefaults();
       
+      // Close multi-select when clicking outside
+      document.addEventListener('click', (e) => {
+        const dropdown = document.getElementById('multi-select-dropdown');
+        const display = document.getElementById('multi-select-display');
+        if (!dropdown.contains(e.target) && !display.contains(e.target)) {
+          dropdown.classList.remove('show');
+        }
+      });
+      
       hideLoading();
     })();
     
@@ -562,6 +759,7 @@
           }).filter(p => p.Active === 'TRUE');
           
           populateSamplePointDropdown();
+          populateMultiSelect();
         }
       } catch (err) {
         console.error('Load sample points error:', err);
@@ -581,6 +779,22 @@
           option.textContent += ` (${point.Description})`;
         }
         select.appendChild(option);
+      });
+    }
+    
+    function populateMultiSelect() {
+      const dropdown = document.getElementById('multi-select-dropdown');
+      dropdown.innerHTML = '';
+      
+      samplePoints.forEach(point => {
+        const option = document.createElement('div');
+        option.className = 'multi-select-option';
+        option.innerHTML = `
+          <div class="multi-select-checkbox" id="checkbox-${point.Name}"></div>
+          <div>${point.Name}${point.Description ? ` (${point.Description})` : ''}</div>
+        `;
+        option.onclick = () => togglePointSelection(point.Name);
+        dropdown.appendChild(option);
       });
     }
     
@@ -625,7 +839,7 @@
     }
     
     // ═══════════════════════════════════════
-    // UI SETUP
+    // UI SETUP & CONTROLS
     // ═══════════════════════════════════════
     function setupParameterButtons() {
       const buttons = document.querySelectorAll('.parameter-btn');
@@ -656,65 +870,164 @@
       document.getElementById('filter-date-from').valueAsDate = thirtyDaysAgo;
     }
     
+    function toggleComparisonMode() {
+      comparisonMode = !comparisonMode;
+      
+      const toggle = document.getElementById('comparison-toggle');
+      toggle.classList.toggle('active', comparisonMode);
+      
+      document.getElementById('single-point-group').style.display = comparisonMode ? 'none' : 'block';
+      document.getElementById('multi-point-group').style.display = comparisonMode ? 'block' : 'none';
+      
+      updateAnalyzeButton();
+    }
+    
+    function toggleMultiSelect() {
+      const dropdown = document.getElementById('multi-select-dropdown');
+      dropdown.classList.toggle('show');
+    }
+    
+    function togglePointSelection(pointName) {
+      const checkbox = document.getElementById(`checkbox-${pointName}`);
+      
+      if (selectedPoints.includes(pointName)) {
+        selectedPoints = selectedPoints.filter(p => p !== pointName);
+        checkbox.textContent = '';
+      } else {
+        if (selectedPoints.length >= 4) {
+          showToast('⚠️ Maximum 4 points allowed');
+          return;
+        }
+        selectedPoints.push(pointName);
+        checkbox.textContent = '✓';
+      }
+      
+      updateMultiSelectDisplay();
+      updateAnalyzeButton();
+    }
+    
+    function updateMultiSelectDisplay() {
+      const display = document.getElementById('multi-select-display');
+      
+      if (selectedPoints.length === 0) {
+        display.textContent = 'Select points...';
+      } else {
+        display.textContent = selectedPoints.join(', ');
+      }
+    }
+    
+    function toggleOption(option) {
+      const toggle = document.getElementById(`${option}-toggle`);
+      toggle.classList.toggle('active');
+      
+      if (option === 'outliers') showOutliers = !showOutliers;
+      if (option === 'trendline') showTrendLine = !showTrendLine;
+      if (option === 'prediction') showPrediction = !showPrediction;
+    }
+    
     function updateAnalyzeButton() {
-      const point = document.getElementById('filter-point').value;
       const hasParams = selectedParameters.length > 0;
+      let hasPoints = false;
+      
+      if (comparisonMode) {
+        hasPoints = selectedPoints.length >= 2;
+      } else {
+        hasPoints = document.getElementById('filter-point').value !== '';
+      }
       
       const btn = document.getElementById('analyze-btn');
-      btn.disabled = !point || !hasParams;
+      btn.disabled = !hasPoints || !hasParams;
     }
     
     // ═══════════════════════════════════════
     // ANALYSIS LOGIC
     // ═══════════════════════════════════════
     function analyzeData() {
-      const point = document.getElementById('filter-point').value;
       const dateFrom = document.getElementById('filter-date-from').value;
       const dateTo = document.getElementById('filter-date-to').value;
       
-      if (!point || selectedParameters.length === 0) {
-        showToast('⚠️ Select sample point and parameters');
+      let pointsToAnalyze = [];
+      
+      if (comparisonMode) {
+        if (selectedPoints.length < 2) {
+          showToast('⚠️ Select at least 2 points for comparison');
+          return;
+        }
+        pointsToAnalyze = selectedPoints;
+      } else {
+        const point = document.getElementById('filter-point').value;
+        if (!point) {
+          showToast('⚠️ Select a sample point');
+          return;
+        }
+        pointsToAnalyze = [point];
+      }
+      
+      if (selectedParameters.length === 0) {
+        showToast('⚠️ Select at least one parameter');
         return;
       }
       
       showLoading();
       
-      // Filter entries
-      let filteredEntries = entries.filter(e => e['Sample Point'] === point);
+      // Filter entries for all selected points
+      let allFilteredEntries = [];
       
-      if (dateFrom) {
-        filteredEntries = filteredEntries.filter(e => e.Date >= dateFrom);
-      }
-      if (dateTo) {
-        filteredEntries = filteredEntries.filter(e => e.Date <= dateTo);
-      }
+      pointsToAnalyze.forEach(point => {
+        let filtered = entries.filter(e => e['Sample Point'] === point);
+        
+        if (dateFrom) {
+          filtered = filtered.filter(e => e.Date >= dateFrom);
+        }
+        if (dateTo) {
+          filtered = filtered.filter(e => e.Date <= dateTo);
+        }
+        
+        filtered.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+        
+        allFilteredEntries.push({ point, data: filtered });
+      });
       
-      // Sort by date
-      filteredEntries.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+      const totalEntries = allFilteredEntries.reduce((sum, p) => sum + p.data.length, 0);
       
-      if (filteredEntries.length === 0) {
+      if (totalEntries === 0) {
         hideLoading();
         showToast('⚠️ No data found for selected filters');
         hideResults();
         return;
       }
       
-      console.log('📊 Analyzing', filteredEntries.length, 'entries');
+      console.log('📊 Analyzing', totalEntries, 'entries across', pointsToAnalyze.length, 'points');
       
       // Generate statistics
-      generateStatistics(filteredEntries);
+      if (comparisonMode) {
+        generateComparisonStatistics(allFilteredEntries);
+      } else {
+        generateStatistics(allFilteredEntries[0].data);
+      }
       
       // Generate chart
-      generateChart(filteredEntries);
+      generateChart(allFilteredEntries);
       
-      // Show weather overlay
-      generateWeatherOverlay(filteredEntries);
+      // Show weather overlay (only for single point)
+      if (!comparisonMode) {
+        generateWeatherOverlay(allFilteredEntries[0].data);
+      } else {
+        document.getElementById('weather-overlay').style.display = 'none';
+      }
+      
+      // Generate predictions if enabled
+      if (showPrediction && !comparisonMode) {
+        generatePredictions(allFilteredEntries[0].data);
+      } else {
+        document.getElementById('prediction-card').classList.remove('show');
+      }
       
       // Show results
       showResults();
       
       hideLoading();
-      showToast(`✅ Analyzed ${filteredEntries.length} entries`);
+      showToast(`✅ Analyzed ${totalEntries} entries`);
     }
     
     // ═══════════════════════════════════════
@@ -733,38 +1046,100 @@
         
         if (values.length === 0) return;
         
-        const min = Math.min(...values);
-        const max = Math.max(...values);
-        const avg = values.reduce((a, b) => a + b, 0) / values.length;
-        
-        // Trend direction
-        const firstHalf = values.slice(0, Math.floor(values.length / 2));
-        const secondHalf = values.slice(Math.floor(values.length / 2));
-        const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
-        const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
-        const trend = secondAvg > firstAvg ? 'up' : secondAvg < firstAvg ? 'down' : 'stable';
-        
+        const stats = calculateStatistics(values);
         const unit = getParameterUnit(param);
         
+        // Detect outliers
+        const isOutlier = showOutliers && stats.hasOutliers;
+        
         const statItem = document.createElement('div');
-        statItem.className = 'stat-item';
+        statItem.className = 'stat-item' + (isOutlier ? ' outlier' : '');
         statItem.innerHTML = `
           <div class="stat-label">${param}</div>
           <div class="stat-value">
-            ${avg.toFixed(2)}
+            ${stats.avg.toFixed(2)}
             <span class="stat-unit">${unit}</span>
           </div>
           <div style="font-size:11px; color:var(--text3); margin-top:4px;">
-            Min: ${min.toFixed(2)} | Max: ${max.toFixed(2)}
+            Min: ${stats.min.toFixed(2)} | Max: ${stats.max.toFixed(2)}
           </div>
-          <div class="trend-indicator ${trend}">
-            ${trend === 'up' ? '↗' : trend === 'down' ? '↘' : '→'}
-            ${trend === 'up' ? 'Increasing' : trend === 'down' ? 'Decreasing' : 'Stable'}
+          <div style="font-size:10px; color:var(--text3); margin-top:2px;">
+            σ: ${stats.stdDev.toFixed(2)}
+          </div>
+          <div class="trend-indicator ${stats.trend}">
+            ${stats.trend === 'up' ? '↗' : stats.trend === 'down' ? '↘' : '→'}
+            ${stats.trend === 'up' ? 'Increasing' : stats.trend === 'down' ? 'Decreasing' : 'Stable'}
           </div>
         `;
         
         statsGrid.appendChild(statItem);
       });
+    }
+    
+    function generateComparisonStatistics(allData) {
+      const statsGrid = document.getElementById('stats-grid');
+      statsGrid.innerHTML = '';
+      
+      const totalEntries = allData.reduce((sum, p) => sum + p.data.length, 0);
+      document.getElementById('stats-badge').textContent = `${totalEntries} entries`;
+      
+      allData.forEach(({ point, data }) => {
+        selectedParameters.forEach(param => {
+          const values = data
+            .map(e => parseFloat(e[param]))
+            .filter(v => !isNaN(v) && v !== null);
+          
+          if (values.length === 0) return;
+          
+          const stats = calculateStatistics(values);
+          const unit = getParameterUnit(param);
+          
+          const statItem = document.createElement('div');
+          statItem.className = 'stat-item';
+          statItem.innerHTML = `
+            <div class="stat-label">${point} — ${param}</div>
+            <div class="stat-value">
+              ${stats.avg.toFixed(2)}
+              <span class="stat-unit">${unit}</span>
+            </div>
+            <div style="font-size:11px; color:var(--text3); margin-top:4px;">
+              ${values.length} readings
+            </div>
+            <div class="trend-indicator ${stats.trend}">
+              ${stats.trend === 'up' ? '↗' : stats.trend === 'down' ? '↘' : '→'}
+            </div>
+          `;
+          
+          statsGrid.appendChild(statItem);
+        });
+      });
+    }
+    
+    function calculateStatistics(values) {
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const avg = values.reduce((a, b) => a + b, 0) / values.length;
+      
+      // Standard deviation
+      const variance = values.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / values.length;
+      const stdDev = Math.sqrt(variance);
+      
+      // Outlier detection (values beyond 2 standard deviations)
+      const hasOutliers = values.some(v => Math.abs(v - avg) > 2 * stdDev);
+      
+      // Trend direction
+      const firstHalf = values.slice(0, Math.floor(values.length / 2));
+      const secondHalf = values.slice(Math.floor(values.length / 2));
+      const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+      const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+      
+      const changePercent = ((secondAvg - firstAvg) / firstAvg) * 100;
+      let trend = 'stable';
+      if (Math.abs(changePercent) > 5) {
+        trend = secondAvg > firstAvg ? 'up' : 'down';
+      }
+      
+      return { min, max, avg, stdDev, hasOutliers, trend };
     }
     
     function getParameterUnit(param) {
@@ -780,43 +1155,141 @@
     }
     
     // ═══════════════════════════════════════
-    // CHART GENERATION
+    // ✅ CHART GENERATION WITH DUAL AXIS
     // ═══════════════════════════════════════
-    function generateChart(data) {
+    function generateChart(allData) {
       const ctx = document.getElementById('trend-chart').getContext('2d');
       
       if (currentChart) {
         currentChart.destroy();
       }
       
-      const datasets = selectedParameters.map((param, index) => {
-        const values = data.map(e => ({
-          x: e.Date,
-          y: parseFloat(e[param]) || null
-        }));
-        
-        const colors = [
-          '#0052A3', '#27ae60', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c'
-        ];
-        
-        return {
-          label: param,
-          data: values,
-          borderColor: colors[index % colors.length],
-          backgroundColor: colors[index % colors.length] + '20',
-          borderWidth: 3,
-          tension: 0.4,
-          fill: currentChartType === 'line',
-          pointRadius: 5,
-          pointHoverRadius: 7,
-          pointBackgroundColor: colors[index % colors.length],
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2
-        };
+      const datasets = [];
+      const colors = [
+        '#0052A3', '#27ae60', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c',
+        '#e67e22', '#34495e', '#16a085', '#c0392b', '#8e44ad', '#2980b9'
+      ];
+      
+      let colorIndex = 0;
+      
+      // Build datasets
+      allData.forEach(({ point, data }) => {
+        selectedParameters.forEach(param => {
+          const values = data.map(e => ({
+            x: e.Date,
+            y: parseFloat(e[param]) || null
+          }));
+          
+          const color = colors[colorIndex % colors.length];
+          colorIndex++;
+          
+          const label = comparisonMode ? `${point} — ${param}` : param;
+          
+          datasets.push({
+            label,
+            data: values,
+            borderColor: color,
+            backgroundColor: color + '20',
+            borderWidth: 3,
+            tension: 0.4,
+            fill: currentChartType === 'line',
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            pointBackgroundColor: color,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            yAxisID: selectedParameters.length > 1 && !comparisonMode ? getYAxisId(param) : 'y'
+          });
+        });
       });
       
       const textColor = isDark ? '#8b98a5' : '#5a6c7d';
       const gridColor = isDark ? '#2e3547' : '#e9ecf1';
+      
+      // ✅ Build scales dynamically
+      const scales = {
+        x: {
+          type: 'time',
+          time: {
+            unit: 'day',
+            displayFormats: { day: 'MMM d' }
+          },
+          grid: {
+            color: gridColor,
+            drawBorder: false
+          },
+          ticks: {
+            color: textColor,
+            font: { size: 10 }
+          }
+        },
+        y: {
+          position: 'left',
+          beginAtZero: false,
+          grid: {
+            color: gridColor,
+            drawBorder: false
+          },
+          ticks: {
+            color: textColor,
+            font: { size: 10 }
+          },
+          title: {
+            display: selectedParameters.length > 1 && !comparisonMode,
+            text: selectedParameters[0] ? `${selectedParameters[0]} (${getParameterUnit(selectedParameters[0])})` : '',
+            color: textColor,
+            font: { size: 11, weight: '600' }
+          }
+        }
+      };
+      
+      // ✅ Add second Y-axis if multiple parameters (single point mode)
+      if (selectedParameters.length > 1 && !comparisonMode) {
+        scales.y1 = {
+          position: 'right',
+          beginAtZero: false,
+          grid: {
+            drawOnChartArea: false
+          },
+          ticks: {
+            color: textColor,
+            font: { size: 10 }
+          },
+          title: {
+            display: true,
+            text: selectedParameters[1] ? `${selectedParameters[1]} (${getParameterUnit(selectedParameters[1])})` : '',
+            color: textColor,
+            font: { size: 11, weight: '600' }
+          }
+        };
+      }
+      
+      // ✅ Build annotations (trend lines)
+      const annotations = {};
+      
+      if (showTrendLine && !comparisonMode) {
+        selectedParameters.forEach((param, idx) => {
+          const values = allData[0].data
+            .map(e => parseFloat(e[param]))
+            .filter(v => !isNaN(v) && v !== null);
+          
+          if (values.length < 2) return;
+          
+          const regression = linearRegression(values);
+          
+          annotations[`trendline-${idx}`] = {
+            type: 'line',
+            yMin: regression.predict(0),
+            yMax: regression.predict(values.length - 1),
+            xMin: allData[0].data[0].Date,
+            xMax: allData[0].data[allData[0].data.length - 1].Date,
+            borderColor: colors[idx] + '80',
+            borderWidth: 2,
+            borderDash: [5, 5],
+            yScaleID: getYAxisId(param)
+          };
+        });
+      }
       
       currentChart = new Chart(ctx, {
         type: currentChartType,
@@ -830,13 +1303,15 @@
           },
           plugins: {
             legend: {
-              display: selectedParameters.length > 1,
+              display: true,
               position: 'bottom',
               labels: {
                 color: textColor,
-                font: { size: 11, weight: '600' },
-                padding: 12,
-                usePointStyle: true
+                font: { size: 10, weight: '600' },
+                padding: 10,
+                usePointStyle: true,
+                boxWidth: 8,
+                boxHeight: 8
               }
             },
             tooltip: {
@@ -849,48 +1324,34 @@
               displayColors: true,
               callbacks: {
                 label: function(context) {
-                  const param = context.dataset.label;
+                  const label = context.dataset.label;
                   const value = context.parsed.y;
-                  const unit = getParameterUnit(param);
-                  return `${param}: ${value} ${unit}`;
+                  return `${label}: ${value}`;
                 }
               }
+            },
+            annotation: {
+              annotations
             }
           },
-          scales: {
-            x: {
-              type: 'time',
-              time: {
-                unit: 'day',
-                displayFormats: { day: 'MMM d' }
-              },
-              grid: {
-                color: gridColor,
-                drawBorder: false
-              },
-              ticks: {
-                color: textColor,
-                font: { size: 10 }
-              }
-            },
-            y: {
-              beginAtZero: false,
-              grid: {
-                color: gridColor,
-                drawBorder: false
-              },
-              ticks: {
-                color: textColor,
-                font: { size: 10 }
-              }
-            }
-          }
+          scales
         }
       });
       
-      const point = document.getElementById('filter-point').value;
-      document.getElementById('chart-title').textContent = 
-        `${point} — ${selectedParameters.join(', ')}`;
+      // Update chart title
+      if (comparisonMode) {
+        document.getElementById('chart-title').textContent = 
+          `Comparison: ${selectedPoints.join(' vs ')}`;
+      } else {
+        const point = allData[0].point;
+        document.getElementById('chart-title').textContent = 
+          `${point} — ${selectedParameters.join(', ')}`;
+      }
+    }
+    
+    function getYAxisId(param) {
+      const index = selectedParameters.indexOf(param);
+      return index === 0 ? 'y' : 'y1';
     }
     
     function changeChartType(type) {
@@ -901,22 +1362,7 @@
       });
       
       if (currentChart) {
-        const point = document.getElementById('filter-point').value;
-        const dateFrom = document.getElementById('filter-date-from').value;
-        const dateTo = document.getElementById('filter-date-to').value;
-        
-        let filteredEntries = entries.filter(e => e['Sample Point'] === point);
-        
-        if (dateFrom) {
-          filteredEntries = filteredEntries.filter(e => e.Date >= dateFrom);
-        }
-        if (dateTo) {
-          filteredEntries = filteredEntries.filter(e => e.Date <= dateTo);
-        }
-        
-        filteredEntries.sort((a, b) => new Date(a.Date) - new Date(b.Date));
-        
-        generateChart(filteredEntries);
+        analyzeData();
       }
     }
     
@@ -932,12 +1378,104 @@
       currentChart.options.plugins.tooltip.bodyColor = textColor;
       currentChart.options.plugins.tooltip.borderColor = gridColor;
       
-      currentChart.options.scales.x.grid.color = gridColor;
-      currentChart.options.scales.x.ticks.color = textColor;
-      currentChart.options.scales.y.grid.color = gridColor;
-      currentChart.options.scales.y.ticks.color = textColor;
+      Object.keys(currentChart.options.scales).forEach(scaleKey => {
+        currentChart.options.scales[scaleKey].grid.color = gridColor;
+        currentChart.options.scales[scaleKey].ticks.color = textColor;
+        if (currentChart.options.scales[scaleKey].title) {
+          currentChart.options.scales[scaleKey].title.color = textColor;
+        }
+      });
       
       currentChart.update();
+    }
+    
+    // ═══════════════════════════════════════
+    // ✅ LINEAR REGRESSION & PREDICTION
+    // ═══════════════════════════════════════
+    function linearRegression(values) {
+      const n = values.length;
+      let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+      
+      for (let i = 0; i < n; i++) {
+        sumX += i;
+        sumY += values[i];
+        sumXY += i * values[i];
+        sumX2 += i * i;
+      }
+      
+      const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+      const intercept = (sumY - slope * sumX) / n;
+      
+      return {
+        slope,
+        intercept,
+        predict: (x) => slope * x + intercept
+      };
+    }
+    
+    function generatePredictions(data) {
+      const predictionGrid = document.getElementById('prediction-grid');
+      predictionGrid.innerHTML = '';
+      
+      const param = selectedParameters[0]; // Use first parameter for prediction
+      
+      const values = data
+        .map(e => parseFloat(e[param]))
+        .filter(v => !isNaN(v) && v !== null);
+      
+      if (values.length < 3) {
+        document.getElementById('prediction-card').classList.remove('show');
+        return;
+      }
+      
+      const regression = linearRegression(values);
+      const lastDate = new Date(data[data.length - 1].Date);
+      
+      for (let i = 1; i <= 7; i++) {
+        const futureDate = new Date(lastDate);
+        futureDate.setDate(futureDate.getDate() + i);
+        
+        const predictedValue = regression.predict(values.length + i - 1);
+        const unit = getParameterUnit(param);
+        
+        const item = document.createElement('div');
+        item.className = 'prediction-item';
+        item.innerHTML = `
+          <div class="prediction-date">${futureDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+          <div class="prediction-value">
+            ${predictedValue.toFixed(2)}
+            <span class="stat-unit">${unit}</span>
+          </div>
+        `;
+        
+        predictionGrid.appendChild(item);
+      }
+      
+      document.getElementById('prediction-card').classList.add('show');
+    }
+    
+    // ═══════════════════════════════════════
+    // ✅ EXPORT CHART
+    // ═══════════════════════════════════════
+    function exportChart() {
+      if (!currentChart) {
+        showToast('⚠️ No chart to export');
+        return;
+      }
+      
+      const url = currentChart.toBase64Image();
+      const link = document.createElement('a');
+      
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = comparisonMode 
+        ? `siadeel-comparison-${timestamp}.png`
+        : `siadeel-trends-${timestamp}.png`;
+      
+      link.download = filename;
+      link.href = url;
+      link.click();
+      
+      showToast('✅ Chart exported!');
     }
     
     // ═══════════════════════════════════════
@@ -1031,7 +1569,7 @@
     }
     
     // ═══════════════════════════════════════
-    // DROPDOWN CHANGE HANDLER
+    // EVENT LISTENERS
     // ═══════════════════════════════════════
     document.getElementById('filter-point').addEventListener('change', updateAnalyzeButton);
   </script>
