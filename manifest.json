@@ -1,25 +1,21 @@
 {
   "name": "Siadeel Water",
   "short_name": "Siadeel",
-  "description": "Water Treatment & Supply Services Management",
   "start_url": "./index.html",
-  "scope": "./",
   "display": "standalone",
   "background_color": "#0052A3",
   "theme_color": "#0052A3",
-  "orientation": "portrait",
+  "description": "Water Treatment & Supply Services",
   "icons": [
     {
-      "src": "./icon-192.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
-      "src": "./icon-512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
