@@ -1225,103 +1225,192 @@
     }
 
     async function submitEntry(event) {
-      event.preventDefault();
-      
-      if (!token) {
-        showToast('❌ Not authenticated');
-        return;
-      }
-      
-      const date = document.getElementById('input-date').value;
-      const point = document.getElementById('input-point').value;
-      
-      if (!date || !point) {
-        showToast('⚠️ Date and Sample Point are required');
-        return;
-      }
-      
-      const editRowIndex = document.getElementById('edit-row-index').value;
-      const isEditMode = editRowIndex !== '';
-      
-      showToast(isEditMode ? '⏳ Updating entry...' : '⏳ Saving entry...');
-      
-      const desc = document.getElementById('input-desc').value;
-      const pH = document.getElementById('input-ph').value;
-      const conductivity = document.getElementById('input-conductivity').value;
-      const chlorine = document.getElementById('input-chlorine').value;
-      const iron = document.getElementById('input-iron').value;
-      const hardness = document.getElementById('input-hardness').value;
-      const turbidity = document.getElementById('input-turbidity').value;
-      
-        // ✅ ENHANCED: Get full weather object
-      const weatherData = await getCurrentWeather();
-      const weatherString = weatherData ? JSON.stringify(weatherData) : 'N/A';
-      
-      const imageFile = document.getElementById('input-image').files[0];
-      let imageUrl = '';
-      if (imageFile) {
-        imageUrl = await resizeAndUploadImage(imageFile);
-      } else if (isEditMode && currentEntry) {
-        imageUrl = currentEntry.Picture || '';
-      }
-      
-      const id = isEditMode ? currentEntry.ID : Date.now();
-      
-      const rowData = [
-        id, date, point, desc, pH, conductivity, chlorine, iron, hardness, turbidity, imageUrl, weatherString
-      ];
-      
-      if (isEditMode) {
-        const range = `${SHEET_NAME}!A${editRowIndex}:L${editRowIndex}`;
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
-        
-        fetch(url, {
-          method: 'PUT',
-          headers: {
-            'Authorization': 'Bearer ' + token,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            values: [rowData]
-          })
-        })
-        .then(r => r.json())
-        .then(data => {
-          showToast('✅ Entry updated!');
-          closeAddModal();
-          loadEntries();
-          setTimeout(() => selectDate(date), 500);
-        })
-        .catch(err => {
-          console.error('Update error:', err);
-          showToast('❌ Failed to update entry');
-        });
-      } else {
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:L:append?valueInputOption=USER_ENTERED`;
-        
-        fetch(url, {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Bearer ' + token,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            values: [rowData]
-          })
-        })
-        .then(r => r.json())
-        .then(data => {
-          showToast('✅ Entry saved!');
-          closeAddModal();
-          loadEntries();
-          document.getElementById('entry-form').reset();
-        })
-        .catch(err => {
-          console.error('Save error:', err);
-          showToast('❌ Failed to save entry');
-        });
-      }
+  event.preventDefault();
+  console.log('🚀 submitEntry() called');
+  
+  if (!token) {
+    console.error('❌ No token found');
+    showToast('❌ Not authenticated');
+    return;
+  }
+  console.log('✅ Token exists:', token.substring(0, 20) + '...');
+  
+  const date = document.getElementById('input-date').value;
+  const point = document.getElementById('input-point').value;
+  
+  console.log('📅 Date:', date);
+  console.log('📍 Sample Point:', point);
+  
+  if (!date || !point) {
+    console.error('❌ Missing required fields');
+    showToast('⚠️ Date and Sample Point are required');
+    return;
+  }
+  
+  const editRowIndex = document.getElementById('edit-row-index').value;
+  const isEditMode = editRowIndex !== '';
+  
+  console.log('🔄 Edit mode:', isEditMode);
+  
+  showToast(isEditMode ? '⏳ Updating entry...' : '⏳ Saving entry...');
+  
+  const desc = document.getElementById('input-desc').value;
+  const pH = document.getElementById('input-ph').value;
+  const conductivity = document.getElementById('input-conductivity').value;
+  const chlorine = document.getElementById('input-chlorine').value;
+  const iron = document.getElementById('input-iron').value;
+  const hardness = document.getElementById('input-hardness').value;
+  const turbidity = document.getElementById('input-turbidity').value;
+  
+  console.log('📊 Form values:', { desc, pH, conductivity, chlorine, iron, hardness, turbidity });
+  
+  // ✅ Get weather with error handling
+  console.log('🌤️ Fetching weather...');
+  let weatherString = 'N/A';
+  try {
+    const weatherData = await getCurrentWeather();
+    console.log('🌤️ Weather data received:', weatherData);
+    weatherString = weatherData ? JSON.stringify(weatherData) : 'N/A';
+    console.log('🌤️ Weather string length:', weatherString.length);
+  } catch (err) {
+    console.error('⚠️ Weather fetch failed:', err);
+    weatherString = 'N/A';
+  }
+  
+  // ✅ Handle image
+  console.log('📷 Processing image...');
+  const imageFile = document.getElementById('input-image').files[0];
+  let imageUrl = '';
+  if (imageFile) {
+    console.log('📷 Image file found:', imageFile.name, imageFile.size, 'bytes');
+    try {
+      imageUrl = await resizeAndUploadImage(imageFile);
+      console.log('📷 Image processed, data URL length:', imageUrl.length);
+    } catch (err) {
+      console.error('❌ Image processing failed:', err);
+      showToast('⚠️ Image processing failed, continuing without image');
     }
+  } else if (isEditMode && currentEntry) {
+    imageUrl = currentEntry.Picture || '';
+    console.log('📷 Using existing image from entry');
+  } else {
+    console.log('📷 No image provided');
+  }
+  
+  const id = isEditMode ? currentEntry.ID : Date.now();
+  console.log('🆔 Entry ID:', id);
+  
+  const rowData = [
+    id, date, point, desc, pH, conductivity, chlorine, iron, hardness, turbidity, imageUrl, weatherString
+  ];
+  
+  console.log('📤 Row data prepared (12 columns):', rowData);
+  console.log('📤 Row data lengths:', rowData.map(v => String(v).length));
+  
+  // ✅ Check if any value is too large
+  const totalSize = rowData.reduce((sum, val) => sum + String(val).length, 0);
+  console.log('📏 Total data size:', totalSize, 'characters');
+  
+  if (totalSize > 50000) {
+    console.error('❌ Data too large:', totalSize);
+    showToast('❌ Data too large (image or weather data). Try without image.');
+    return;
+  }
+  
+  if (isEditMode) {
+    console.log('🔄 UPDATE MODE');
+    const range = `${SHEET_NAME}!A${editRowIndex}:L${editRowIndex}`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
+    
+    console.log('🌐 Update URL:', url);
+    console.log('📍 Update range:', range);
+    
+    try {
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ values: [rowData] })
+      });
+      
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response OK:', response.ok);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Response error body:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+      
+      const data = await response.json();
+      console.log('✅ Update successful:', data);
+      
+      showToast('✅ Entry updated!');
+      closeAddModal();
+      loadEntries();
+      setTimeout(() => selectDate(date), 500);
+    } catch (err) {
+      console.error('❌ Update error:', err);
+      showToast('❌ Update failed: ' + err.message);
+    }
+    
+  } else {
+    console.log('➕ CREATE MODE');
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:L:append?valueInputOption=USER_ENTERED`;
+    
+    console.log('🌐 Append URL:', url);
+    console.log('📋 Sheet name:', SHEET_NAME);
+    console.log('📋 Sheet ID:', SHEET_ID);
+    
+    try {
+      const requestBody = { values: [rowData] };
+      console.log('📤 Request body:', JSON.stringify(requestBody).substring(0, 500) + '...');
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+      
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response OK:', response.ok);
+      console.log('📡 Response headers:', [...response.headers.entries()]);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Response error body:', errorText);
+        
+        // Try to parse as JSON for better error message
+        try {
+          const errorJson = JSON.parse(errorText);
+          console.error('❌ Parsed error:', errorJson);
+          throw new Error(`API Error: ${errorJson.error?.message || errorText}`);
+        } catch (parseErr) {
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+      }
+      
+      const data = await response.json();
+      console.log('✅ Save successful:', data);
+      
+      showToast('✅ Entry saved!');
+      closeAddModal();
+      loadEntries();
+      document.getElementById('entry-form').reset();
+      
+    } catch (err) {
+      console.error('❌ Save error full stack:', err);
+      console.error('❌ Error name:', err.name);
+      console.error('❌ Error message:', err.message);
+      showToast('❌ Save failed: ' + err.message);
+    }
+  }
+}
 
     function editCurrentEntry() {
       if (!currentEntry) {
