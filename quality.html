@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0052A3">
+  <title>Quality Documents - Siadeel Water</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg: #f5f7fa; --bg2: #e9ecf1; --shadow-d: #c8d1dc; --shadow-l: #ffffff;
+      --text: #0052A3; --text2: #5a6c7d; --text3: #8b98a5;
+      --blue: #0052A3; --blue-d: #003d7a; --blue-l: #1a6bbf; --card: #f5f7fa;
+      --red: #e74c3c; --red-d: #c0392b; --green: #27ae60; --green-d: #229954;
+      --yellow: #f39c12; --purple: #9b59b6; --orange: #e67e22;
+      --neu-out: 8px 8px 16px var(--shadow-d), -6px -6px 12px var(--shadow-l);
+      --neu-in:  inset 5px 5px 10px var(--shadow-d), inset -4px -4px 9px var(--shadow-l);
+      --neu-sm:  5px 5px 10px var(--shadow-d), -4px -4px 8px var(--shadow-l);
+      --neu-xs:  3px 3px 7px var(--shadow-d), -2px -2px 6px var(--shadow-l);
+    }
+    
+    body.dark {
+      --bg: #1a1f2e; --bg2: #232a3a; --shadow-d: #0f1219; --shadow-l: #2e3547;
+      --text: #1a6bbf; --text2: #8b98a5; --text3: #5a6c7d; --card: #1a1f2e;
+      --neu-out: 6px 6px 14px var(--shadow-d), -4px -4px 10px var(--shadow-l);
+      --neu-in:  inset 5px 5px 10px var(--shadow-d), inset -4px -4px 9px var(--shadow-l);
+      --neu-sm:  5px 5px 10px var(--shadow-d), -4px -4px 8px var(--shadow-l);
+      --neu-xs:  3px 3px 8px var(--shadow-d), -2px -2px 7px var(--shadow-l);
+    }
+    
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent }
+    html,body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; transition:background 0.4s,color 0.4s }
+    
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7); z-index: 500;
+      display: none; align-items: center; justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    .loading-overlay.show { display: flex; }
+    .loading-spinner {
+      width: 60px; height: 60px;
+      border: 4px solid rgba(255, 255, 255, 0.2);
+      border-top-color: white; border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .quality-page { display:flex; flex-direction:column; height:100dvh; width:100%; }
+    
+    /* Header */
+    .quality-header {
+      background:#0052A3; padding:14px 18px;
+      padding-top:calc(env(safe-area-inset-top,0px) + 14px);
+      display:flex; align-items:center; justify-content:space-between;
+      box-shadow:0 3px 10px rgba(0,0,0,0.15);
+      position:relative; overflow:hidden; z-index:10;
+    }
+    #header-wave-canvas {
+      position:absolute; top:0; left:0; width:100%; height:100%;
+      pointer-events:none; z-index:1; opacity:0.3;
+    }
+    .quality-back {
+      width:36px; height:36px; border-radius:10px;
+      background:rgba(255,255,255,0.15); border:none;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; transition:background 0.2s; color:white;
+      position:relative; z-index:2;
+    }
+    .quality-back:active { background:rgba(255,255,255,0.25); }
+    .quality-header h1 {
+      font-size:20px; font-weight:700; color:white;
+      letter-spacing:0.5px; position:relative; z-index:2;
+    }
+    .add-doc-btn {
+      width:36px; height:36px; border-radius:10px;
+      background:rgba(255,255,255,0.15); border:none;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; transition:background 0.2s; color:white;
+      position:relative; z-index:2; font-size:24px; font-weight:300;
+    }
+    .add-doc-btn:active { background:rgba(255,255,255,0.25); }
+    
+    /* Content */
+    .quality-content {
+      flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
+      padding:20px 18px; padding-bottom:calc(40px + env(safe-area-inset-bottom,0px));
+    }
+    
+    /* Stats Cards */
+    .stats-row {
+      display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;
+      margin-bottom:20px;
+    }
+    .stat-card {
+      background:var(--bg); border-radius:14px;
+      box-shadow:var(--neu-out); padding:16px;
+      text-align:center;
+    }
+    .stat-icon {
+      font-size:28px; margin-bottom:8px;
+    }
+    .stat-value {
+      font-size:24px; font-weight:700; color:var(--blue);
+      margin-bottom:4px;
+    }
+    .stat-label {
+      font-size:11px; font-weight:600; color:var(--text3);
+      text-transform:uppercase; letter-spacing:0.5px;
+    }
+    
+    /* Filter Bar */
+    .filter-bar {
+      background:var(--bg); border-radius:14px;
+      box-shadow:var(--neu-out); padding:16px;
+      margin-bottom:20px;
+    }
+    .filter-tabs {
+      display:flex; gap:8px; overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+    }
+    .filter-tabs::-webkit-scrollbar { display:none; }
+    .filter-tab {
+      padding:10px 16px; background:var(--bg);
+      border:none; border-radius:10px; box-shadow:var(--neu-sm);
+      font-size:13px; font-weight:600; color:var(--text2);
+      cursor:pointer; white-space:nowrap;
+      transition:all 0.2s; font-family:'Inter',sans-serif;
+    }
+    .filter-tab:active {
+      box-shadow:var(--neu-in); transform:scale(0.98);
+    }
+    .filter-tab.active {
+      background:var(--blue); color:white;
+      box-shadow:0 4px 12px rgba(0,82,163,0.3);
+    }
+    
+    /* Search Bar */
+    .search-bar {
+      background:var(--bg); border-radius:14px;
+      box-shadow:var(--neu-out); padding:16px;
+      margin-bottom:20px;
+    }
+    .search-input-wrapper {
+      position:relative;
+    }
+    .search-icon {
+      position:absolute; left:14px; top:50%;
+      transform:translateY(-50%); font-size:18px;
+      color:var(--text3); pointer-events:none;
+    }
+    .search-input {
+      width:100%; padding:14px 14px 14px 44px;
+      background:var(--bg); border:none; border-radius:12px;
+      box-shadow:var(--neu-in); font-size:14px;
+      color:var(--text); font-family:'Inter',sans-serif;
+      outline:none;
+    }
+    .search-input:focus {
+      box-shadow:var(--neu-in), 0 0 0 2px var(--blue-l);
+    }
+    
+    /* Documents Grid */
+    .documents-grid {
+      display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+      gap:16px;
+    }
+    
+    .document-card {
+      background:var(--bg); border-radius:16px;
+      box-shadow:var(--neu-out); padding:16px;
+      cursor:pointer; transition:transform 0.2s;
+      position:relative; overflow:hidden;
+    }
+    .document-card:active { transform:scale(0.98); }
+    
+    .document-preview {
+      width:100%; height:180px; border-radius:12px;
+      object-fit:cover; margin-bottom:12px;
+      box-shadow:var(--neu-sm); background:var(--bg2);
+      display:flex; align-items:center; justify-content:center;
+      font-size:64px; color:var(--text3);
+    }
+    .document-preview img {
+      width:100%; height:100%; object-fit:cover;
+      border-radius:12px;
+    }
+    
+    .document-info {
+      margin-bottom:12px;
+    }
+    .document-title {
+      font-size:15px; font-weight:700; color:var(--text);
+      margin-bottom:6px; line-height:1.3;
+      display:-webkit-box; -webkit-line-clamp:2;
+      -webkit-box-orient:vertical; overflow:hidden;
+    }
+    .document-meta {
+      display:flex; align-items:center; gap:12px;
+      font-size:11px; color:var(--text3);
+    }
+    .document-meta-item {
+      display:flex; align-items:center; gap:4px;
+    }
+    
+    .document-tags {
+      display:flex; flex-wrap:wrap; gap:6px;
+      margin-bottom:12px;
+    }
+    .document-tag {
+      padding:4px 10px; background:var(--bg);
+      border-radius:6px; box-shadow:var(--neu-xs);
+      font-size:10px; font-weight:600; color:var(--text2);
+    }
+    .document-tag.lab { background:rgba(39,174,96,0.1); color:var(--green); }
+    .document-tag.cert { background:rgba(0,82,163,0.1); color:var(--blue); }
+    .document-tag.report { background:rgba(243,156,18,0.1); color:var(--yellow); }
+    
+    .document-actions {
+      display:flex; gap:8px;
+    }
+    .doc-action-btn {
+      flex:1; padding:10px; background:var(--bg);
+      border:none; border-radius:10px; box-shadow:var(--neu-sm);
+      font-size:12px; font-weight:600; color:var(--text2);
+      cursor:pointer; transition:all 0.15s;
+      font-family:'Inter',sans-serif;
+    }
+    .doc-action-btn:active {
+      box-shadow:var(--neu-in); transform:scale(0.98);
+    }
+    .doc-action-btn.primary {
+      background:var(--blue); color:white;
+      box-shadow:0 4px 12px rgba(0,82,163,0.3);
+    }
+    .doc-action-btn.danger {
+      background:var(--red); color:white;
+      box-shadow:0 4px 12px rgba(231,76,60,0.3);
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align:center; padding:60px 20px;
+      color:var(--text3);
+    }
+    .empty-icon {
+      font-size:64px; margin-bottom:16px; opacity:0.3;
+    }
+    .empty-title {
+      font-size:18px; font-weight:600; color:var(--text2);
+      margin-bottom:8px;
+    }
+    .empty-message {
+      font-size:14px; line-height:1.6;
+    }
+    
+    /* Upload Modal */
+    .modal {
+      position:fixed; top:0; left:0; right:0; bottom:0;
+      background:rgba(0,0,0,0.5); z-index:100;
+      display:none; align-items:flex-end; justify-content:center;
+    }
+    .modal.show { display:flex; }
+    .modal-content {
+      background:var(--bg); border-radius:28px 28px 0 0;
+      width:100%; max-height:85vh; overflow-y:auto;
+      padding:24px; padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));
+      box-shadow:0 -8px 32px rgba(0,0,0,0.2);
+      animation:slideUp 0.3s cubic-bezier(0.16,1,0.3,1);
+    }
+    @keyframes slideUp {
+      from { transform:translateY(100%); }
+      to { transform:translateY(0); }
+    }
+    .modal-header {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:20px;
+    }
+    .modal-title {
+      font-size:20px; font-weight:700; color:var(--text);
+    }
+    .modal-close {
+      width:32px; height:32px; border-radius:8px;
+      background:var(--bg); border:none; box-shadow:var(--neu-xs);
+      color:var(--text); cursor:pointer; font-size:20px;
+    }
+    
+    .upload-methods {
+      display:grid; grid-template-columns:1fr 1fr; gap:12px;
+      margin-bottom:20px;
+    }
+    .upload-method-btn {
+      padding:40px 20px; background:var(--bg);
+      border:none; border-radius:16px; box-shadow:var(--neu-out);
+      cursor:pointer; transition:all 0.15s;
+      font-family:'Inter',sans-serif;
+    }
+    .upload-method-btn:active {
+      box-shadow:var(--neu-in); transform:scale(0.98);
+    }
+    .upload-method-icon {
+      font-size:48px; margin-bottom:12px;
+    }
+    .upload-method-label {
+      font-size:14px; font-weight:600; color:var(--text);
+    }
+    
+    .form-group {
+      margin-bottom:16px;
+    }
+    .form-label {
+      font-size:12px; font-weight:600; color:var(--text2);
+      margin-bottom:8px; display:block;
+    }
+    .form-input, .form-select, .form-textarea {
+      width:100%; padding:14px; background:var(--bg);
+      border:none; border-radius:12px; box-shadow:var(--neu-in);
+      font-size:14px; color:var(--text); font-family:'Inter',sans-serif;
+      outline:none;
+    }
+    .form-textarea {
+      min-height:100px; resize:vertical;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      box-shadow:var(--neu-in), 0 0 0 2px var(--blue-l);
+    }
+    
+    .image-preview-container {
+      margin-top:16px; display:none;
+    }
+    .image-preview-container.show { display:block; }
+    .image-preview {
+      width:100%; max-height:300px; object-fit:contain;
+      border-radius:12px; box-shadow:var(--neu-sm);
+    }
+    
+    .submit-btn {
+      width:100%; padding:16px; background:var(--blue);
+      border:none; border-radius:14px; color:white;
+      font-size:15px; font-weight:600; cursor:pointer;
+      box-shadow:0 4px 12px rgba(0,82,163,0.3);
+      transition:transform 0.1s; font-family:'Inter',sans-serif;
+    }
+    .submit-btn:active { transform:scale(0.98); }
+    .submit-btn:disabled {
+      opacity:0.5; cursor:not-allowed;
+    }
+    
+    /* View Document Modal */
+    .view-modal {
+      position:fixed; top:0; left:0; right:0; bottom:0;
+      background:rgba(0,0,0,0.9); z-index:200;
+      display:none; align-items:center; justify-content:center;
+      padding:20px;
+    }
+    .view-modal.show { display:flex; }
+    .view-modal-content {
+      max-width:100%; max-height:100%;
+      position:relative;
+    }
+    .view-modal-image {
+      max-width:100%; max-height:90vh;
+      object-fit:contain; border-radius:12px;
+    }
+    .view-modal-close {
+      position:absolute; top:-40px; right:0;
+      width:36px; height:36px; border-radius:50%;
+      background:white; border:none; color:#000;
+      font-size:24px; cursor:pointer;
+    }
+    .view-modal-actions {
+      position:absolute; bottom:-50px; left:50%;
+      transform:translateX(-50%); display:flex; gap:12px;
+    }
+    .view-action-btn {
+      padding:12px 20px; background:white;
+      border:none; border-radius:10px; color:#000;
+      font-size:14px; font-weight:600; cursor:pointer;
+      font-family:'Inter',sans-serif;
+    }
+    
+    /* Confirm Modal */
+    .confirm-modal {
+      position:fixed; top:0; left:0; right:0; bottom:0;
+      background:rgba(0,0,0,0.6); z-index:150;
+      display:none; align-items:center; justify-content:center;
+      padding:20px;
+    }
+    .confirm-modal.show { display:flex; }
+    .confirm-content {
+      background:var(--bg); border-radius:18px;
+      padding:24px; max-width:320px; width:100%;
+      box-shadow:0 8px 32px rgba(0,0,0,0.3);
+      animation:popIn 0.2s cubic-bezier(0.16,1,0.3,1);
+    }
+    @keyframes popIn {
+      from { transform:scale(0.9); opacity:0; }
+      to { transform:scale(1); opacity:1; }
+    }
+    .confirm-title {
+      font-size:18px; font-weight:700; color:var(--text);
+      margin-bottom:12px;
+    }
+    .confirm-message {
+      font-size:14px; color:var(--text2); line-height:1.6;
+      margin-bottom:20px;
+    }
+    .confirm-actions {
+      display:flex; gap:10px;
+    }
+    .confirm-btn {
+      flex:1; padding:12px; border:none; border-radius:12px;
+      font-size:14px; font-weight:600; cursor:pointer;
+      transition:transform 0.1s; font-family:'Inter',sans-serif;
+    }
+    .confirm-btn.cancel {
+      background:var(--bg); color:var(--text);
+      box-shadow:var(--neu-sm);
+    }
+    .confirm-btn.cancel:active {
+      box-shadow:var(--neu-in); transform:scale(0.98);
+    }
+    .confirm-btn.confirm {
+      background:var(--red); color:white;
+      box-shadow:0 4px 12px rgba(231,76,60,0.3);
+    }
+    .confirm-btn.confirm:active {
+      background:var(--red-d); transform:scale(0.98);
+    }
+    
+    /* Toast */
+    .toast {
+      position:fixed; bottom:calc(30px + env(safe-area-inset-bottom,0px));
+      left:50%; transform:translateX(-50%); background:var(--bg);
+      border-radius:14px; box-shadow:var(--neu-out);
+      border-left:4px solid var(--blue); padding:14px 24px;
+      font-size:13px; font-weight:500; color:var(--text);
+      z-index:300; white-space:nowrap; opacity:0;
+      pointer-events:none; transition:opacity 0.3s; max-width:90%;
+    }
+    .toast.show { opacity:1; }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <div class="quality-page">
+    <!-- Header -->
+    <div class="quality-header">
+      <canvas id="header-wave-canvas"></canvas>
+      <button class="quality-back" onclick="goBack()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <h1>Quality Documents</h1>
+      <button class="add-doc-btn" onclick="openUploadModal()">+</button>
+    </div>
+
+    <!-- Content -->
+    <div class="quality-content">
+      <!-- Stats Row -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon">📄</div>
+          <div class="stat-value" id="total-docs">0</div>
+          <div class="stat-label">Total Docs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🏆</div>
+          <div class="stat-value" id="total-certs">0</div>
+          <div class="stat-label">Certificates</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🔬</div>
+          <div class="stat-value" id="total-labs">0</div>
+          <div class="stat-label">Lab Results</div>
+        </div>
+      </div>
+      
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-filter="all" onclick="filterDocuments('all')">
+            All Documents
+          </button>
+          <button class="filter-tab" data-filter="certificate" onclick="filterDocuments('certificate')">
+            🏆 Certificates
+          </button>
+          <button class="filter-tab" data-filter="lab-result" onclick="filterDocuments('lab-result')">
+            🔬 Lab Results
+          </button>
+          <button class="filter-tab" data-filter="report" onclick="filterDocuments('report')">
+            📊 Reports
+          </button>
+          <button class="filter-tab" data-filter="permit" onclick="filterDocuments('permit')">
+            📋 Permits
+          </button>
+        </div>
+      </div>
+      
+      <!-- Search Bar -->
+      <div class="search-bar">
+        <div class="search-input-wrapper">
+          <div class="search-icon">🔍</div>
+          <input type="text" class="search-input" id="search-input" 
+                 placeholder="Search documents..." 
+                 oninput="searchDocuments()">
+        </div>
+      </div>
+      
+      <!-- Documents Grid -->
+      <div class="documents-grid" id="documents-grid">
+        <!-- Populated dynamically -->
+      </div>
+      
+      <!-- Empty State -->
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">📁</div>
+        <div class="empty-title">No Documents Yet</div>
+        <div class="empty-message">
+          Tap the + button above to upload<br>
+          certificates, lab results, or reports.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Modal -->
+  <div class="modal" id="upload-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Upload Document</div>
+        <button class="modal-close" onclick="closeUploadModal()">×</button>
+      </div>
+      
+      <div class="upload-methods" id="upload-methods">
+        <button class="upload-method-btn" onclick="openCamera()">
+          <div class="upload-method-icon">📷</div>
+          <div class="upload-method-label">Take Photo</div>
+        </button>
+        <button class="upload-method-btn" onclick="openFilePicker()">
+          <div class="upload-method-icon">📁</div>
+          <div class="upload-method-label">Choose File</div>
+        </button>
+      </div>
+      
+      <form id="document-form" onsubmit="submitDocument(event)" style="display:none;">
+        <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFileSelect(event)">
+        <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none" onchange="handleFileSelect(event)">
+        
+        <div class="image-preview-container" id="image-preview-container">
+          <img class="image-preview" id="image-preview" src="" alt="">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Document Title *</label>
+          <input type="text" class="form-input" id="doc-title" 
+                 placeholder="e.g., Water Quality Certificate 2024" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Document Type *</label>
+          <select class="form-select" id="doc-type" required>
+            <option value="">Select type...</option>
+            <option value="certificate">🏆 Certificate</option>
+            <option value="lab-result">🔬 Lab Result</option>
+            <option value="report">📊 Report</option>
+            <option value="permit">📋 Permit</option>
+            <option value="other">📄 Other</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Issuing Body</label>
+          <input type="text" class="form-input" id="doc-issuer" 
+                 placeholder="e.g., Bureau Veritas, DOH, etc.">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Issue Date</label>
+          <input type="date" class="form-input" id="doc-date">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Expiry Date (if applicable)</label>
+          <input type="date" class="form-input" id="doc-expiry">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea class="form-textarea" id="doc-notes" 
+                    placeholder="Additional information..."></textarea>
+        </div>
+        
+        <button type="submit" class="submit-btn" id="submit-btn">
+          💾 Save Document
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- View Document Modal -->
+  <div class="view-modal" id="view-modal">
+    <div class="view-modal-content">
+      <button class="view-modal-close" onclick="closeViewModal()">×</button>
+      <img class="view-modal-image" id="view-modal-image" src="" alt="">
+      <div class="view-modal-actions">
+        <button class="view-action-btn" onclick="downloadDocument()">
+          📥 Download
+        </button>
+        <button class="view-action-btn" onclick="shareDocument()">
+          📤 Share
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Delete Modal -->
+  <div class="confirm-modal" id="confirm-modal">
+    <div class="confirm-content">
+      <div class="confirm-title">Delete Document?</div>
+      <div class="confirm-message" id="confirm-message">
+        This will permanently delete this document. This action cannot be undone.
+      </div>
+      <div class="confirm-actions">
+        <button class="confirm-btn cancel" onclick="closeConfirmModal()">Cancel</button>
+        <button class="confirm-btn confirm" onclick="deleteCurrentDocument()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ═══════════════════════════════════════
+    // CONFIGURATION
+    // ═══════════════════════════════════════
+    const CODE_VERSION = '1.0';
+    console.log('🚀 Quality Documents version:', CODE_VERSION);
+    
+    const SHEET_ID = '1-lhBa3FTi_gcFGS1Z0Q9w6yCYoq_BnToI3ZKBl8k8Cs';
+    const DOCUMENTS_SHEET = 'QualityDocuments';
+    
+    let token = null;
+    let isDark = false;
+    let documents = [];
+    let currentFilter = 'all';
+    let currentDocument = null;
+    let currentImageData = null;
+    
+    // ═══════════════════════════════════════
+    // THEME SYNC
+    // ═══════════════════════════════════════
+    const themeChannel = new BroadcastChannel('siadeel-theme-channel');
+    themeChannel.onmessage = (event) => {
+      if (event.data.type === 'theme-change') {
+        applyTheme(event.data.isDark);
+      }
+    };
+
+    function applyTheme(dark) {
+      isDark = dark;
+      document.body.classList.toggle('dark', dark);
+    }
+
+    applyTheme(localStorage.getItem('siadeel-theme') === 'dark');
+    
+    // ═══════════════════════════════════════
+    // LOADING STATE
+    // ═══════════════════════════════════════
+    function showLoading() {
+      document.getElementById('loading-overlay').classList.add('show');
+    }
+    
+    function hideLoading() {
+      document.getElementById('loading-overlay').classList.remove('show');
+    }
+    
+    // ═══════════════════════════════════════
+    // WAVE ANIMATION
+    // ═══════════════════════════════════════
+    (function initWaves() {
+      const canvas = document.getElementById('header-wave-canvas');
+      const ctx = canvas.getContext('2d');
+      let animId = null;
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+
+      function resize() {
+        const header = canvas.parentElement;
+        const W = header.offsetWidth;
+        const H = header.offsetHeight;
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        canvas.style.width = W + 'px';
+        canvas.style.height = H + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      const WAVES = [
+        { yBase: 0.5, amp1: 3, amp2: 2, freq1: 0.015, freq2: 0.030, speed: 0.3, alpha: 0.15, color: '255,255,255' },
+        { yBase: 0.7, amp1: 4, amp2: 2, freq1: 0.012, freq2: 0.025, speed: 0.4, alpha: 0.20, color: '180,230,255' }
+      ];
+
+      function loop(ts) {
+        const t = ts / 1000;
+        const W = canvas.width / dpr;
+        const H = canvas.height / dpr;
+        ctx.clearRect(0, 0, W, H);
+
+        for (let i = 0; i < WAVES.length; i++) {
+          const layer = WAVES[i];
+          const yCenter = H * layer.yBase;
+          const phase = t * layer.speed;
+
+          ctx.beginPath();
+          ctx.moveTo(0, H);
+          for (let x = 0; x <= W; x += 2) {
+            const y = yCenter
+              + Math.sin(x * layer.freq1 + phase * 2.0) * layer.amp1
+              + Math.sin(x * layer.freq2 - phase * 1.4) * layer.amp2;
+            if (x === 0) ctx.lineTo(0, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.lineTo(W, H);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(' + layer.color + ',' + layer.alpha + ')';
+          ctx.fill();
+        }
+
+        animId = requestAnimationFrame(loop);
+      }
+
+      window.addEventListener('resize', resize);
+      resize();
+      animId = requestAnimationFrame(loop);
+    })();
+    
+    // ═══════════════════════════════════════
+    // INITIALIZATION
+    // ═══════════════════════════════════════
+    (async function init() {
+      token = localStorage.getItem('siadeel-token');
+      const expiry = localStorage.getItem('siadeel-token-expiry');
+      const bufferMs = 5 * 60 * 1000;
+      
+      if (!token || !expiry || Date.now() >= (parseInt(expiry) - bufferMs)) {
+        showToast('⚠️ Session expired. Redirecting...');
+        setTimeout(() => window.location.href = 'index.html', 2000);
+        return;
+      }
+      
+      showLoading();
+      
+      await loadDocuments();
+      updateStats();
+      renderDocuments();
+      
+      hideLoading();
+    })();
+    
+    // ═══════════════════════════════════════
+    // DATA LOADING
+    // ═══════════════════════════════════════
+    async function loadDocuments() {
+      if (!token) return;
+      
+      try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${DOCUMENTS_SHEET}!A:J`;
+        
+        const response = await fetch(url, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            // Sheet doesn't exist yet, create it
+            console.log('Documents sheet not found, will create on first upload');
+            documents = [];
+            return;
+          }
+          throw new Error('Failed to load documents');
+        }
+        
+        const data = await response.json();
+        
+        if (data.values && data.values.length > 1) {
+          const headers = data.values[0];
+          
+          documents = data.values.slice(1).map((row, index) => {
+            const obj = { _rowIndex: index + 2 };
+            
+            headers.forEach((h, i) => {
+              obj[h] = row[i] || '';
+            });
+            
+            return obj;
+          });
+          
+          console.log('✅ Loaded', documents.length, 'documents');
+        }
+      } catch (err) {
+        console.error('Load documents error:', err);
+        if (err.message !== 'Failed to load documents') {
+          showToast('⚠️ ' + err.message);
+        }
+      }
+    }
+    
+    // ═══════════════════════════════════════
+    // STATS UPDATE
+    // ═══════════════════════════════════════
+    function updateStats() {
+      document.getElementById('total-docs').textContent = documents.length;
+      
+      const certs = documents.filter(d => d.Type === 'certificate').length;
+      document.getElementById('total-certs').textContent = certs;
+      
+      const labs = documents.filter(d => d.Type === 'lab-result').length;
+      document.getElementById('total-labs').textContent = labs;
+    }
+    
+    // ═══════════════════════════════════════
+    // RENDER DOCUMENTS
+    // ═══════════════════════════════════════
+    function renderDocuments() {
+      const grid = document.getElementById('documents-grid');
+      const emptyState = document.getElementById('empty-state');
+      
+      let filtered = documents;
+      
+      // Apply filter
+      if (currentFilter !== 'all') {
+        filtered = documents.filter(d => d.Type === currentFilter);
+      }
+      
+      // Apply search
+      const searchTerm = document.getElementById('search-input').value.toLowerCase();
+      if (searchTerm) {
+        filtered = filtered.filter(d => 
+          d.Title.toLowerCase().includes(searchTerm) ||
+          (d.Issuer && d.Issuer.toLowerCase().includes(searchTerm)) ||
+          (d.Notes && d.Notes.toLowerCase().includes(searchTerm))
+        );
+      }
+      
+      if (filtered.length === 0) {
+        grid.style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+      }
+      
+      grid.style.display = 'grid';
+      emptyState.style.display = 'none';
+      
+      grid.innerHTML = filtered.map(doc => {
+        const typeIcon = getTypeIcon(doc.Type);
+        const typeClass = doc.Type;
+        const issueDate = doc.IssueDate ? new Date(doc.IssueDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A';
+        const fileSize = doc.Image ? `${Math.round(doc.Image.length / 1024)} KB` : 'N/A';
+        
+        return `
+          <div class="document-card" onclick='viewDocument(${JSON.stringify(doc).replace(/'/g, "&apos;")})'>
+            <div class="document-preview">
+              ${doc.Image ? `<img src="${doc.Image}" alt="${doc.Title}">` : typeIcon}
+            </div>
+            <div class="document-info">
+              <div class="document-title">${doc.Title}</div>
+              <div class="document-meta">
+                <div class="document-meta-item">
+                  <span>📅</span>
+                  <span>${issueDate}</span>
+                </div>
+                <div class="document-meta-item">
+                  <span>💾</span>
+                  <span>${fileSize}</span>
+                </div>
+              </div>
+            </div>
+            <div class="document-tags">
+              <div class="document-tag ${typeClass}">${getTypeLabel(doc.Type)}</div>
+              ${doc.Issuer ? `<div class="document-tag">${doc.Issuer}</div>` : ''}
+            </div>
+            <div class="document-actions" onclick="event.stopPropagation()">
+              <button class="doc-action-btn primary" onclick='viewDocument(${JSON.stringify(doc).replace(/'/g, "&apos;")})'>
+                👁️ View
+              </button>
+              <button class="doc-action-btn danger" onclick='confirmDeleteDocument(${JSON.stringify(doc).replace(/'/g, "&apos;")})'>
+                🗑️
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function getTypeIcon(type) {
+      const icons = {
+        'certificate': '🏆',
+        'lab-result': '🔬',
+        'report': '📊',
+        'permit': '📋',
+        'other': '📄'
+      };
+      return `<div style="font-size:64px">${icons[type] || '📄'}</div>`;
+    }
+    
+    function getTypeLabel(type) {
+      const labels = {
+        'certificate': 'Certificate',
+        'lab-result': 'Lab Result',
+        'report': 'Report',
+        'permit': 'Permit',
+        'other': 'Other'
+      };
+      return labels[type] || 'Document';
+    }
+    
+    // ═══════════════════════════════════════
+    // FILTER & SEARCH
+    // ═══════════════════════════════════════
+    function filterDocuments(filter) {
+      currentFilter = filter;
+      
+      document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.filter === filter);
+      });
+      
+      renderDocuments();
+    }
+    
+    function searchDocuments() {
+      renderDocuments();
+    }
+    
+    // ═══════════════════════════════════════
+    // UPLOAD MODAL
+    // ═══════════════════════════════════════
+    function openUploadModal() {
+      document.getElementById('upload-modal').classList.add('show');
+      document.getElementById('upload-methods').style.display = 'grid';
+      document.getElementById('document-form').style.display = 'none';
+      currentImageData = null;
+    }
+    
+    function closeUploadModal() {
+      document.getElementById('upload-modal').classList.remove('show');
+      document.getElementById('document-form').reset();
+      document.getElementById('image-preview-container').classList.remove('show');
+      currentImageData = null;
+    }
+    
+    function openCamera() {
+      document.getElementById('camera-input').click();
+    }
+    
+    function openFilePicker() {
+      document.getElementById('file-input').click();
+    }
+    
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          // Resize image
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 1200;
+          const MAX_HEIGHT = 1200;
+          
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          
+          if (resizedDataUrl.length > 500000) {
+            showToast('⚠️ Image too large (max 500KB)');
+            return;
+          }
+          
+          currentImageData = resizedDataUrl;
+          
+          document.getElementById('image-preview').src = resizedDataUrl;
+          document.getElementById('image-preview-container').classList.add('show');
+          
+          document.getElementById('upload-methods').style.display = 'none';
+          document.getElementById('document-form').style.display = 'block';
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+    
+    // ═══════════════════════════════════════
+    // SUBMIT DOCUMENT
+    // ═══════════════════════════════════════
+    async function submitDocument(event) {
+      event.preventDefault();
+      
+      if (!token || !currentImageData) {
+        showToast('❌ Missing data');
+        return;
+      }
+      
+      showLoading();
+      
+      const title = document.getElementById('doc-title').value;
+      const type = document.getElementById('doc-type').value;
+      const issuer = document.getElementById('doc-issuer').value;
+      const issueDate = document.getElementById('doc-date').value;
+      const expiry = document.getElementById('doc-expiry').value;
+      const notes = document.getElementById('doc-notes').value;
+      
+      const id = Date.now();
+      const uploadDate = new Date().toISOString().split('T')[0];
+      
+      const rowData = [
+        id, title, type, issuer, issueDate, expiry, notes, currentImageData, uploadDate
+      ];
+      
+      try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${DOCUMENTS_SHEET}!A:I:append?valueInputOption=USER_ENTERED`;
+        
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ values: [rowData] })
+        });
+        
+        if (!response.ok) throw new Error('Upload failed');
+        
+        showToast('✅ Document uploaded!');
+        
+        closeUploadModal();
+        await loadDocuments();
+        updateStats();
+        renderDocuments();
+        
+      } catch (err) {
+        console.error('Upload error:', err);
+        showToast('❌ Upload failed');
+      } finally {
+        hideLoading();
+      }
+    }
+    
+    // ═══════════════════════════════════════
+    // VIEW DOCUMENT
+    // ═══════════════════════════════════════
+    function viewDocument(doc) {
+      currentDocument = doc;
+      
+      if (doc.Image) {
+        document.getElementById('view-modal-image').src = doc.Image;
+        document.getElementById('view-modal').classList.add('show');
+      } else {
+        showToast('⚠️ No image available');
+      }
+    }
+    
+    function closeViewModal() {
+      document.getElementById('view-modal').classList.remove('show');
+    }
+    
+    function downloadDocument() {
+      if (!currentDocument || !currentDocument.Image) return;
+      
+      const link = document.createElement('a');
+      link.download = `${currentDocument.Title.replace(/\s+/g, '-')}.jpg`;
+      link.href = currentDocument.Image;
+      link.click();
+      
+      showToast('✅ Download started!');
+    }
+    
+    async function shareDocument() {
+      if (!currentDocument || !currentDocument.Image) return;
+      
+      if (navigator.share) {
+        try {
+          const blob = await fetch(currentDocument.Image).then(r => r.blob());
+          const file = new File([blob], `${currentDocument.Title}.jpg`, { type: 'image/jpeg' });
+          
+          await navigator.share({
+            title: currentDocument.Title,
+            text: `Document: ${currentDocument.Title}`,
+            files: [file]
+          });
+          
+          showToast('✅ Shared!');
+        } catch (err) {
+          console.error('Share error:', err);
+          showToast('⚠️ Share cancelled');
+        }
+      } else {
+        showToast('⚠️ Share not supported');
+      }
+    }
+    
+    // ═══════════════════════════════════════
+    // DELETE DOCUMENT
+    // ═══════════════════════════════════════
+    function confirmDeleteDocument(doc) {
+      currentDocument = doc;
+      document.getElementById('confirm-message').textContent = 
+        `Are you sure you want to delete "${doc.Title}"? This action cannot be undone.`;
+      document.getElementById('confirm-modal').classList.add('show');
+    }
+    
+    function closeConfirmModal() {
+      document.getElementById('confirm-modal').classList.remove('show');
+    }
+    
+    async function deleteCurrentDocument() {
+      if (!currentDocument || !token) return;
+      
+      closeConfirmModal();
+      showLoading();
+      
+      // TODO: Implement actual delete via Google Sheets API
+      // For now, just remove from local array
+      
+      documents = documents.filter(d => d.ID !== currentDocument.ID);
+      
+      showToast('✅ Document deleted!');
+      
+      updateStats();
+      renderDocuments();
+      
+      hideLoading();
+    }
+    
+    // ═══════════════════════════════════════
+    // UI HELPERS
+    // ═══════════════════════════════════════
+    function goBack() {
+      window.location.href = 'index.html';
+    }
+    
+    let toastTimer;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+  </script>
+</body>
+</html>
