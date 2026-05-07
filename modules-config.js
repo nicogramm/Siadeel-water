@@ -1,8 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // SIADEEL WATER — MODULES CONFIGURATION
 // ═══════════════════════════════════════════════════════════════
-// Add your modules here — index.html will automatically load them
-// ═══════════════════════════════════════════════════════════════
 
 const SIADEEL_MODULES = [
   {
@@ -10,9 +8,9 @@ const SIADEEL_MODULES = [
     icon: 'check',
     label: 'Results',
     stat: 'sv-results',
-    sub: 'Latest test results',
-    value: '24',           // ⬅️ Default value to display
-    page: 'results.html',  // ⬅️ Page to navigate to (optional)
+    sub: 'Test entries',
+    metric: 'Total Results', // ⬅️ BAGO: Metric name from DashboardStats sheet
+    page: 'results.html',
     wide: false
   },
   {
@@ -20,8 +18,8 @@ const SIADEEL_MODULES = [
     icon: 'trend',
     label: 'Trends',
     stat: 'sv-trends',
-    sub: 'Performance analytics',
-    value: '89%',
+    sub: 'This month',
+    metric: 'This Month Tests',
     page: 'trends.html',
     wide: false
   },
@@ -30,18 +28,18 @@ const SIADEEL_MODULES = [
     icon: 'info',
     label: 'Process Information',
     stat: 'sv-process',
-    sub: 'System operations',
-    value: '5',
+    sub: 'Active sample points',
+    metric: 'Active Sample Points',
     page: 'process.html',
-    wide: true             // ⬅️ Wide card (spans 2 columns)
+    wide: true
   },
   {
     id: 'water-quality',
     icon: 'droplet',
     label: 'Water Quality',
     stat: 'sv-quality',
-    sub: 'Current status',
-    value: '98%',
+    sub: 'Average pH',
+    metric: 'Avg pH',
     page: 'quality.html',
     wide: false
   },
@@ -50,8 +48,8 @@ const SIADEEL_MODULES = [
     icon: 'filter',
     label: 'Treatment',
     stat: 'sv-treatment',
-    sub: 'Active processes',
-    value: '3',
+    sub: 'Avg conductivity (µS/cm)',
+    metric: 'Avg Conductivity',
     page: 'treatment.html',
     wide: false
   },
@@ -61,25 +59,8 @@ const SIADEEL_MODULES = [
     label: 'Settings',
     stat: 'sv-settings',
     sub: 'App configuration',
-    value: '—',
+    metric: null, // ⬅️ No metric for settings
     page: 'settings.html',
     wide: true
   }
 ];
-
-// ✅ PAANO MAGDAGDAG NG BAGONG MODULE:
-// 1. Copy ang format sa itaas
-// 2. Palitan ang values (id, label, page, etc.)
-// 3. Save — automatic na lalabas sa dashboard!
-//
-// Example ng bagong module:
-// {
-//   id: 'reports',
-//   icon: 'check',           // Available icons: check, trend, info, droplet, filter, settings
-//   label: 'Reports',
-//   stat: 'sv-reports',      // Unique ID for the stat value element
-//   sub: 'Monthly summaries',
-//   value: '12',             // Initial display value
-//   page: 'reports.html',    // HTML file to navigate to
-//   wide: false              // true = 2 columns, false = 1 column
-// }
