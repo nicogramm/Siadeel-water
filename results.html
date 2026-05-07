@@ -500,7 +500,7 @@
         <div class="calendar-days" id="calendar-days"></div>
       </div>
 
-      <div class="entry-details" id="entry-details">
+      <div id="entry-details"></div>
         <div class="entry-header">
           <div class="entry-date" id="entry-date">—</div>
                 <!-- ✅ ENHANCED: Detailed Weather Display -->
@@ -674,16 +674,16 @@
     // ═══════════════════════════════════════
     const SHEET_ID = '1-lhBa3FTi_gcFGS1Z0Q9w6yCYoq_BnToI3ZKBl8k8Cs';
     const SHEET_NAME = 'Results';
-    const SAMPLE_POINTS_SHEET = 'SamplePoints'; // ✅ BAGO
+    const SAMPLE_POINTS_SHEET = 'SamplePoints';
     const WEATHER_API_KEY = '44692e0366a24e13c3ea18e3ba743cf0';
     
     let currentMonth = new Date().getMonth();
     let currentYear = new Date().getFullYear();
     let entries = [];
-    let samplePoints = []; // ✅ BAGO
+    let samplePoints = [];
     let selectedDate = null;
     let currentEntry = null;
-    let currentPoint = null; // ✅ BAGO: For editing sample points
+    let currentPoint = null;
     let token = null;
     let isDark = false;
 
@@ -778,13 +778,13 @@
       }
       
       renderCalendar();
-      loadSamplePoints(); // ✅ BAGO: Load sample points first
+      loadSamplePoints();
       loadEntries();
       document.getElementById('input-date').valueAsDate = new Date();
     })();
 
     // ═══════════════════════════════════════
-    // ✅ BAGO: SAMPLE POINTS FUNCTIONS
+    // SAMPLE POINTS FUNCTIONS
     // ═══════════════════════════════════════
     function loadSamplePoints() {
       if (!token) return;
@@ -807,7 +807,7 @@
               obj[h] = row[i] || '';
             });
             return obj;
-          }).filter(p => p.Active === 'TRUE'); // Only show active points
+          }).filter(p => p.Active === 'TRUE');
           
           populateSamplePointDropdown();
         }
@@ -986,7 +986,7 @@
           requests: [{
             deleteDimension: {
               range: {
-                sheetId: 0, // ⚠️ Update if SamplePoints is not first sheet
+                sheetId: 0,
                 dimension: 'ROWS',
                 startIndex: rowIndex - 1,
                 endIndex: rowIndex
@@ -1012,7 +1012,7 @@
     }
 
     // ═══════════════════════════════════════
-    // CALENDAR FUNCTIONS (unchanged)
+    // CALENDAR FUNCTIONS
     // ═══════════════════════════════════════
     function renderCalendar() {
       const firstDay = new Date(currentYear, currentMonth, 1).getDay();
@@ -1104,584 +1104,131 @@
       if (dayEntries.length > 0) {
         displayEntries(dayEntries);
       } else {
-        document.getElementById('entry-details').classList.remove('show');
+        document.getElementById('entry-details').innerHTML = '';
         showToast('No entries for this date');
       }
     }
 
+    // ✅ NEW: Display ALL entries for a date
     function displayEntries(dayEntries) {
-      const entry = dayEntries[0];
-      currentEntry = entry;
+      if (dayEntries.length === 0) {
+        document.getElementById('entry-details').innerHTML = '';
+        return;
+      }
       
-      document.getElementById('entry-date').textContent = new Date(entry.Date).toLocaleDateString('en-US', {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-      });
+      const detailsContainer = document.getElementById('entry-details');
+      detailsContainer.innerHTML = '';
       
-        // ✅ ENHANCED: Render detailed weather
+      dayEntries.forEach((entry, index) => {
+        const entryCard = document.createElement('div');
+        entryCard.style.cssText = `
+          background: var(--bg);
+          border-radius: 18px;
+          box-shadow: var(--neu-out);
+          padding: 20px;
+          margin-bottom: 20px;
+        `;
+        
         let weatherData = entry['Picture Weather'];
-        if (weatherData) {
+        if (weatherData && weatherData !== 'N/A') {
           try {
-            // Try to parse as JSON (new format)
             weatherData = JSON.parse(weatherData);
           } catch (e) {
-            // Keep as string (legacy format)
+            // Keep as string
           }
         }
-        renderWeatherDetails(weatherData);
-      
-      const grid = document.getElementById('entry-grid');
-      grid.innerHTML = `
-        <div class="entry-item">
-          <div class="entry-label">Sample Point</div>
-          <div class="entry-value" style="font-size:14px">${entry['Sample Point'] || '—'}</div>
-        </div>
-        <div class="entry-item">
-          <div class="entry-label">pH</div>
-          <div class="entry-value">${entry.pH || '—'}</div>
-        </div>
-        <div class="entry-item">
-          <div class="entry-label">Conductivity</div>
-          <div class="entry-value" style="font-size:14px">${entry.Conductivity || '—'} µS/cm</div>
-        </div>
-        <div class="entry-item">
-          <div class="entry-label">Free Chlorine</div>
-          <div class="entry-value" style="font-size:14px">${entry['Free Chlorine (FRC)'] || '—'} mg/L</div>
-        </div>
-        <div class="entry-item">
-          <div class="entry-label">Iron</div>
-          <div class="entry-value" style="font-size:14px">${entry.Iron || '—'} mg/L</div>
-        </div>
-        <div class="entry-item">
-          <div class="entry-label">Hardness</div>
-          <div class="entry-value" style="font-size:14px">${entry.Hardness || '—'} mg/L</div>
-        </div>
-        <div class="entry-item">
-          <div class="entry-label">Turbidity</div>
-          <div class="entry-value" style="font-size:14px">${entry.Turbidity || '—'} NTU</div>
-        </div>
-      `;
-      
-      const imageEl = document.getElementById('entry-image');
-      if (entry.Picture) {
-        imageEl.src = entry.Picture;
-        imageEl.style.display = 'block';
-      } else {
-        imageEl.style.display = 'none';
-      }
-      
-      document.getElementById('entry-details').classList.add('show');
-    }
-
-    function getWeatherIcon(weather) {
-      if (!weather) return '☀️';
-      const w = weather.toLowerCase();
-      if (w.includes('rain')) return '🌧️';
-      if (w.includes('cloud')) return '☁️';
-      if (w.includes('sun') || w.includes('clear')) return '☀️';
-      if (w.includes('storm')) return '⛈️';
-      return '☀️';
-    }
-
-    // ═══════════════════════════════════════
-    // DATA FUNCTIONS
-    // ═══════════════════════════════════════
-    function loadEntries() {
-      if (!token) return;
-      
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:L`;
-      
-      fetch(url, {
-        headers: { 'Authorization': 'Bearer ' + token }
-      })
-      .then(r => {
-        if (!r.ok) throw new Error(r.status === 401 ? 'Token expired' : 'Network error');
-        return r.json();
-      })
-      .then(data => {
-        if (data.values && data.values.length > 1) {
-          const headers = data.values[0];
-          entries = data.values.slice(1).map((row, index) => {
-            const obj = { _rowIndex: index + 2 };
-            headers.forEach((h, i) => {
-              obj[h] = row[i] || '';
-            });
-            return obj;
-          });
-          renderCalendar();
-          showToast(`✅ Loaded ${entries.length} entries`);
-        } else {
-          showToast('ℹ️ No entries yet');
-        }
-      })
-      .catch(err => {
-        console.error('Load entries error:', err);
-        if (err.message === 'Token expired') {
-          showToast('❌ Session expired');
-          setTimeout(() => window.location.href = 'index.html', 2000);
-        } else {
-          showToast('❌ Failed to load');
-        }
-      });
-    }
-
-    async function submitEntry(event) {
-  event.preventDefault();
-  console.log('🚀 submitEntry() called');
-  
-  if (!token) {
-    console.error('❌ No token found');
-    showToast('❌ Not authenticated');
-    return;
-  }
-  console.log('✅ Token exists:', token.substring(0, 20) + '...');
-  
-  const date = document.getElementById('input-date').value;
-  const point = document.getElementById('input-point').value;
-  
-  console.log('📅 Date:', date);
-  console.log('📍 Sample Point:', point);
-  
-  if (!date || !point) {
-    console.error('❌ Missing required fields');
-    showToast('⚠️ Date and Sample Point are required');
-    return;
-  }
-  
-  const editRowIndex = document.getElementById('edit-row-index').value;
-  const isEditMode = editRowIndex !== '';
-  
-  console.log('🔄 Edit mode:', isEditMode);
-  
-  showToast(isEditMode ? '⏳ Updating entry...' : '⏳ Saving entry...');
-  
-  const desc = document.getElementById('input-desc').value;
-  const pH = document.getElementById('input-ph').value;
-  const conductivity = document.getElementById('input-conductivity').value;
-  const chlorine = document.getElementById('input-chlorine').value;
-  const iron = document.getElementById('input-iron').value;
-  const hardness = document.getElementById('input-hardness').value;
-  const turbidity = document.getElementById('input-turbidity').value;
-  
-  console.log('📊 Form values:', { desc, pH, conductivity, chlorine, iron, hardness, turbidity });
-  
-  // ✅ Get weather with error handling
-  console.log('🌤️ Fetching weather...');
-  let weatherString = 'N/A';
-  try {
-    const weatherData = await getCurrentWeather();
-    console.log('🌤️ Weather data received:', weatherData);
-    weatherString = weatherData ? JSON.stringify(weatherData) : 'N/A';
-    console.log('🌤️ Weather string length:', weatherString.length);
-  } catch (err) {
-    console.error('⚠️ Weather fetch failed:', err);
-    weatherString = 'N/A';
-  }
-  
-  // ✅ Handle image
-  console.log('📷 Processing image...');
-  const imageFile = document.getElementById('input-image').files[0];
-  let imageUrl = '';
-  if (imageFile) {
-    console.log('📷 Image file found:', imageFile.name, imageFile.size, 'bytes');
-    try {
-      imageUrl = await resizeAndUploadImage(imageFile);
-      console.log('📷 Image processed, data URL length:', imageUrl.length);
-    } catch (err) {
-      console.error('❌ Image processing failed:', err);
-      showToast('⚠️ Image processing failed, continuing without image');
-    }
-  } else if (isEditMode && currentEntry) {
-    imageUrl = currentEntry.Picture || '';
-    console.log('📷 Using existing image from entry');
-  } else {
-    console.log('📷 No image provided');
-  }
-  
-  const id = isEditMode ? currentEntry.ID : Date.now();
-  console.log('🆔 Entry ID:', id);
-  
-  const rowData = [
-    id, date, point, desc, pH, conductivity, chlorine, iron, hardness, turbidity, imageUrl, weatherString
-  ];
-  
-  console.log('📤 Row data prepared (12 columns):', rowData);
-  console.log('📤 Row data lengths:', rowData.map(v => String(v).length));
-  
-  // ✅ Check if any value is too large
-  const totalSize = rowData.reduce((sum, val) => sum + String(val).length, 0);
-  console.log('📏 Total data size:', totalSize, 'characters');
-  
-  if (totalSize > 50000) {
-    console.error('❌ Data too large:', totalSize);
-    showToast('❌ Data too large (image or weather data). Try without image.');
-    return;
-  }
-  
-  if (isEditMode) {
-    console.log('🔄 UPDATE MODE');
-    const range = `${SHEET_NAME}!A${editRowIndex}:L${editRowIndex}`;
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
-    
-    console.log('🌐 Update URL:', url);
-    console.log('📍 Update range:', range);
-    
-    try {
-      const response = await fetch(url, {
-        method: 'PUT',
-        headers: {
-          'Authorization': 'Bearer ' + token,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ values: [rowData] })
+        
+        entryCard.innerHTML = `
+          <div class="entry-header" style="margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--shadow-d);">
+            <div class="entry-date" style="font-size:16px; font-weight:700; color:var(--text);">
+              ${new Date(entry.Date).toLocaleDateString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+              })}
+              ${dayEntries.length > 1 ? `<span style="color:var(--text3); font-size:12px; margin-left:8px;">Entry ${index + 1} of ${dayEntries.length}</span>` : ''}
+            </div>
+          </div>
+          
+          ${weatherData && weatherData !== 'N/A' ? `
+            <div class="entry-weather">
+              ${renderWeatherHTML(weatherData)}
+            </div>
+          ` : ''}
+          
+          <div class="entry-actions" style="display:flex; gap:10px; margin-bottom:16px;">
+            <button class="entry-btn edit" onclick='editEntryByIndex(${index})'>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline-block; vertical-align:middle; margin-right:6px;">
+                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Edit
+            </button>
+            <button class="entry-btn delete" onclick='confirmDeleteByIndex(${index})'>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline-block; vertical-align:middle; margin-right:6px;">
+                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Delete
+            </button>
+          </div>
+          
+          <div class="entry-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+            <div class="entry-item">
+              <div class="entry-label">Sample Point</div>
+              <div class="entry-value" style="font-size:14px">${entry['Sample Point'] || '—'}</div>
+            </div>
+            <div class="entry-item">
+              <div class="entry-label">pH</div>
+              <div class="entry-value">${entry.pH || '—'}</div>
+            </div>
+            <div class="entry-item">
+              <div class="entry-label">Conductivity</div>
+              <div class="entry-value" style="font-size:14px">${entry.Conductivity || '—'} µS/cm</div>
+            </div>
+            <div class="entry-item">
+              <div class="entry-label">Free Chlorine</div>
+              <div class="entry-value" style="font-size:14px">${entry['Free Chlorine (FRC)'] || '—'} mg/L</div>
+            </div>
+            <div class="entry-item">
+              <div class="entry-label">Iron</div>
+              <div class="entry-value" style="font-size:14px">${entry.Iron || '—'} mg/L</div>
+            </div>
+            <div class="entry-item">
+              <div class="entry-label">Hardness</div>
+              <div class="entry-value" style="font-size:14px">${entry.Hardness || '—'} mg/L</div>
+            </div>
+            <div class="entry-item">
+              <div class="entry-label">Turbidity</div>
+              <div class="entry-value" style="font-size:14px">${entry.Turbidity || '—'} NTU</div>
+            </div>
+          </div>
+          
+          ${entry.Picture ? `
+            <img class="entry-image" src="${entry.Picture}" alt="Test photo" style="display:block; width:100%; border-radius:12px; box-shadow:var(--neu-sm);">
+          ` : ''}
+        `;
+        
+        detailsContainer.appendChild(entryCard);
       });
       
-      console.log('📡 Response status:', response.status);
-      console.log('📡 Response OK:', response.ok);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Response error body:', errorText);
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
-      
-      const data = await response.json();
-      console.log('✅ Update successful:', data);
-      
-      showToast('✅ Entry updated!');
-      closeAddModal();
-      loadEntries();
-      setTimeout(() => selectDate(date), 500);
-    } catch (err) {
-      console.error('❌ Update error:', err);
-      showToast('❌ Update failed: ' + err.message);
-    }
-    
-  } else {
-    console.log('➕ CREATE MODE');
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:L:append?valueInputOption=USER_ENTERED`;
-    
-    console.log('🌐 Append URL:', url);
-    console.log('📋 Sheet name:', SHEET_NAME);
-    console.log('📋 Sheet ID:', SHEET_ID);
-    
-    try {
-      const requestBody = { values: [rowData] };
-      console.log('📤 Request body:', JSON.stringify(requestBody).substring(0, 500) + '...');
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + token,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
-      });
-      
-      console.log('📡 Response status:', response.status);
-      console.log('📡 Response OK:', response.ok);
-      console.log('📡 Response headers:', [...response.headers.entries()]);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Response error body:', errorText);
-        
-        // Try to parse as JSON for better error message
-        try {
-          const errorJson = JSON.parse(errorText);
-          console.error('❌ Parsed error:', errorJson);
-          throw new Error(`API Error: ${errorJson.error?.message || errorText}`);
-        } catch (parseErr) {
-          throw new Error(`HTTP ${response.status}: ${errorText}`);
-        }
-      }
-      
-      const data = await response.json();
-      console.log('✅ Save successful:', data);
-      
-      showToast('✅ Entry saved!');
-      closeAddModal();
-      loadEntries();
-      document.getElementById('entry-form').reset();
-      
-    } catch (err) {
-      console.error('❌ Save error full stack:', err);
-      console.error('❌ Error name:', err.name);
-      console.error('❌ Error message:', err.message);
-      showToast('❌ Save failed: ' + err.message);
-    }
-  }
-}
-
-    function editCurrentEntry() {
-      if (!currentEntry) {
-        showToast('⚠️ No entry selected');
-        return;
-      }
-      
-      document.getElementById('input-date').value = currentEntry.Date;
-      document.getElementById('input-point').value = currentEntry['Sample Point'];
-      document.getElementById('input-desc').value = currentEntry.Description || '';
-      document.getElementById('input-ph').value = currentEntry.pH || '';
-      document.getElementById('input-conductivity').value = currentEntry.Conductivity || '';
-      document.getElementById('input-chlorine').value = currentEntry['Free Chlorine (FRC)'] || '';
-      document.getElementById('input-iron').value = currentEntry.Iron || '';
-      document.getElementById('input-hardness').value = currentEntry.Hardness || '';
-      document.getElementById('input-turbidity').value = currentEntry.Turbidity || '';
-      
-      if (currentEntry.Picture) {
-        const preview = document.getElementById('image-preview');
-        preview.src = currentEntry.Picture;
-        preview.classList.add('show');
-      }
-      
-      document.getElementById('edit-row-index').value = currentEntry._rowIndex;
-      document.getElementById('modal-title').textContent = 'Edit Test Entry';
-      document.getElementById('submit-btn').textContent = 'Update Entry';
-      
-      openAddModal();
+      window.currentDayEntries = dayEntries;
     }
 
-    function confirmDelete() {
-      if (!currentEntry) {
-        showToast('⚠️ No entry selected');
-        return;
+    function renderWeatherHTML(weatherData) {
+      if (!weatherData || weatherData === 'N/A') {
+        return '<div class="weather-main"><div class="weather-icon-box">☀️</div><div class="weather-primary"><div class="weather-condition">No weather data</div></div></div>';
       }
-      document.getElementById('confirm-title').textContent = 'Delete Entry?';
-      document.getElementById('confirm-message').textContent = 'This will permanently delete this test result. This action cannot be undone.';
-      document.getElementById('confirm-action-btn').onclick = deleteCurrentEntry;
-      document.getElementById('confirm-modal').classList.add('show');
-    }
-
-    function closeConfirmModal() {
-      document.getElementById('confirm-modal').classList.remove('show');
-    }
-
-    function deleteCurrentEntry() {
-      if (!currentEntry || !token) return;
-      
-      closeConfirmModal();
-      showToast('⏳ Deleting entry...');
-      
-      const rowIndex = currentEntry._rowIndex;
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`;
-      
-      fetch(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + token,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          requests: [
-            {
-              deleteDimension: {
-                range: {
-                  sheetId: 0,
-                  dimension: 'ROWS',
-                  startIndex: rowIndex - 1,
-                  endIndex: rowIndex
-                }
-              }
-            }
-          ]
-        })
-      })
-      .then(r => {
-        if (!r.ok) throw new Error('Delete failed');
-        return r.json();
-      })
-      .then(data => {
-        showToast('✅ Entry deleted!');
-        document.getElementById('entry-details').classList.remove('show');
-        currentEntry = null;
-        loadEntries();
-      })
-      .catch(err => {
-        console.error('Delete error:', err);
-        showToast('❌ Failed to delete entry');
-      });
-    }
-
-    // ═══════════════════════════════════════
-    // IMAGE FUNCTIONS
-    // ═══════════════════════════════════════
-    function previewImage(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const preview = document.getElementById('image-preview');
-          preview.src = e.target.result;
-          preview.classList.add('show');
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-
-    async function resizeAndUploadImage(file) {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const img = new Image();
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 600;
-            const MAX_HEIGHT = 450;
-            
-            let width = img.width;
-            let height = img.height;
-            
-            if (width > height) {
-              if (width > MAX_WIDTH) {
-                height *= MAX_WIDTH / width;
-                width = MAX_WIDTH;
-              }
-            } else {
-              if (height > MAX_HEIGHT) {
-                width *= MAX_HEIGHT / height;
-                height = MAX_HEIGHT;
-              }
-            }
-            
-            canvas.width = width;
-            canvas.height = height;
-            
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            
-            const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-            
-            if (resizedDataUrl.length > 50000) {
-              showToast('⚠️ Image too large, using placeholder');
-              resolve('');
-            } else {
-              resolve(resizedDataUrl);
-            }
-          };
-          img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-
-        // ═══════════════════════════════════════
-    // ✅ ENHANCED: WEATHER FUNCTIONS
-    // ═══════════════════════════════════════
-    async function getCurrentWeather() {
-      if (!WEATHER_API_KEY || WEATHER_API_KEY === 'YOUR_OPENWEATHER_API_KEY') {
-        return null; // Return null instead of 'N/A'
-      }
-      
-      try {
-        const position = await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
-        });
-        
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-        
-        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`;
-        
-        const response = await fetch(url);
-        const data = await response.json();
-        
-        // ✅ Return full weather object
-        return {
-          condition: data.weather[0].main,
-          description: data.weather[0].description,
-          icon: data.weather[0].icon,
-          temp: Math.round(data.main.temp),
-          feelsLike: Math.round(data.main.feels_like),
-          tempMin: Math.round(data.main.temp_min),
-          tempMax: Math.round(data.main.temp_max),
-          humidity: data.main.humidity,
-          pressure: data.main.pressure,
-          windSpeed: data.wind.speed,
-          windDeg: data.wind.deg,
-          visibility: data.visibility ? Math.round(data.visibility / 1000) : null,
-          location: data.name,
-          timestamp: new Date().toISOString()
-        };
-      } catch (err) {
-        console.error('Weather error:', err);
-        return null;
-      }
-    }
-
-    function getWeatherIcon(weatherData) {
-      if (!weatherData) return '☀️';
-      
-      // Use OpenWeather icon codes
-      const iconMap = {
-        '01d': '☀️', '01n': '🌙',
-        '02d': '⛅', '02n': '☁️',
-        '03d': '☁️', '03n': '☁️',
-        '04d': '☁️', '04n': '☁️',
-        '09d': '🌧️', '09n': '🌧️',
-        '10d': '🌦️', '10n': '🌧️',
-        '11d': '⛈️', '11n': '⛈️',
-        '13d': '🌨️', '13n': '🌨️',
-        '50d': '🌫️', '50n': '🌫️'
-      };
       
       if (typeof weatherData === 'string') {
-        // Legacy format (plain text)
-        const w = weatherData.toLowerCase();
-        if (w.includes('rain')) return '🌧️';
-        if (w.includes('cloud')) return '☁️';
-        if (w.includes('sun') || w.includes('clear')) return '☀️';
-        if (w.includes('storm')) return '⛈️';
-        return '☀️';
-      }
-      
-      // New format (weather object)
-      return iconMap[weatherData.icon] || '☀️';
-    }
-
-    function getWindDirection(degrees) {
-      const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-      const index = Math.round(degrees / 45) % 8;
-      return directions[index];
-    }
-
-    function renderWeatherDetails(weatherData) {
-      const weatherEl = document.getElementById('entry-weather');
-      
-      if (!weatherData || typeof weatherData === 'string') {
-        // Legacy format or no data
-        weatherEl.innerHTML = `
+        return `
           <div class="weather-main">
             <div class="weather-icon-box">${getWeatherIcon(weatherData)}</div>
             <div class="weather-primary">
-              <div class="weather-condition">${weatherData || 'No weather data'}</div>
+              <div class="weather-condition">${weatherData}</div>
             </div>
           </div>
         `;
-        weatherEl.style.display = 'block';
-        return;
       }
       
-      // Parse if stored as JSON string
-      if (typeof weatherData === 'string') {
-        try {
-          weatherData = JSON.parse(weatherData);
-        } catch (e) {
-          // If parsing fails, treat as legacy text
-          weatherEl.innerHTML = `
-            <div class="weather-main">
-              <div class="weather-icon-box">${getWeatherIcon(weatherData)}</div>
-              <div class="weather-primary">
-                <div class="weather-condition">${weatherData}</div>
-              </div>
-            </div>
-          `;
-          weatherEl.style.display = 'block';
-          return;
-        }
-      }
-      
-      // ✅ Render detailed weather
-      weatherEl.innerHTML = `
+      return `
         <div class="weather-main">
           <div class="weather-icon-box">${getWeatherIcon(weatherData)}</div>
           <div class="weather-primary">
@@ -1745,9 +1292,464 @@
           ` : ''}
         </div>
       `;
-      
-      weatherEl.style.display = 'block';
     }
+
+    function editEntryByIndex(index) {
+      if (!window.currentDayEntries || !window.currentDayEntries[index]) {
+        showToast('⚠️ Entry not found');
+        return;
+      }
+      
+      currentEntry = window.currentDayEntries[index];
+      editCurrentEntry();
+    }
+
+    function confirmDeleteByIndex(index) {
+      if (!window.currentDayEntries || !window.currentDayEntries[index]) {
+        showToast('⚠️ Entry not found');
+        return;
+      }
+      
+      currentEntry = window.currentDayEntries[index];
+      confirmDelete();
+    }
+
+    // ═══════════════════════════════════════
+    // DATA FUNCTIONS
+    // ═══════════════════════════════════════
+    function loadEntries() {
+      if (!token) return;
+      
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:L`;
+      
+      fetch(url, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      })
+      .then(r => {
+        if (!r.ok) throw new Error(r.status === 401 ? 'Token expired' : 'Network error');
+        return r.json();
+      })
+      .then(data => {
+        if (data.values && data.values.length > 1) {
+          const headers = data.values[0];
+          entries = data.values.slice(1).map((row, index) => {
+            const obj = { _rowIndex: index + 2 };
+            headers.forEach((h, i) => {
+              obj[h] = row[i] || '';
+            });
+            return obj;
+          });
+          renderCalendar();
+          showToast(`✅ Loaded ${entries.length} entries`);
+        } else {
+          showToast('ℹ️ No entries yet');
+        }
+      })
+      .catch(err => {
+        console.error('Load entries error:', err);
+        if (err.message === 'Token expired') {
+          showToast('❌ Session expired');
+          setTimeout(() => window.location.href = 'index.html', 2000);
+        } else {
+          showToast('❌ Failed to load');
+        }
+      });
+    }
+
+    async function submitEntry(event) {
+      event.preventDefault();
+      console.log('🚀 submitEntry() called');
+      
+      if (!token) {
+        console.error('❌ No token');
+        showToast('❌ Not authenticated');
+        return;
+      }
+      
+      const date = document.getElementById('input-date').value;
+      const point = document.getElementById('input-point').value;
+      
+      if (!date || !point) {
+        showToast('⚠️ Date and Sample Point are required');
+        return;
+      }
+      
+      const editRowIndex = document.getElementById('edit-row-index').value;
+      const isEditMode = editRowIndex !== '';
+      
+      showToast(isEditMode ? '⏳ Updating...' : '⏳ Saving...');
+      
+      const desc = document.getElementById('input-desc').value;
+      const pH = document.getElementById('input-ph').value;
+      const conductivity = document.getElementById('input-conductivity').value;
+      const chlorine = document.getElementById('input-chlorine').value;
+      const iron = document.getElementById('input-iron').value;
+      const hardness = document.getElementById('input-hardness').value;
+      const turbidity = document.getElementById('input-turbidity').value;
+      
+      console.log('🌤️ Fetching weather...');
+      let weatherString = 'N/A';
+      try {
+        const weatherData = await getCurrentWeather();
+        console.log('✅ Weather received:', weatherData);
+        weatherString = weatherData ? JSON.stringify(weatherData) : 'N/A';
+      } catch (err) {
+        console.error('⚠️ Weather error:', err);
+      }
+      
+      console.log('📷 Processing image...');
+      const imageFile = document.getElementById('input-image').files[0];
+      let imageUrl = '';
+      if (imageFile) {
+        try {
+          imageUrl = await resizeAndUploadImage(imageFile);
+          console.log('✅ Image processed');
+        } catch (err) {
+          console.error('❌ Image error:', err);
+        }
+      } else if (isEditMode && currentEntry) {
+        imageUrl = currentEntry.Picture || '';
+      }
+      
+      const id = isEditMode ? currentEntry.ID : Date.now();
+      
+      const rowData = [
+        id, date, point, desc, pH, conductivity, chlorine, iron, hardness, turbidity, imageUrl, weatherString
+      ];
+      
+      console.log('📤 Saving row data:', rowData);
+      
+      if (isEditMode) {
+        const range = `${SHEET_NAME}!A${editRowIndex}:L${editRowIndex}`;
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
+        
+        try {
+          const response = await fetch(url, {
+            method: 'PUT',
+            headers: {
+              'Authorization': 'Bearer ' + token,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ values: [rowData] })
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Update failed:', errorText);
+            throw new Error(`HTTP ${response.status}`);
+          }
+          
+          const data = await response.json();
+          console.log('✅ Update success:', data);
+          
+          showToast('✅ Entry updated!');
+          closeAddModal();
+          loadEntries();
+          setTimeout(() => selectDate(date), 500);
+        } catch (err) {
+          console.error('❌ Update error:', err);
+          showToast('❌ Update failed: ' + err.message);
+        }
+        
+      } else {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:L:append?valueInputOption=USER_ENTERED`;
+        
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + token,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ values: [rowData] })
+          });
+          
+          console.log('📡 Response status:', response.status);
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Save failed:', errorText);
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+          }
+          
+          const data = await response.json();
+          console.log('✅ Save success:', data);
+          
+          showToast('✅ Entry saved!');
+          closeAddModal();
+          loadEntries();
+          document.getElementById('entry-form').reset();
+          
+        } catch (err) {
+          console.error('❌ Save error:', err);
+          showToast('❌ Save failed: ' + err.message);
+        }
+      }
+    }
+
+    function editCurrentEntry() {
+      if (!currentEntry) {
+        showToast('⚠️ No entry selected');
+        return;
+      }
+      
+      document.getElementById('input-date').value = currentEntry.Date;
+      document.getElementById('input-point').value = currentEntry['Sample Point'];
+      document.getElementById('input-desc').value = currentEntry.Description || '';
+      document.getElementById('input-ph').value = currentEntry.pH || '';
+      document.getElementById('input-conductivity').value = currentEntry.Conductivity || '';
+      document.getElementById('input-chlorine').value = currentEntry['Free Chlorine (FRC)'] || '';
+      document.getElementById('input-iron').value = currentEntry.Iron || '';
+      document.getElementById('input-hardness').value = currentEntry.Hardness || '';
+      document.getElementById('input-turbidity').value = currentEntry.Turbidity || '';
+      
+      if (currentEntry.Picture) {
+        const preview = document.getElementById('image-preview');
+        preview.src = currentEntry.Picture;
+        preview.classList.add('show');
+      }
+      
+      document.getElementById('edit-row-index').value = currentEntry._rowIndex;
+      document.getElementById('modal-title').textContent = 'Edit Test Entry';
+      document.getElementById('submit-btn').textContent = 'Update Entry';
+      
+      openAddModal();
+    }
+
+    function confirmDelete() {
+      if (!currentEntry) {
+        showToast('⚠️ No entry selected');
+        return;
+      }
+      document.getElementById('confirm-title').textContent = 'Delete Entry?';
+      document.getElementById('confirm-message').textContent = 'This will permanently delete this test result. This action cannot be undone.';
+      document.getElementById('confirm-action-btn').onclick = deleteCurrentEntry;
+      document.getElementById('confirm-modal').classList.add('show');
+    }
+
+    function closeConfirmModal() {
+      document.getElementById('confirm-modal').classList.remove('show');
+    }
+
+    function deleteCurrentEntry() {
+      if (!currentEntry || !token) return;
+      
+      closeConfirmModal();
+      showToast('⏳ Deleting...');
+      
+      const rowIndex = currentEntry._rowIndex;
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`;
+      
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          requests: [{
+            deleteDimension: {
+              range: {
+                sheetId: 0,
+                dimension: 'ROWS',
+                startIndex: rowIndex - 1,
+                endIndex: rowIndex
+              }
+            }
+          }]
+        })
+      })
+      .then(r => {
+        if (!r.ok) throw new Error('Delete failed');
+        return r.json();
+      })
+      .then(data => {
+        showToast('✅ Entry deleted!');
+        document.getElementById('entry-details').innerHTML = '';
+        currentEntry = null;
+        loadEntries();
+      })
+      .catch(err => {
+        console.error('Delete error:', err);
+        showToast('❌ Failed to delete');
+      });
+    }
+
+    // ═══════════════════════════════════════
+    // IMAGE FUNCTIONS
+    // ═══════════════════════════════════════
+    function previewImage(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const preview = document.getElementById('image-preview');
+          preview.src = e.target.result;
+          preview.classList.add('show');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    async function resizeAndUploadImage(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 600;
+            const MAX_HEIGHT = 450;
+            
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+              }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            
+            if (resizedDataUrl.length > 50000) {
+              showToast('⚠️ Image too large');
+              resolve('');
+            } else {
+              resolve(resizedDataUrl);
+            }
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // ═══════════════════════════════════════
+    // WEATHER FUNCTIONS
+    // ═══════════════════════════════════════
+    async function getCurrentWeather() {
+      console.log('🌤️ getCurrentWeather() called');
+      
+      if (!WEATHER_API_KEY || WEATHER_API_KEY === 'YOUR_OPENWEATHER_API_KEY') {
+        console.warn('⚠️ No API key');
+        return null;
+      }
+      
+      try {
+        console.log('📍 Requesting location...');
+        
+        const position = await new Promise((resolve, reject) => {
+          if (!navigator.geolocation) {
+            reject(new Error('Geolocation not supported'));
+            return;
+          }
+          
+          navigator.geolocation.getCurrentPosition(
+            resolve,
+            (error) => {
+              console.error('📍 Geolocation error:', error);
+              reject(error);
+            },
+            { 
+              enableHighAccuracy: false,
+              timeout: 10000,
+              maximumAge: 300000
+            }
+          );
+        });
+        
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        
+        console.log('📍 Location:', lat, lon);
+        
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`;
+        
+        console.log('🌐 Fetching weather...');
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error(`Weather API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('✅ Weather data:', data);
+        
+        return {
+          condition: data.weather[0].main,
+          description: data.weather[0].description,
+          icon: data.weather[0].icon,
+          temp: Math.round(data.main.temp),
+          feelsLike: Math.round(data.main.feels_like),
+          tempMin: Math.round(data.main.temp_min),
+          tempMax: Math.round(data.main.temp_max),
+          humidity: data.main.humidity,
+          pressure: data.main.pressure,
+          windSpeed: data.wind.speed,
+          windDeg: data.wind.deg,
+          visibility: data.visibility ? Math.round(data.visibility / 1000) : null,
+          location: data.name,
+          timestamp: new Date().toISOString()
+        };
+        
+      } catch (err) {
+        console.error('❌ Weather error:', err);
+        
+        if (err.code === 1) {
+          showToast('⚠️ Location permission denied');
+        }
+        
+        return null;
+      }
+    }
+
+    function getWeatherIcon(weatherData) {
+      if (!weatherData) return '☀️';
+      
+      const iconMap = {
+        '01d': '☀️', '01n': '🌙',
+        '02d': '⛅', '02n': '☁️',
+        '03d': '☁️', '03n': '☁️',
+        '04d': '☁️', '04n': '☁️',
+        '09d': '🌧️', '09n': '🌧️',
+        '10d': '🌦️', '10n': '🌧️',
+        '11d': '⛈️', '11n': '⛈️',
+        '13d': '🌨️', '13n': '🌨️',
+        '50d': '🌫️', '50n': '🌫️'
+      };
+      
+      if (typeof weatherData === 'string') {
+        const w = weatherData.toLowerCase();
+        if (w.includes('rain')) return '🌧️';
+        if (w.includes('cloud')) return '☁️';
+        if (w.includes('sun') || w.includes('clear')) return '☀️';
+        if (w.includes('storm')) return '⛈️';
+        return '☀️';
+      }
+      
+      return iconMap[weatherData.icon] || '☀️';
+    }
+
+    function getWindDirection(degrees) {
+      const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+      const index = Math.round(degrees / 45) % 8;
+      return directions[index];
+    }
+
     // ═══════════════════════════════════════
     // UI FUNCTIONS
     // ═══════════════════════════════════════
@@ -1777,5 +1779,5 @@
       toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
     }
   </script>
-</body>
+  </body>
 </html>
