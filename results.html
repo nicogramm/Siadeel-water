@@ -16,6 +16,7 @@
       --bg: #f5f7fa; --bg2: #e9ecf1; --shadow-d: #c8d1dc; --shadow-l: #ffffff;
       --text: #0052A3; --text2: #5a6c7d; --text3: #8b98a5;
       --blue: #0052A3; --blue-d: #003d7a; --blue-l: #1a6bbf; --card: #f5f7fa;
+      --red: #e74c3c; --red-d: #c0392b;
       --neu-out: 8px 8px 16px var(--shadow-d), -6px -6px 12px var(--shadow-l);
       --neu-in:  inset 5px 5px 10px var(--shadow-d), inset -4px -4px 9px var(--shadow-l);
       --neu-sm:  5px 5px 10px var(--shadow-d), -4px -4px 8px var(--shadow-l);
@@ -34,7 +35,6 @@
     
     .results-page { display:flex; flex-direction:column; height:100dvh; width:100%; }
     
-    /* Header */
     .results-header {
       background:#0052A3;
       padding:14px 18px;
@@ -72,13 +72,11 @@
     }
     .add-btn:active { background:rgba(255,255,255,0.25); }
     
-    /* Content */
     .results-content {
       flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
       padding:20px 18px; padding-bottom:calc(40px + env(safe-area-inset-bottom,0px));
     }
     
-    /* Calendar */
     .calendar-card {
       background:var(--bg); border-radius:18px;
       box-shadow:var(--neu-out); padding:20px; margin-bottom:20px;
@@ -144,7 +142,6 @@
       color:white;
     }
     
-    /* Entry Details */
     .entry-details {
       background:var(--bg); border-radius:18px;
       box-shadow:var(--neu-out); padding:20px;
@@ -163,6 +160,32 @@
       display:flex; align-items:center; gap:8px;
       font-size:13px; color:var(--text2);
     }
+    
+    /* ✅ BAGO: Entry actions (Edit & Delete buttons) */
+    .entry-actions {
+      display:flex; gap:10px; margin-bottom:16px;
+    }
+    .entry-btn {
+      flex:1; padding:12px; border:none; border-radius:12px;
+      font-size:14px; font-weight:600; cursor:pointer;
+      transition:transform 0.1s, box-shadow 0.15s;
+      font-family:'Inter',sans-serif;
+    }
+    .entry-btn.edit {
+      background:var(--bg); color:var(--blue);
+      box-shadow:var(--neu-sm);
+    }
+    .entry-btn.edit:active {
+      box-shadow:var(--neu-in); transform:scale(0.98);
+    }
+    .entry-btn.delete {
+      background:var(--red); color:white;
+      box-shadow:0 4px 12px rgba(231,76,60,0.3);
+    }
+    .entry-btn.delete:active {
+      background:var(--red-d); transform:scale(0.98);
+    }
+    
     .entry-grid {
       display:grid; grid-template-columns:1fr 1fr; gap:12px;
       margin-bottom:16px;
@@ -183,7 +206,6 @@
       box-shadow:var(--neu-sm);
     }
     
-    /* Modal */
     .modal {
       position:fixed; top:0; left:0; right:0; bottom:0;
       background:rgba(0,0,0,0.5); z-index:100;
@@ -249,7 +271,56 @@
     }
     .submit-btn:active { transform:scale(0.98); }
     
-    /* Toast */
+    /* ✅ BAGO: Confirm Delete Modal */
+    .confirm-modal {
+      position:fixed; top:0; left:0; right:0; bottom:0;
+      background:rgba(0,0,0,0.6); z-index:150;
+      display:none; align-items:center; justify-content:center;
+      padding:20px;
+    }
+    .confirm-modal.show { display:flex; }
+    .confirm-content {
+      background:var(--bg); border-radius:18px;
+      padding:24px; max-width:320px; width:100%;
+      box-shadow:0 8px 32px rgba(0,0,0,0.3);
+      animation:popIn 0.2s cubic-bezier(0.16,1,0.3,1);
+    }
+    @keyframes popIn {
+      from { transform:scale(0.9); opacity:0; }
+      to { transform:scale(1); opacity:1; }
+    }
+    .confirm-title {
+      font-size:18px; font-weight:700; color:var(--text);
+      margin-bottom:12px;
+    }
+    .confirm-message {
+      font-size:14px; color:var(--text2); line-height:1.6;
+      margin-bottom:20px;
+    }
+    .confirm-actions {
+      display:flex; gap:10px;
+    }
+    .confirm-btn {
+      flex:1; padding:12px; border:none; border-radius:12px;
+      font-size:14px; font-weight:600; cursor:pointer;
+      transition:transform 0.1s;
+      font-family:'Inter',sans-serif;
+    }
+    .confirm-btn.cancel {
+      background:var(--bg); color:var(--text);
+      box-shadow:var(--neu-sm);
+    }
+    .confirm-btn.cancel:active {
+      box-shadow:var(--neu-in); transform:scale(0.98);
+    }
+    .confirm-btn.confirm {
+      background:var(--red); color:white;
+      box-shadow:0 4px 12px rgba(231,76,60,0.3);
+    }
+    .confirm-btn.confirm:active {
+      background:var(--red-d); transform:scale(0.98);
+    }
+    
     .toast {
       position:fixed; bottom:calc(30px + env(safe-area-inset-bottom,0px));
       left:50%; transform:translateX(-50%); background:var(--bg);
@@ -264,7 +335,6 @@
 </head>
 <body>
   <div class="results-page">
-    <!-- Header -->
     <div class="results-header">
       <canvas id="header-wave-canvas"></canvas>
       <button class="results-back" onclick="goBack()">
@@ -276,9 +346,7 @@
       <button class="add-btn" onclick="openAddModal()">+</button>
     </div>
 
-    <!-- Content -->
     <div class="results-content">
-      <!-- Calendar -->
       <div class="calendar-card">
         <div class="calendar-header">
           <div class="calendar-month" id="calendar-month">January 2024</div>
@@ -299,7 +367,6 @@
         <div class="calendar-days" id="calendar-days"></div>
       </div>
 
-      <!-- Entry Details -->
       <div class="entry-details" id="entry-details">
         <div class="entry-header">
           <div class="entry-date" id="entry-date">—</div>
@@ -308,21 +375,42 @@
             <span>—</span>
           </div>
         </div>
+        
+        <!-- ✅ BAGO: Edit & Delete buttons -->
+        <div class="entry-actions">
+          <button class="entry-btn edit" onclick="editCurrentEntry()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline-block; vertical-align:middle; margin-right:6px;">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Edit
+          </button>
+          <button class="entry-btn delete" onclick="confirmDelete()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline-block; vertical-align:middle; margin-right:6px;">
+              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Delete
+          </button>
+        </div>
+        
         <div class="entry-grid" id="entry-grid"></div>
         <img class="entry-image" id="entry-image" src="" alt="">
       </div>
     </div>
   </div>
 
-  <!-- Add Entry Modal -->
+  <!-- Add/Edit Entry Modal -->
   <div class="modal" id="add-modal">
     <div class="modal-content">
       <div class="modal-header">
-        <div class="modal-title">New Test Entry</div>
+        <div class="modal-title" id="modal-title">New Test Entry</div>
         <button class="modal-close" onclick="closeAddModal()">×</button>
       </div>
       
       <form id="entry-form" onsubmit="submitEntry(event)">
+        <!-- ✅ BAGO: Hidden field for edit mode -->
+        <input type="hidden" id="edit-row-index" value="">
+        
         <div class="form-group">
           <label class="form-label">Date</label>
           <input type="date" class="form-input" id="input-date" required>
@@ -377,12 +465,25 @@
           <img class="image-preview" id="image-preview" src="" alt="">
         </div>
         
-        <button type="submit" class="submit-btn">Save Entry</button>
+        <button type="submit" class="submit-btn" id="submit-btn">Save Entry</button>
       </form>
     </div>
   </div>
 
-  <!-- Toast -->
+  <!-- ✅ BAGO: Confirm Delete Modal -->
+  <div class="confirm-modal" id="confirm-modal">
+    <div class="confirm-content">
+      <div class="confirm-title">Delete Entry?</div>
+      <div class="confirm-message">
+        This will permanently delete this test result. This action cannot be undone.
+      </div>
+      <div class="confirm-actions">
+        <button class="confirm-btn cancel" onclick="closeConfirmModal()">Cancel</button>
+        <button class="confirm-btn confirm" onclick="deleteCurrentEntry()">Delete</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script>
@@ -391,12 +492,13 @@
     // ═══════════════════════════════════════
     const SHEET_ID = '1-lhBa3FTi_gcFGS1Z0Q9w6yCYoq_BnToI3ZKBl8k8Cs';
     const SHEET_NAME = 'Results';
-    const WEATHER_API_KEY = 'YOUR_OPENWEATHER_API_KEY'; // Get from openweathermap.org
+    const WEATHER_API_KEY = 'Y44692e0366a24e13c3ea18e3ba743cf0'; // ⬅️ Replace with your key from openweathermap.org
     
     let currentMonth = new Date().getMonth();
     let currentYear = new Date().getFullYear();
     let entries = [];
     let selectedDate = null;
+    let currentEntry = null; // ✅ BAGO: Track currently displayed entry
     let token = null;
     let isDark = false;
 
@@ -415,7 +517,6 @@
       document.body.classList.toggle('dark', dark);
     }
 
-    // Apply saved theme
     applyTheme(localStorage.getItem('siadeel-theme') === 'dark');
 
     // ═══════════════════════════════════════
@@ -482,15 +583,17 @@
     // ═══════════════════════════════════════
     (function init() {
       token = localStorage.getItem('siadeel-token');
-      if (!token) {
-        window.location.href = 'index.html';
+      const expiry = localStorage.getItem('siadeel-token-expiry');
+      const bufferMs = 5 * 60 * 1000;
+      
+      if (!token || !expiry || Date.now() >= (parseInt(expiry) - bufferMs)) {
+        showToast('⚠️ Session expired. Redirecting...');
+        setTimeout(() => window.location.href = 'index.html', 2000);
         return;
       }
       
       renderCalendar();
       loadEntries();
-      
-      // Set today's date in form
       document.getElementById('input-date').valueAsDate = new Date();
     })();
 
@@ -513,7 +616,6 @@
       const today = new Date();
       const isCurrentMonth = currentMonth === today.getMonth() && currentYear === today.getFullYear();
       
-      // Previous month days
       for (let i = firstDay - 1; i >= 0; i--) {
         const day = daysInPrevMonth - i;
         const dayEl = document.createElement('div');
@@ -522,7 +624,6 @@
         daysContainer.appendChild(dayEl);
       }
       
-      // Current month days
       for (let day = 1; day <= daysInMonth; day++) {
         const dayEl = document.createElement('div');
         dayEl.className = 'calendar-day';
@@ -542,9 +643,8 @@
         daysContainer.appendChild(dayEl);
       }
       
-      // Next month days
       const totalCells = daysContainer.children.length;
-      const remainingCells = 42 - totalCells; // 6 rows × 7 days
+      const remainingCells = 42 - totalCells;
       for (let day = 1; day <= remainingCells; day++) {
         const dayEl = document.createElement('div');
         dayEl.className = 'calendar-day other-month';
@@ -578,7 +678,6 @@
     function selectDate(dateStr) {
       selectedDate = dateStr;
       
-      // Update selected day styling
       document.querySelectorAll('.calendar-day').forEach(day => {
         day.classList.remove('selected');
         if (day.textContent === dateStr.split('-')[2] && !day.classList.contains('other-month')) {
@@ -597,7 +696,8 @@
     }
 
     function displayEntries(dayEntries) {
-      const entry = dayEntries[0]; // Show first entry (you can add pagination later)
+      const entry = dayEntries[0];
+      currentEntry = entry; // ✅ BAGO: Store current entry
       
       document.getElementById('entry-date').textContent = new Date(entry.Date).toLocaleDateString('en-US', {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
@@ -667,28 +767,39 @@
     function loadEntries() {
       if (!token) return;
       
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:K`;
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:L`;
       
       fetch(url, {
         headers: { 'Authorization': 'Bearer ' + token }
       })
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(r.status === 401 ? 'Token expired' : 'Network error');
+        return r.json();
+      })
       .then(data => {
         if (data.values && data.values.length > 1) {
           const headers = data.values[0];
-          entries = data.values.slice(1).map(row => {
-            const obj = {};
+          entries = data.values.slice(1).map((row, index) => {
+            const obj = { _rowIndex: index + 2 }; // ✅ BAGO: Store row index (header is row 1)
             headers.forEach((h, i) => {
               obj[h] = row[i] || '';
             });
             return obj;
           });
           renderCalendar();
+          showToast(`✅ Loaded ${entries.length} entries`);
+        } else {
+          showToast('ℹ️ No entries yet');
         }
       })
       .catch(err => {
         console.error('Load entries error:', err);
-        showToast('❌ Failed to load entries');
+        if (err.message === 'Token expired') {
+          showToast('❌ Session expired');
+          setTimeout(() => window.location.href = 'index.html', 2000);
+        } else {
+          showToast('❌ Failed to load');
+        }
       });
     }
 
@@ -700,11 +811,19 @@
         return;
       }
       
-      showToast('⏳ Saving entry...');
-      
-      // Get form values
       const date = document.getElementById('input-date').value;
       const point = document.getElementById('input-point').value;
+      
+      if (!date || !point) {
+        showToast('⚠️ Date and Sample Point are required');
+        return;
+      }
+      
+      const editRowIndex = document.getElementById('edit-row-index').value;
+      const isEditMode = editRowIndex !== '';
+      
+      showToast(isEditMode ? '⏳ Updating entry...' : '⏳ Saving entry...');
+      
       const desc = document.getElementById('input-desc').value;
       const pH = document.getElementById('input-ph').value;
       const conductivity = document.getElementById('input-conductivity').value;
@@ -713,26 +832,134 @@
       const hardness = document.getElementById('input-hardness').value;
       const turbidity = document.getElementById('input-turbidity').value;
       
-      // Get weather
       const weather = await getCurrentWeather();
       
-      // Get image (resized)
       const imageFile = document.getElementById('input-image').files[0];
       let imageUrl = '';
       if (imageFile) {
         imageUrl = await resizeAndUploadImage(imageFile);
+      } else if (isEditMode && currentEntry) {
+        imageUrl = currentEntry.Picture || ''; // Keep existing image if not changed
       }
       
-      // Generate ID
-      const id = Date.now();
+      const id = isEditMode ? currentEntry.ID : Date.now();
       
-      // Prepare row data
       const rowData = [
         id, date, point, desc, pH, conductivity, chlorine, iron, hardness, turbidity, imageUrl, weather
       ];
       
-      // Append to sheet
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:L:append?valueInputOption=USER_ENTERED`;
+      if (isEditMode) {
+        // ✅ UPDATE existing row
+        const range = `${SHEET_NAME}!A${editRowIndex}:L${editRowIndex}`;
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
+        
+        fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            values: [rowData]
+          })
+        })
+        .then(r => r.json())
+        .then(data => {
+          showToast('✅ Entry updated!');
+          closeAddModal();
+          loadEntries();
+          setTimeout(() => selectDate(date), 500); // Reselect date to refresh display
+        })
+        .catch(err => {
+          console.error('Update error:', err);
+          showToast('❌ Failed to update entry');
+        });
+      } else {
+        // ✅ APPEND new row
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:L:append?valueInputOption=USER_ENTERED`;
+        
+        fetch(url, {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            values: [rowData]
+          })
+        })
+        .then(r => r.json())
+        .then(data => {
+          showToast('✅ Entry saved!');
+          closeAddModal();
+          loadEntries();
+          document.getElementById('entry-form').reset();
+        })
+        .catch(err => {
+          console.error('Save error:', err);
+          showToast('❌ Failed to save entry');
+        });
+      }
+    }
+
+    // ✅ BAGO: Edit current entry
+    function editCurrentEntry() {
+      if (!currentEntry) {
+        showToast('⚠️ No entry selected');
+        return;
+      }
+      
+      // Populate form with current entry data
+      document.getElementById('input-date').value = currentEntry.Date;
+      document.getElementById('input-point').value = currentEntry['Sample Point'];
+      document.getElementById('input-desc').value = currentEntry.Description || '';
+      document.getElementById('input-ph').value = currentEntry.pH || '';
+      document.getElementById('input-conductivity').value = currentEntry.Conductivity || '';
+      document.getElementById('input-chlorine').value = currentEntry['Free Chlorine (FRC)'] || '';
+      document.getElementById('input-iron').value = currentEntry.Iron || '';
+      document.getElementById('input-hardness').value = currentEntry.Hardness || '';
+      document.getElementById('input-turbidity').value = currentEntry.Turbidity || '';
+      
+      // Show existing image if available
+      if (currentEntry.Picture) {
+        const preview = document.getElementById('image-preview');
+        preview.src = currentEntry.Picture;
+        preview.classList.add('show');
+      }
+      
+      // Set edit mode
+      document.getElementById('edit-row-index').value = currentEntry._rowIndex;
+      document.getElementById('modal-title').textContent = 'Edit Test Entry';
+      document.getElementById('submit-btn').textContent = 'Update Entry';
+      
+      openAddModal();
+    }
+
+    // ✅ BAGO: Confirm delete
+    function confirmDelete() {
+      if (!currentEntry) {
+        showToast('⚠️ No entry selected');
+        return;
+      }
+      document.getElementById('confirm-modal').classList.add('show');
+    }
+
+    function closeConfirmModal() {
+      document.getElementById('confirm-modal').classList.remove('show');
+    }
+
+    // ✅ BAGO: Delete current entry
+    function deleteCurrentEntry() {
+      if (!currentEntry || !token) return;
+      
+      closeConfirmModal();
+      showToast('⏳ Deleting entry...');
+      
+      const rowIndex = currentEntry._rowIndex;
+      
+      // Google Sheets API doesn't have a direct "delete row" endpoint
+      // We need to use batchUpdate to delete the row
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`;
       
       fetch(url, {
         method: 'POST',
@@ -741,19 +968,33 @@
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          values: [rowData]
+          requests: [
+            {
+              deleteDimension: {
+                range: {
+                  sheetId: 0, // ⚠️ Change this if your sheet is not the first one (check Sheet ID in URL)
+                  dimension: 'ROWS',
+                  startIndex: rowIndex - 1, // 0-indexed
+                  endIndex: rowIndex
+                }
+              }
+            }
+          ]
         })
       })
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error('Delete failed');
+        return r.json();
+      })
       .then(data => {
-        showToast('✅ Entry saved!');
-        closeAddModal();
+        showToast('✅ Entry deleted!');
+        document.getElementById('entry-details').classList.remove('show');
+        currentEntry = null;
         loadEntries();
-        document.getElementById('entry-form').reset();
       })
       .catch(err => {
-        console.error('Save error:', err);
-        showToast('❌ Failed to save entry');
+        console.error('Delete error:', err);
+        showToast('❌ Failed to delete entry');
       });
     }
 
@@ -780,8 +1021,8 @@
           const img = new Image();
           img.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 800;
-            const MAX_HEIGHT = 600;
+            const MAX_WIDTH = 600;
+            const MAX_HEIGHT = 450;
             
             let width = img.width;
             let height = img.height;
@@ -804,8 +1045,14 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
             
-            const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-            resolve(resizedDataUrl);
+            const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            
+            if (resizedDataUrl.length > 50000) {
+              showToast('⚠️ Image too large, using placeholder');
+              resolve('');
+            } else {
+              resolve(resizedDataUrl);
+            }
           };
           img.src = e.target.result;
         };
@@ -817,9 +1064,13 @@
     // WEATHER FUNCTIONS
     // ═══════════════════════════════════════
     async function getCurrentWeather() {
+      if (!WEATHER_API_KEY || WEATHER_API_KEY === 'YOUR_OPENWEATHER_API_KEY') {
+        return 'N/A';
+      }
+      
       try {
         const position = await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject);
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
         });
         
         const lat = position.coords.latitude;
@@ -833,7 +1084,7 @@
         return `${data.weather[0].main}, ${Math.round(data.main.temp)}°C`;
       } catch (err) {
         console.error('Weather error:', err);
-        return 'Unknown';
+        return 'N/A';
       }
     }
 
@@ -850,6 +1101,12 @@
 
     function closeAddModal() {
       document.getElementById('add-modal').classList.remove('show');
+      // Reset form
+      document.getElementById('entry-form').reset();
+      document.getElementById('edit-row-index').value = '';
+      document.getElementById('modal-title').textContent = 'New Test Entry';
+      document.getElementById('submit-btn').textContent = 'Save Entry';
+      document.getElementById('image-preview').classList.remove('show');
     }
 
     let toastTimer;
