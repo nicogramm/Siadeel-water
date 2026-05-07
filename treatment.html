@@ -1256,50 +1256,51 @@
     }
     
     async function deleteCurrentActivity() {
-      if (!currentActivity || !token) return;
-      
-      closeConfirmModal();
-      showLoading();
-      
-      try {
-        const rowNum = currentActivity._rowNumber;
-        
-        console.log('🔥 Clearing row', rowNum);
-        
-        // ✅ STRATEGY: CLEAR THE ROW (set all cells to empty)
-        const clearUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A${rowNum}:H${rowNum}?valueInputOption=USER_ENTERED`;
-        
-        const clearResponse = await fetch(clearUrl, {
-          method: 'PUT',
-          headers: {
-            'Authorization': 'Bearer ' + token,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            values: [['', '', '', '', '', '', '', '']]  // 8 empty cells
-          })
-        });
-        
-        if (!clearResponse.ok) {
-          const error = await clearResponse.json();
-          console.error('❌ Clear error:', error);
-          throw new Error('Delete failed');
-        }
-        
-        console.log('✅ Row cleared successfully');
-        showToast('✅ Activity deleted!');
-        
-        await loadActivities();
-        renderActivities();
-        
-      } catch (err) {
-        console.error('❌ Delete error:', err);
-        showToast('❌ Failed: ' + err.message);
-      } finally {
-        hideLoading();
-        currentActivity = null;
-      }
+  if (!currentActivity || !token) return;
+  
+  // ✅ FIX: Save reference BEFORE closing modal
+  const activityToDelete = currentActivity;
+  
+  closeConfirmModal();
+  showLoading();
+  
+  try {
+    const rowNum = activityToDelete._rowNumber;
+    
+    console.log('🔥 Clearing row', rowNum);
+    
+    const clearUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A${rowNum}:H${rowNum}?valueInputOption=USER_ENTERED`;
+    
+    const clearResponse = await fetch(clearUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        values: [['', '', '', '', '', '', '', '']]
+      })
+    });
+    
+    if (!clearResponse.ok) {
+      const error = await clearResponse.json();
+      console.error('❌ Clear error:', error);
+      throw new Error('Delete failed');
     }
+    
+    console.log('✅ Row cleared successfully');
+    showToast('✅ Activity deleted!');
+    
+    await loadActivities();
+    renderActivities();
+    
+  } catch (err) {
+    console.error('❌ Delete error:', err);
+    showToast('❌ Failed: ' + err.message);
+  } finally {
+    hideLoading();
+  }
+}
     
     // ═══════════════════════════════════════
     // UI HELPERS
