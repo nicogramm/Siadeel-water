@@ -194,7 +194,7 @@
         <div class="info-card">
           <div class="info-title">💡 Siadeel Water System</div>
           <div class="info-text">
-            Current flow: Well → Elevated Tank → Filtration → Distribution → Recycle Loop
+            Current flow: Well → Elevated Tank → Chlorination → Distribution → Recycle Loop
           </div>
         </div>
         
@@ -215,7 +215,7 @@
         
         <textarea id="code-editor" placeholder="Enter Mermaid diagram code...">graph TB
     A[🏞️ Well Source] -->|Pump| B[⬆️ Elevated Tank]
-    B -->|Gravity Feed| C[🔬 Filtration System]
+    B -->|Gravity Feed| C[🔬 Chlorination System]
     C -->|Clean Water| D[🏘️ Distribution Network]
     D -->|Partial Flow| E[🔄 Recycle Loop]
     E -->|Return| B
@@ -245,7 +245,7 @@
         <div class="preview-container">
           <div class="mermaid" id="preview">graph TB
     A[🏞️ Well Source] -->|Pump| B[⬆️ Elevated Tank]
-    B -->|Gravity Feed| C[🔬 Filtration System]
+    B -->|Gravity Feed| C[🔬 Chlorination System]
     C -->|Clean Water| D[🏘️ Distribution Network]
     D -->|Partial Flow| E[🔄 Recycle Loop]
     E -->|Return| B
@@ -368,7 +368,7 @@
     const templates = {
       siadeel: `graph TB
     A[🏞️ Well Source] -->|Pump| B[⬆️ Elevated Tank]
-    B -->|Gravity Feed| C[🔬 Filtration System]
+    B -->|Gravity Feed| C[🔬 Chlorination System]
     C -->|Clean Water| D[🏘️ Distribution Network]
     D -->|Partial Flow| E[🔄 Recycle Loop]
     E -->|Return| B
@@ -382,7 +382,7 @@
       detailed: `graph TB
     A[🏞️ Deep Well<br/>Source Water] -->|Submersible Pump| B[⬆️ Elevated Storage Tank<br/>Capacity: 10,000L]
     B -->|Gravity Distribution| C{Water Quality<br/>Check}
-    C -->|Pass| D[🔬 Multi-Stage Filtration]
+    C -->|Pass| D[🔬 Chlorination Stage]
     C -->|Fail| F[⚠️ Treatment Required]
     F --> D
     D -->|Sand Filter| G[Carbon Filter]
@@ -408,7 +408,7 @@
       
       monitoring: `graph TB
     A[🏞️ Well Source] -->|Flow Meter| B[⬆️ Elevated Tank]
-    B -->|Level Sensor| C[🔬 Filtration]
+    B -->|Level Sensor| C[🔬 Chlorination]
     C -->|Quality Monitor| D[🏘️ Distribution]
     D -->|Pressure Gauge| E[End Users]
     D -->|Flow Control| F[🔄 Recycle]
