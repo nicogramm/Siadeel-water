@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0052A3">
+  <title>Treatment Activities - Siadeel Water</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg: #f5f7fa; --bg2: #e9ecf1; --shadow-d: #c8d1dc; --shadow-l: #ffffff;
+      --text: #0052A3; --text2: #5a6c7d; --text3: #8b98a5;
+      --blue: #0052A3; --blue-d: #003d7a; --blue-l: #1a6bbf; --card: #f5f7fa;
+      --red: #e74c3c; --red-d: #c0392b; --green: #27ae60; --green-d: #229954;
+      --yellow: #f39c12; --purple: #9b59b6; --orange: #e67e22;
+      --neu-out: 8px 8px 16px var(--shadow-d), -6px -6px 12px var(--shadow-l);
+      --neu-in:  inset 5px 5px 10px var(--shadow-d), inset -4px -4px 9px var(--shadow-l);
+      --neu-sm:  5px 5px 10px var(--shadow-d), -4px -4px 8px var(--shadow-l);
+      --neu-xs:  3px 3px 7px var(--shadow-d), -2px -2px 6px var(--shadow-l);
+    }
+    
+    body.dark {
+      --bg: #1a1f2e; --bg2: #232a3a; --shadow-d: #0f1219; --shadow-l: #2e3547;
+      --text: #1a6bbf; --text2: #8b98a5; --text3: #5a6c7d; --card: #1a1f2e;
+      --neu-out: 6px 6px 14px var(--shadow-d), -4px -4px 10px var(--shadow-l);
+      --neu-in:  inset 5px 5px 10px var(--shadow-d), inset -4px -4px 9px var(--shadow-l);
+      --neu-sm:  5px 5px 10px var(--shadow-d), -4px -4px 8px var(--shadow-l);
+      --neu-xs:  3px 3px 8px var(--shadow-d), -2px -2px 7px var(--shadow-l);
+    }
+    
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent }
+    html,body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; transition:background 0.4s,color 0.4s }
+    
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7); z-index: 500;
+      display: none; align-items: center; justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    .loading-overlay.show { display: flex; }
+    .loading-spinner {
+      width: 60px; height: 60px;
+      border: 4px solid rgba(255, 255, 255, 0.2);
+      border-top-color: white; border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .treatment-page { display:flex; flex-direction:column; height:100dvh; width:100%; }
+    
+    /* Header */
+    .treatment-header {
+      background:#0052A3; padding:14px 18px;
+      padding-top:calc(env(safe-area-inset-top,0px) + 14px);
+      display:flex; align-items:center; justify-content:space-between;
+      box-shadow:0 3px 10px rgba(0,0,0,0.15);
+      position:relative; overflow:hidden; z-index:10;
+    }
+    #header-wave-canvas {
+      position:absolute; top:0; left:0; width:100%; height:100%;
+      pointer-events:none; z-index:1; opacity:0.3;
+    }
+    .treatment-back {
+      width:36px; height:36px; border-radius:10px;
+      background:rgba(255,255,255,0.15); border:none;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; transition:background 0.2s; color:white;
+      position:relative; z-index:2;
+    }
+    .treatment-back:active { background:rgba(255,255,255,0.25); }
+    .treatment-header h1 {
+      font-size:20px; font-weight:700; color:white;
+      letter-spacing:0.5px; position:relative; z-index:2;
+    }
+    .header-spacer { width:36px; position:relative; z-index:2; }
+    
+    /* Tab Navigation */
+    .tab-nav {
+      background:var(--bg); display:flex;
+      box-shadow:0 2px 8px rgba(0,0,0,0.1);
+      position:sticky; top:0; z-index:5;
+    }
+    .tab-btn {
+      flex:1; padding:16px; background:transparent;
+      border:none; border-bottom:3px solid transparent;
+      font-size:14px; font-weight:600; color:var(--text2);
+      cursor:pointer; transition:all 0.2s;
+      font-family:'Inter',sans-serif;
+    }
+    .tab-btn.active {
+      color:var(--blue); border-bottom-color:var(--blue);
+    }
+    
+    /* Content */
+    .treatment-content {
+      flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
+      padding:20px 18px; padding-bottom:calc(40px + env(safe-area-inset-bottom,0px));
+    }
+    
+    .tab-panel {
+      display:none;
+    }
+    .tab-panel.active {
+      display:block;
+    }
+    
+    /* Activity Scheduler Section */
+    .add-activity-btn {
+      width:100%; padding:16px; background:var(--blue);
+      border:none; border-radius:14px; color:white;
+      font-size:15px; font-weight:600; cursor:pointer;
+      box-shadow:0 4px 12px rgba(0,82,163,0.3);
+      transition:transform 0.1s; font-family:'Inter',sans-serif;
+      margin-bottom:20px; display:flex; align-items:center;
+      justify-content:center; gap:8px;
+    }
+    .add-activity-btn:active { transform:scale(0.98); }
+    
+    .activities-list {
+      display:flex; flex-direction:column; gap:12px;
+    }
+    
+    .activity-card {
+      background:var(--bg); border-radius:16px;
+      box-shadow:var(--neu-out); padding:16px;
+      border-left:4px solid var(--blue);
+    }
+    .activity-card.maintenance { border-left-color:var(--orange); }
+    .activity-card.cleaning { border-left-color:var(--green); }
+    .activity-card.inspection { border-left-color:var(--purple); }
+    .activity-card.repair { border-left-color:var(--red); }
+    
+    .activity-header {
+      display:flex; align-items:flex-start; justify-content:space-between;
+      margin-bottom:12px;
+    }
+    .activity-title {
+      font-size:16px; font-weight:700; color:var(--text);
+      margin-bottom:6px;
+    }
+    .activity-type {
+      padding:4px 10px; background:var(--bg2);
+      border-radius:6px; font-size:11px; font-weight:600;
+      color:var(--text2); text-transform:uppercase;
+      letter-spacing:0.5px;
+    }
+    .activity-meta {
+      display:flex; flex-wrap:wrap; gap:12px;
+      font-size:13px; color:var(--text3);
+      margin-bottom:12px;
+    }
+    .activity-meta-item {
+      display:flex; align-items:center; gap:6px;
+    }
+    .activity-description {
+      font-size:14px; color:var(--text2); line-height:1.6;
+      margin-bottom:12px;
+    }
+    .activity-actions {
+      display:flex; gap:8px;
+    }
+    .activity-action-btn {
+      flex:1; padding:10px; background:var(--bg);
+      border:none; border-radius:10px; box-shadow:var(--neu-sm);
+      font-size:12px; font-weight:600; color:var(--text2);
+      cursor:pointer; transition:all 0.15s;
+      font-family:'Inter',sans-serif;
+    }
+    .activity-action-btn:active {
+      box-shadow:var(--neu-in); transform:scale(0.98);
+    }
+    .activity-action-btn.delete {
+      background:var(--red); color:white;
+      box-shadow:0 4px 12px rgba(231,76,60,0.3);
+    }
+    
+    /* Standards Section */
+    .standards-intro {
+      background:var(--bg); border-radius:16px;
+      box-shadow:var(--neu-out); padding:20px;
+      margin-bottom:20px; border-left:4px solid var(--blue);
+    }
+    .standards-intro h2 {
+      font-size:18px; font-weight:700; color:var(--text);
+      margin-bottom:12px;
+    }
+    .standards-intro p {
+      font-size:14px; color:var(--text2); line-height:1.8;
+      margin-bottom:10px;
+    }
+    .standards-source {
+      font-size:12px; color:var(--text3); font-style:italic;
+      margin-top:12px; padding-top:12px;
+      border-top:1px solid var(--shadow-d);
+    }
+    
+    .standards-grid {
+      display:grid; gap:16px;
+    }
+    
+    .standard-card {
+      background:var(--bg); border-radius:16px;
+      box-shadow:var(--neu-out); padding:18px;
+    }
+    .standard-header {
+      display:flex; align-items:center; gap:12px;
+      margin-bottom:14px; padding-bottom:14px;
+      border-bottom:1px solid var(--shadow-d);
+    }
+    .standard-icon {
+      width:48px; height:48px; border-radius:12px;
+      background:var(--bg); box-shadow:var(--neu-sm);
+      display:flex; align-items:center; justify-content:center;
+      font-size:24px; flex-shrink:0;
+    }
+    .standard-title {
+      font-size:16px; font-weight:700; color:var(--text);
+    }
+    
+    .parameter-table {
+      width:100%; border-collapse:collapse;
+    }
+    .parameter-table th {
+      text-align:left; padding:10px 8px;
+      font-size:11px; font-weight:600;
+      color:var(--text3); text-transform:uppercase;
+      letter-spacing:0.5px; border-bottom:2px solid var(--shadow-d);
+    }
+    .parameter-table td {
+      padding:12px 8px; font-size:13px;
+      color:var(--text2); border-bottom:1px solid var(--shadow-d);
+    }
+    .parameter-table tr:last-child td {
+      border-bottom:none;
+    }
+    .parameter-name {
+      font-weight:600; color:var(--text);
+    }
+    .parameter-limit {
+      font-weight:700; color:var(--blue);
+    }
+    .parameter-unit {
+      font-size:11px; color:var(--text3);
+    }
+    
+    .info-note {
+      background:rgba(0,82,163,0.05); border-radius:10px;
+      padding:12px; margin-top:12px;
+      border-left:3px solid var(--blue);
+    }
+    .info-note-text {
+      font-size:12px; color:var(--text2); line-height:1.6;
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align:center; padding:60px 20px;
+      color:var(--text3);
+    }
+    .empty-icon {
+      font-size:64px; margin-bottom:16px; opacity:0.3;
+    }
+    .empty-title {
+      font-size:18px; font-weight:600; color:var(--text2);
+      margin-bottom:8px;
+    }
+    .empty-message {
+      font-size:14px; line-height:1.6;
+    }
+    
+    /* Modal */
+    .modal {
+      position:fixed; top:0; left:0; right:0; bottom:0;
+      background:rgba(0,0,0,0.5); z-index:100;
+      display:none; align-items:flex-end; justify-content:center;
+    }
+    .modal.show { display:flex; }
+    .modal-content {
+      background:var(--bg); border-radius:28px 28px 0 0;
+      width:100%; max-height:85vh; overflow-y:auto;
+      padding:24px; padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));
+      box-shadow:0 -8px 32px rgba(0,0,0,0.2);
+      animation:slideUp 0.3s cubic-bezier(0.16,1,0.3,1);
+    }
+    @keyframes slideUp {
+      from { transform:translateY(100%); }
+      to { transform:translateY(0); }
+    }
+    .modal-header {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:20px;
+    }
+    .modal-title {
+      font-size:20px; font-weight:700; color:var(--text);
+    }
+    .modal-close {
+      width:32px; height:32px; border-radius:8px;
+      background:var(--bg); border:none; box-shadow:var(--neu-xs);
+      color:var(--text); cursor:pointer; font-size:20px;
+    }
+    
+    .form-group {
+      margin-bottom:16px;
+    }
+    .form-label {
+      font-size:12px; font-weight:600; color:var(--text2);
+      margin-bottom:8px; display:block;
+    }
+    .form-input, .form-select, .form-textarea {
+      width:100%; padding:14px; background:var(--bg);
+      border:none; border-radius:12px; box-shadow:var(--neu-in);
+      font-size:14px; color:var(--text); font-family:'Inter',sans-serif;
+      outline:none;
+    }
+    .form-textarea {
+      min-height:100px; resize:vertical;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      box-shadow:var(--neu-in), 0 0 0 2px var(--blue-l);
+    }
+    
+    .submit-btn {
+      width:100%; padding:16px; background:var(--blue);
+      border:none; border-radius:14px; color:white;
+      font-size:15px; font-weight:600; cursor:pointer;
+      box-shadow:0 4px 12px rgba(0,82,163,0.3);
+      transition:transform 0.1s; font-family:'Inter',sans-serif;
+    }
+    .submit-btn:active { transform:scale(0.98); }
+    
+    /* Confirm Modal */
+    .confirm-modal {
+      position:fixed; top:0; left:0; right:0; bottom:0;
+      background:rgba(0,0,0,0.6); z-index:150;
+      display:none; align-items:center; justify-content:center;
+      padding:20px;
+    }
+    .confirm-modal.show { display:flex; }
+    .confirm-content {
+      background:var(--bg); border-radius:18px;
+      padding:24px; max-width:320px; width:100%;
+      box-shadow:0 8px 32px rgba(0,0,0,0.3);
+      animation:popIn 0.2s cubic-bezier(0.16,1,0.3,1);
+    }
+    @keyframes popIn {
+      from { transform:scale(0.9); opacity:0; }
+      to { transform:scale(1); opacity:1; }
+    }
+    .confirm-title {
+      font-size:18px; font-weight:700; color:var(--text);
+      margin-bottom:12px;
+    }
+    .confirm-message {
+      font-size:14px; color:var(--text2); line-height:1.6;
+      margin-bottom:20px;
+    }
+    .confirm-actions {
+      display:flex; gap:10px;
+    }
+    .confirm-btn {
+      flex:1; padding:12px; border:none; border-radius:12px;
+      font-size:14px; font-weight:600; cursor:pointer;
+      transition:transform 0.1s; font-family:'Inter',sans-serif;
+    }
+    .confirm-btn.cancel {
+      background:var(--bg); color:var(--text);
+      box-shadow:var(--neu-sm);
+    }
+    .confirm-btn.cancel:active {
+      box-shadow:var(--neu-in); transform:scale(0.98);
+    }
+    .confirm-btn.confirm {
+      background:var(--red); color:white;
+      box-shadow:0 4px 12px rgba(231,76,60,0.3);
+    }
+    .confirm-btn.confirm:active {
+      background:var(--red-d); transform:scale(0.98);
+    }
+    
+    /* Toast */
+    .toast {
+      position:fixed; bottom:calc(30px + env(safe-area-inset-bottom,0px));
+      left:50%; transform:translateX(-50%); background:var(--bg);
+      border-radius:14px; box-shadow:var(--neu-out);
+      border-left:4px solid var(--blue); padding:14px 24px;
+      font-size:13px; font-weight:500; color:var(--text);
+      z-index:300; white-space:nowrap; opacity:0;
+      pointer-events:none; transition:opacity 0.3s; max-width:90%;
+    }
+    .toast.show { opacity:1; }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <div class="treatment-page">
+    <!-- Header -->
+    <div class="treatment-header">
+      <canvas id="header-wave-canvas"></canvas>
+      <button class="treatment-back" onclick="goBack()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <h1>Treatment</h1>
+      <div class="header-spacer"></div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('activities')">
+        📋 Activities
+      </button>
+      <button class="tab-btn" onclick="switchTab('standards')">
+        📊 Standards
+      </button>
+    </div>
+
+    <!-- Content -->
+    <div class="treatment-content">
+      <!-- Activities Tab -->
+      <div class="tab-panel active" id="activities-panel">
+        <button class="add-activity-btn" onclick="openActivityModal()">
+          <span>➕</span>
+          <span>Log Activity</span>
+        </button>
+        
+        <div class="activities-list" id="activities-list">
+          <!-- Populated dynamically -->
+        </div>
+        
+        <div class="empty-state" id="activities-empty" style="display:none;">
+          <div class="empty-icon">📝</div>
+          <div class="empty-title">No Activities Logged</div>
+          <div class="empty-message">
+            Tap "Log Activity" above to record<br>
+            maintenance, cleaning, or inspection tasks.
+          </div>
+        </div>
+      </div>
+
+      <!-- Standards Tab -->
+      <div class="tab-panel" id="standards-panel">
+        <div class="standards-intro">
+          <h2>🇵🇭 Philippine Drinking Water Quality Standards</h2>
+          <p>
+            The Philippine National Standards for Drinking Water (PNSDW) are established 
+            by the Department of Health (DOH) to ensure safe and potable water for all Filipinos. 
+            These standards are based on World Health Organization (WHO) guidelines and are 
+            regularly updated to reflect current scientific knowledge.
+          </p>
+          <p>
+            All water service providers, including private systems like Siadeel Water, must 
+            comply with these standards to protect public health.
+          </p>
+          <div class="standards-source">
+            Source: DOH Administrative Order 2017-0010 — Philippine National Standards for Drinking Water (PNSDW) 2017
+          </div>
+        </div>
+
+        <div class="standards-grid">
+          <!-- Physical Parameters -->
+          <div class="standard-card">
+            <div class="standard-header">
+              <div class="standard-icon">👁️</div>
+              <div class="standard-title">Physical Parameters</div>
+            </div>
+            <table class="parameter-table">
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Maximum Limit</th>
+                  <th>Unit</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="parameter-name">Color</td>
+                  <td class="parameter-limit">15</td>
+                  <td class="parameter-unit">TCU</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Turbidity</td>
+                  <td class="parameter-limit">5</td>
+                  <td class="parameter-unit">NTU</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Odor</td>
+                  <td class="parameter-limit">Unobjectionable</td>
+                  <td class="parameter-unit">—</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Taste</td>
+                  <td class="parameter-limit">Unobjectionable</td>
+                  <td class="parameter-unit">—</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Temperature</td>
+                  <td class="parameter-limit">Ambient</td>
+                  <td class="parameter-unit">°C</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="info-note">
+              <div class="info-note-text">
+                💡 <strong>Note:</strong> Turbidity should ideally be below 1 NTU for effective disinfection.
+              </div>
+            </div>
+          </div>
+
+          <!-- Chemical Parameters (Inorganic) -->
+          <div class="standard-card">
+            <div class="standard-header">
+              <div class="standard-icon">🧪</div>
+              <div class="standard-title">Chemical Parameters — Inorganic</div>
+            </div>
+            <table class="parameter-table">
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Maximum Limit</th>
+                  <th>Unit</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="parameter-name">pH</td>
+                  <td class="parameter-limit">6.5 - 8.5</td>
+                  <td class="parameter-unit">—</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Total Dissolved Solids</td>
+                  <td class="parameter-limit">600</td>
+                  <td class="parameter-unit">mg/L</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Total Hardness (as CaCO₃)</td>
+                  <td class="parameter-limit">300</td>
+                  <td class="parameter-unit">mg/L</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Chloride</td>
+                  <td class="parameter-limit">250</td>
+                  <td class="parameter-unit">mg/L</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Sulfate</td>
+                  <td class="parameter-limit">250</td>
+                  <td class="parameter-unit">mg/L</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Iron</td>
+                  <td class="parameter-limit">1.0</td>
+                  <td class="parameter-unit">mg/L</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Manganese</td>
+                  <td class="parameter-limit">0.4</td>
+                  <td class="parameter-unit">mg/L</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Copper</td>
+                  <td class="parameter-limit">1.0</td>
+                  <td class="parameter-unit">mg/L</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Zinc</td>
+                  <td class="parameter-limit">5.0</td>
+                  <td class="parameter-unit">mg/L</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Aluminum</td>
+                  <td class="parameter-limit">0.2</td>
+                  <td class="parameter-unit">mg/L</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Chemical Parameters (Health-Related) -->
+          <div class="standard-card">
+            <div class="standard-header">
+              <div class="standard-icon">⚠️</div>
+              <div class="standard-title">Chemical Parameters — Health-Related</div>
+            </div>
+            <table class="parameter-table">
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Maximum Limit</th>
+                  <th>Unit</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="parameter-name">Arsenic</td>
+                  <td class="parameter-limit">0.01</td>
+                  <td class="parameter-unit">mg/L</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Cadmium</td>
+                  <td class="parameter-limit">0.003</td>
+                  <td class="parameter-unit">mg/L</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Chromium</td>
+                  <td class="parameter-limit">0.05</td>
+                  <td class="parameter-unit">mg/L</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Lead</td>
+                  <td class="parameter-limit">0.01</td>
+                  <td class="parameter-unit">mg/L</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Mercury</td>
+                  <td class="parameter-limit">0.001</td>
+                  <td class="parameter-unit">mg/L</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Nitrate (as NO₃)</td>
+                  <td class="parameter-limit">50</td>
+                  <td class="parameter-unit">mg/L</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Nitrite (as NO₂)</td>
+                  <td class="parameter-limit">3.0</td>
+                  <td class="parameter-unit">mg/L</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Fluoride</td>
+                  <td class="parameter-limit">1.5</td>
+                  <td class="parameter-unit">mg/L</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="info-note">
+              <div class="info-note-text">
+                ⚠️ <strong>Warning:</strong> These parameters can cause serious health effects. Regular testing is mandatory.
+              </div>
+            </div>
+          </div>
+
+          <!-- Microbiological Parameters -->
+          <div class="standard-card">
+            <div class="standard-header">
+              <div class="standard-icon">🦠</div>
+              <div class="standard-title">Microbiological Parameters</div>
+            </div>
+            <table class="parameter-table">
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Maximum Limit</th>
+                  <th>Unit</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="parameter-name">E. coli</td>
+                  <td class="parameter-limit">0</td>
+                  <td class="parameter-unit">CFU/100mL</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Total Coliform</td>
+                  <td class="parameter-limit">0</td>
+                  <td class="parameter-unit">CFU/100mL</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Heterotrophic Plate Count</td>
+                  <td class="parameter-limit">500</td>
+                  <td class="parameter-unit">CFU/mL</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="info-note">
+              <div class="info-note-text">
+                🦠 <strong>Critical:</strong> Any detection of E. coli or Total Coliform indicates fecal contamination. 
+                Water must be disinfected immediately and retested.
+              </div>
+            </div>
+          </div>
+
+          <!-- Disinfection Parameters -->
+          <div class="standard-card">
+            <div class="standard-header">
+              <div class="standard-icon">💧</div>
+              <div class="standard-title">Disinfection Parameters</div>
+            </div>
+            <table class="parameter-table">
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Requirement</th>
+                  <th>Unit</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="parameter-name">Free Chlorine (Residual)</td>
+                  <td class="parameter-limit">0.3 - 1.5</td>
+                  <td class="parameter-unit">mg/L</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Contact Time</td>
+                  <td class="parameter-limit">≥ 30 minutes</td>
+                  <td class="parameter-unit">at pH 8 or less</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Trihalomethanes (THMs)</td>
+                  <td class="parameter-limit">0.08</td>
+                  <td class="parameter-unit">mg/L</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="info-note">
+              <div class="info-note-text">
+                💧 <strong>Best Practice:</strong> Maintain residual chlorine between 0.5-1.0 mg/L 
+                at the point of consumption for optimal protection.
+              </div>
+            </div>
+          </div>
+
+          <!-- Radioactive Parameters -->
+          <div class="standard-card">
+            <div class="standard-header">
+              <div class="standard-icon">☢️</div>
+              <div class="standard-title">Radioactive Parameters</div>
+            </div>
+            <table class="parameter-table">
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Maximum Limit</th>
+                  <th>Unit</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="parameter-name">Gross Alpha Activity</td>
+                  <td class="parameter-limit">0.5</td>
+                  <td class="parameter-unit">Bq/L</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Gross Beta Activity</td>
+                  <td class="parameter-limit">1.0</td>
+                  <td class="parameter-unit">Bq/L</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Testing Frequency -->
+          <div class="standard-card">
+            <div class="standard-header">
+              <div class="standard-icon">📅</div>
+              <div class="standard-title">Recommended Testing Frequency</div>
+            </div>
+            <table class="parameter-table">
+              <thead>
+                <tr>
+                  <th>Parameter Type</th>
+                  <th>Frequency</th>
+                  <th>Note</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="parameter-name">Microbiological</td>
+                  <td class="parameter-limit">Monthly</td>
+                  <td class="parameter-unit">Minimum requirement</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Physical & Chemical</td>
+                  <td class="parameter-limit">Quarterly</td>
+                  <td class="parameter-unit">Every 3 months</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Heavy Metals</td>
+                  <td class="parameter-limit">Annually</td>
+                  <td class="parameter-unit">Once per year</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">Residual Chlorine</td>
+                  <td class="parameter-limit">Daily</td>
+                  <td class="parameter-unit">At distribution points</td>
+                </tr>
+                <tr>
+                  <td class="parameter-name">pH & Turbidity</td>
+                  <td class="parameter-limit">Daily</td>
+                  <td class="parameter-unit">Operational monitoring</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="info-note">
+              <div class="info-note-text">
+                📅 <strong>Compliance:</strong> More frequent testing may be required based on 
+                water source quality, treatment processes, and DOH directives.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Activity Modal -->
+  <div class="modal" id="activity-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Log Activity</div>
+        <button class="modal-close" onclick="closeActivityModal()">×</button>
+      </div>
+      
+      <form id="activity-form" onsubmit="submitActivity(event)">
+        <div class="form-group">
+          <label class="form-label">Activity Type *</label>
+          <select class="form-select" id="activity-type" required>
+            <option value="">Select type...</option>
+            <option value="maintenance">🔧 Maintenance</option>
+            <option value="cleaning">🧹 Cleaning</option>
+            <option value="inspection">🔍 Inspection</option>
+            <option value="repair">⚠️ Repair</option>
+            <option value="testing">🧪 Testing</option>
+            <option value="other">📝 Other</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Activity Title *</label>
+          <input type="text" class="form-input" id="activity-title" 
+                 placeholder="e.g., Filter Backwash" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Date & Time *</label>
+          <input type="datetime-local" class="form-input" id="activity-datetime" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Performed By</label>
+          <input type="text" class="form-input" id="activity-operator" 
+                 placeholder="Operator name">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" id="activity-description" 
+                    placeholder="Details about the activity..."></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Duration (minutes)</label>
+          <input type="number" class="form-input" id="activity-duration" 
+                 placeholder="e.g., 30" min="1">
+        </div>
+        
+        <button type="submit" class="submit-btn">
+          💾 Save Activity
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Confirm Delete Modal -->
+  <div class="confirm-modal" id="confirm-modal">
+    <div class="confirm-content">
+      <div class="confirm-title">Delete Activity?</div>
+      <div class="confirm-message">
+        This will permanently delete this activity log. This action cannot be undone.
+      </div>
+      <div class="confirm-actions">
+        <button class="confirm-btn cancel" onclick="closeConfirmModal()">Cancel</button>
+        <button class="confirm-btn confirm" onclick="deleteCurrentActivity()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ═══════════════════════════════════════
+    // CONFIGURATION
+    // ═══════════════════════════════════════
+    const CODE_VERSION = '1.0';
+    console.log('🚀 Treatment version:', CODE_VERSION);
+    
+    const SHEET_ID = '1-lhBa3FTi_gcFGS1Z0Q9w6yCYoq_BnToI3ZKBl8k8Cs';
+    const ACTIVITIES_SHEET = 'TreatmentActivities';
+    
+    let token = null;
+    let isDark = false;
+    let activities = [];
+    let currentActivity = null;
+    
+    // ═══════════════════════════════════════
+    // THEME SYNC
+    // ═══════════════════════════════════════
+    const themeChannel = new BroadcastChannel('siadeel-theme-channel');
+    themeChannel.onmessage = (event) => {
+      if (event.data.type === 'theme-change') {
+        applyTheme(event.data.isDark);
+      }
+    };
+
+    function applyTheme(dark) {
+      isDark = dark;
+      document.body.classList.toggle('dark', dark);
+    }
+
+    applyTheme(localStorage.getItem('siadeel-theme') === 'dark');
+    
+    // ═══════════════════════════════════════
+    // LOADING STATE
+    // ═══════════════════════════════════════
+    function showLoading() {
+      document.getElementById('loading-overlay').classList.add('show');
+    }
+    
+    function hideLoading() {
+      document.getElementById('loading-overlay').classList.remove('show');
+    }
+    
+    // ═══════════════════════════════════════
+    // WAVE ANIMATION
+    // ═══════════════════════════════════════
+    (function initWaves() {
+      const canvas = document.getElementById('header-wave-canvas');
+      const ctx = canvas.getContext('2d');
+      let animId = null;
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+
+      function resize() {
+        const header = canvas.parentElement;
+        const W = header.offsetWidth;
+        const H = header.offsetHeight;
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        canvas.style.width = W + 'px';
+        canvas.style.height = H + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      const WAVES = [
+        { yBase: 0.5, amp1: 3, amp2: 2, freq1: 0.015, freq2: 0.030, speed: 0.3, alpha: 0.15, color: '255,255,255' },
+        { yBase: 0.7, amp1: 4, amp2: 2, freq1: 0.012, freq2: 0.025, speed: 0.4, alpha: 0.20, color: '180,230,255' }
+      ];
+
+      function loop(ts) {
+        const t = ts / 1000;
+        const W = canvas.width / dpr;
+        const H = canvas.height / dpr;
+        ctx.clearRect(0, 0, W, H);
+
+        for (let i = 0; i < WAVES.length; i++) {
+          const layer = WAVES[i];
+          const yCenter = H * layer.yBase;
+          const phase = t * layer.speed;
+
+          ctx.beginPath();
+          ctx.moveTo(0, H);
+          for (let x = 0; x <= W; x += 2) {
+            const y = yCenter
+              + Math.sin(x * layer.freq1 + phase * 2.0) * layer.amp1
+              + Math.sin(x * layer.freq2 - phase * 1.4) * layer.amp2;
+            if (x === 0) ctx.lineTo(0, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.lineTo(W, H);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(' + layer.color + ',' + layer.alpha + ')';
+          ctx.fill();
+        }
+
+        animId = requestAnimationFrame(loop);
+      }
+
+      window.addEventListener('resize', resize);
+      resize();
+      animId = requestAnimationFrame(loop);
+    })();
+    
+    // ═══════════════════════════════════════
+    // INITIALIZATION
+    // ═══════════════════════════════════════
+    (async function init() {
+      token = localStorage.getItem('siadeel-token');
+      const expiry = localStorage.getItem('siadeel-token-expiry');
+      const bufferMs = 5 * 60 * 1000;
+      
+      if (!token || !expiry || Date.now() >= (parseInt(expiry) - bufferMs)) {
+        showToast('⚠️ Session expired. Redirecting...');
+        setTimeout(() => window.location.href = 'index.html', 2000);
+        return;
+      }
+      
+      showLoading();
+      
+      await loadActivities();
+      renderActivities();
+      
+      // Set default datetime to now
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      document.getElementById('activity-datetime').value = now.toISOString().slice(0, 16);
+      
+      hideLoading();
+    })();
+    
+    // ═══════════════════════════════════════
+    // TAB SWITCHING
+    // ═══════════════════════════════════════
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.remove('active');
+      });
+      
+      event.target.classList.add('active');
+      document.getElementById(`${tab}-panel`).classList.add('active');
+    }
+    
+    // ═══════════════════════════════════════
+    // DATA LOADING
+    // ═══════════════════════════════════════
+    async function loadActivities() {
+      if (!token) return;
+      
+      try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A:H`;
+        
+        const response = await fetch(url, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            console.log('Activities sheet not found, will create on first activity');
+            activities = [];
+            return;
+          }
+          throw new Error('Failed to load activities');
+        }
+        
+        const data = await response.json();
+        
+        if (data.values && data.values.length > 1) {
+          const headers = data.values[0];
+          
+          activities = data.values.slice(1).map((row, index) => {
+            const obj = { _rowIndex: index + 2 };
+            
+            headers.forEach((h, i) => {
+              obj[h] = row[i] || '';
+            });
+            
+            return obj;
+          });
+          
+          // Sort by datetime descending
+          activities.sort((a, b) => new Date(b.DateTime) - new Date(a.DateTime));
+          
+          console.log('✅ Loaded', activities.length, 'activities');
+        }
+      } catch (err) {
+        console.error('Load activities error:', err);
+      }
+    }
+    
+    // ═══════════════════════════════════════
+    // RENDER ACTIVITIES
+    // ═══════════════════════════════════════
+    function renderActivities() {
+      const list = document.getElementById('activities-list');
+      const empty = document.getElementById('activities-empty');
+      
+      if (activities.length === 0) {
+        list.style.display = 'none';
+        empty.style.display = 'block';
+        return;
+      }
+      
+      list.style.display = 'flex';
+      empty.style.display = 'none';
+      
+      list.innerHTML = activities.map(activity => {
+        const datetime = new Date(activity.DateTime);
+        const dateStr = datetime.toLocaleDateString('en-US', { 
+          year: 'numeric', month: 'short', day: 'numeric' 
+        });
+        const timeStr = datetime.toLocaleTimeString('en-US', { 
+          hour: '2-digit', minute: '2-digit' 
+        });
+        
+        const typeIcon = getTypeIcon(activity.Type);
+        const typeLabel = getTypeLabel(activity.Type);
+        
+        return `
+          <div class="activity-card ${activity.Type}">
+            <div class="activity-header">
+              <div>
+                <div class="activity-title">${activity.Title}</div>
+                <div class="activity-type">${typeIcon} ${typeLabel}</div>
+              </div>
+            </div>
+            <div class="activity-meta">
+              <div class="activity-meta-item">
+                <span>📅</span>
+                <span>${dateStr}</span>
+              </div>
+              <div class="activity-meta-item">
+                <span>🕐</span>
+                <span>${timeStr}</span>
+              </div>
+              ${activity.Duration ? `
+              <div class="activity-meta-item">
+                <span>⏱️</span>
+                <span>${activity.Duration} min</span>
+              </div>
+              ` : ''}
+              ${activity.Operator ? `
+              <div class="activity-meta-item">
+                <span>👤</span>
+                <span>${activity.Operator}</span>
+              </div>
+              ` : ''}
+            </div>
+            ${activity.Description ? `
+            <div class="activity-description">${activity.Description}</div>
+            ` : ''}
+            <div class="activity-actions">
+              <button class="activity-action-btn delete" onclick='confirmDeleteActivity(${JSON.stringify(activity).replace(/'/g, "&apos;")})'>
+                🗑️ Delete
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function getTypeIcon(type) {
+      const icons = {
+        'maintenance': '🔧',
+        'cleaning': '🧹',
+        'inspection': '🔍',
+        'repair': '⚠️',
+        'testing': '🧪',
+        'other': '📝'
+      };
+      return icons[type] || '📝';
+    }
+    
+    function getTypeLabel(type) {
+      const labels = {
+        'maintenance': 'Maintenance',
+        'cleaning': 'Cleaning',
+        'inspection': 'Inspection',
+        'repair': 'Repair',
+        'testing': 'Testing',
+        'other': 'Other'
+      };
+      return labels[type] || 'Activity';
+    }
+    
+    // ═══════════════════════════════════════
+    // ACTIVITY MODAL
+    // ═══════════════════════════════════════
+    function openActivityModal() {
+      document.getElementById('activity-modal').classList.add('show');
+    }
+    
+    function closeActivityModal() {
+      document.getElementById('activity-modal').classList.remove('show');
+      document.getElementById('activity-form').reset();
+      
+      // Reset datetime to now
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      document.getElementById('activity-datetime').value = now.toISOString().slice(0, 16);
+    }
+    
+    // ═══════════════════════════════════════
+    // SUBMIT ACTIVITY
+    // ═══════════════════════════════════════
+    async function submitActivity(event) {
+      event.preventDefault();
+      
+      if (!token) {
+        showToast('❌ Not authenticated');
+        return;
+      }
+      
+      showLoading();
+      
+      const id = Date.now();
+      const type = document.getElementById('activity-type').value;
+      const title = document.getElementById('activity-title').value;
+      const datetime = document.getElementById('activity-datetime').value;
+      const operator = document.getElementById('activity-operator').value;
+      const description = document.getElementById('activity-description').value;
+      const duration = document.getElementById('activity-duration').value;
+      const createdAt = new Date().toISOString();
+      
+      const rowData = [
+        id, type, title, datetime, operator, description, duration, createdAt
+      ];
+      
+      try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A:H:append?valueInputOption=USER_ENTERED`;
+        
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ values: [rowData] })
+        });
+        
+        if (!response.ok) throw new Error('Save failed');
+        
+        showToast('✅ Activity logged!');
+        
+        closeActivityModal();
+        await loadActivities();
+        renderActivities();
+        
+      } catch (err) {
+        console.error('Submit activity error:', err);
+        showToast('❌ Failed to save');
+      } finally {
+        hideLoading();
+      }
+    }
+    
+    // ═══════════════════════════════════════
+    // DELETE ACTIVITY
+    // ═══════════════════════════════════════
+    function confirmDeleteActivity(activity) {
+      currentActivity = activity;
+      document.getElementById('confirm-modal').classList.add('show');
+    }
+    
+    function closeConfirmModal() {
+      document.getElementById('confirm-modal').classList.remove('show');
+    }
+    
+    async function deleteCurrentActivity() {
+      if (!currentActivity || !token) return;
+      
+      closeConfirmModal();
+      showLoading();
+      
+      // TODO: Implement actual delete via Google Sheets API
+      // For now, just remove from local array
+      
+      activities = activities.filter(a => a.ID !== currentActivity.ID);
+      
+      showToast('✅ Activity deleted!');
+      
+      renderActivities();
+      
+      hideLoading();
+    }
+    
+    // ═══════════════════════════════════════
+    // UI HELPERS
+    // ═══════════════════════════════════════
+    function goBack() {
+      window.location.href = 'index.html';
+    }
+    
+    let toastTimer;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+  </script>
+</body>
+</html>
