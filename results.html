@@ -1530,6 +1530,12 @@
       closeAddModal();
       await loadEntries();
       document.getElementById('entry-form').reset();
+
+      // ✅ FIX: Auto-select the date to show the entry with weather
+      setTimeout(() => {
+        selectDate(date);
+        console.log('✅ Auto-selected date:', date);
+      }, 500);
     }
     
   } catch (err) {
