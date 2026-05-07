@@ -385,11 +385,10 @@
     C -->|Pass| D[🔬 Chlorination Stage]
     C -->|Fail| F[⚠️ Treatment Required]
     F --> D
-    D -->|Sand Filter| G[Carbon Filter]
-    G -->|UV Treatment| H[🏘️ Distribution Network]
-    H -->|Consumption| I[End Users]
-    H -->|Excess/Overflow| J[🔄 Recycle System]
-    J -->|Return Line| B
+    D -->|UV Treatment| H[🏘️ Distribution Network]
+    E -->|Consumption| I[End Users]
+    F -->|Excess/Overflow| J[🔄 Recycle System]
+    G -->|Return Line| B
     
     style A fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
     style B fill:#fff3e0,stroke:#f57c00,stroke-width:2px
@@ -401,7 +400,7 @@
       
       simple: `graph LR
     A[Well] --> B[Tank]
-    B --> C[Filter]
+    B --> C[Chlorine Dosing]
     C --> D[Users]
     D --> E[Recycle]
     E --> B`,
