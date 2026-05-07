@@ -16,7 +16,7 @@
       --bg: #f5f7fa; --bg2: #e9ecf1; --shadow-d: #c8d1dc; --shadow-l: #ffffff;
       --text: #0052A3; --text2: #5a6c7d; --text3: #8b98a5;
       --blue: #0052A3; --blue-d: #003d7a; --blue-l: #1a6bbf; --card: #f5f7fa;
-      --red: #e74c3c; --red-d: #c0392b;
+      --red: #e74c3c; --red-d: #c0392b; --green: #27ae60; --green-d: #229954;
       --neu-out: 8px 8px 16px var(--shadow-d), -6px -6px 12px var(--shadow-l);
       --neu-in:  inset 5px 5px 10px var(--shadow-d), inset -4px -4px 9px var(--shadow-l);
       --neu-sm:  5px 5px 10px var(--shadow-d), -4px -4px 8px var(--shadow-l);
@@ -156,12 +156,71 @@
     .entry-date {
       font-size:16px; font-weight:700; color:var(--text);
     }
+    /* ✅ ENHANCED: Detailed Weather Display */
     .entry-weather {
-      display:flex; align-items:center; gap:8px;
-      font-size:13px; color:var(--text2);
+      display:flex; flex-direction:column; gap:12px;
+      background:var(--bg); border-radius:12px;
+      box-shadow:var(--neu-xs); padding:16px;
+      margin-bottom:16px;
     }
-    
-    /* ✅ BAGO: Entry actions (Edit & Delete buttons) */
+
+    .weather-main {
+      display:flex; align-items:center; gap:12px;
+    }
+
+    .weather-icon-box {
+      width:60px; height:60px; border-radius:12px;
+      background:var(--bg); box-shadow:var(--neu-sm);
+      display:flex; align-items:center; justify-content:center;
+      font-size:32px;
+    }
+
+    .weather-primary {
+      flex:1;
+    }
+
+    .weather-condition {
+      font-size:16px; font-weight:700; color:var(--text);
+      margin-bottom:4px;
+    }
+
+    .weather-temp {
+      font-size:24px; font-weight:700; color:var(--blue);
+      line-height:1;
+    }
+
+    .weather-feels {
+      font-size:11px; color:var(--text3); margin-top:4px;
+    }
+
+    .weather-details {
+      display:grid; grid-template-columns:1fr 1fr; gap:10px;
+      padding-top:12px; border-top:1px solid var(--shadow-d);
+    }
+
+    .weather-detail-item {
+      display:flex; align-items:center; gap:8px;
+    }
+
+    .weather-detail-icon {
+      width:24px; height:24px; border-radius:6px;
+      background:var(--bg); box-shadow:var(--neu-xs);
+      display:flex; align-items:center; justify-content:center;
+      font-size:12px; flex-shrink:0;
+    }
+
+    .weather-detail-info {
+      flex:1;
+    }
+
+    .weather-detail-label {
+      font-size:9px; font-weight:600; letter-spacing:0.5px;
+      text-transform:uppercase; color:var(--text3);
+    }
+
+    .weather-detail-value {
+      font-size:13px; font-weight:600; color:var(--text2);
+    }
     .entry-actions {
       display:flex; gap:10px; margin-bottom:16px;
     }
@@ -242,15 +301,90 @@
       font-size:12px; font-weight:600; color:var(--text2);
       margin-bottom:8px; display:block;
     }
-    .form-input {
+    .form-input, .form-select {
       width:100%; padding:14px; background:var(--bg);
       border:none; border-radius:12px; box-shadow:var(--neu-in);
       font-size:14px; color:var(--text); font-family:'Inter',sans-serif;
       outline:none;
     }
-    .form-input:focus {
+    .form-input:focus, .form-select:focus {
       box-shadow:var(--neu-in), 0 0 0 2px var(--blue-l);
     }
+    
+    /* ✅ BAGO: Sample Point Selector with Manage Button */
+    .sample-point-group {
+      display:flex; gap:10px; align-items:flex-end;
+    }
+    .sample-point-group .form-group {
+      flex:1; margin-bottom:0;
+    }
+    .manage-points-btn {
+      padding:14px 16px; background:var(--bg);
+      border:none; border-radius:12px; box-shadow:var(--neu-sm);
+      color:var(--blue); cursor:pointer; font-size:14px;
+      font-weight:600; white-space:nowrap;
+      transition:box-shadow 0.15s, transform 0.1s;
+      font-family:'Inter',sans-serif;
+    }
+    .manage-points-btn:active {
+      box-shadow:var(--neu-in); transform:scale(0.98);
+    }
+    
+    /* ✅ BAGO: Sample Points Management Modal */
+    .points-list {
+      max-height:400px; overflow-y:auto;
+      margin-bottom:16px;
+    }
+    .point-item {
+      background:var(--bg); border-radius:12px;
+      box-shadow:var(--neu-xs); padding:14px;
+      margin-bottom:10px; display:flex;
+      align-items:center; justify-content:space-between;
+    }
+    .point-info {
+      flex:1;
+    }
+    .point-name {
+      font-size:15px; font-weight:600; color:var(--text);
+      margin-bottom:4px;
+    }
+    .point-desc {
+      font-size:12px; color:var(--text3);
+    }
+    .point-actions {
+      display:flex; gap:8px;
+    }
+    .point-action-btn {
+      width:32px; height:32px; border-radius:8px;
+      border:none; display:flex; align-items:center;
+      justify-content:center; cursor:pointer;
+      transition:transform 0.1s;
+      font-size:16px;
+    }
+    .point-action-btn.edit {
+      background:var(--bg); color:var(--blue);
+      box-shadow:var(--neu-xs);
+    }
+    .point-action-btn.delete {
+      background:var(--red); color:white;
+      box-shadow:0 2px 6px rgba(231,76,60,0.3);
+    }
+    .point-action-btn:active {
+      transform:scale(0.95);
+    }
+    
+    .add-point-btn {
+      width:100%; padding:14px; background:var(--green);
+      border:none; border-radius:12px; color:white;
+      font-size:14px; font-weight:600; cursor:pointer;
+      box-shadow:0 4px 12px rgba(39,174,96,0.3);
+      transition:transform 0.1s;
+      font-family:'Inter',sans-serif;
+    }
+    .add-point-btn:active {
+      background:var(--green-d); transform:scale(0.98);
+    }
+    
     .image-upload {
       width:100%; padding:40px; background:var(--bg);
       border:2px dashed var(--shadow-d); border-radius:12px;
@@ -271,7 +405,6 @@
     }
     .submit-btn:active { transform:scale(0.98); }
     
-    /* ✅ BAGO: Confirm Delete Modal */
     .confirm-modal {
       position:fixed; top:0; left:0; right:0; bottom:0;
       background:rgba(0,0,0,0.6); z-index:150;
@@ -370,13 +503,15 @@
       <div class="entry-details" id="entry-details">
         <div class="entry-header">
           <div class="entry-date" id="entry-date">—</div>
-          <div class="entry-weather" id="entry-weather">
-            <span>☀️</span>
-            <span>—</span>
+                <!-- ✅ ENHANCED: Detailed Weather Display -->
+          <div class="entry-weather" id="entry-weather" style="display:none;">
+            <!-- Weather content will be inserted here by JavaScript -->
           </div>
         </div>
         
-        <!-- ✅ BAGO: Edit & Delete buttons -->
+
+
+
         <div class="entry-actions">
           <button class="entry-btn edit" onclick="editCurrentEntry()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline-block; vertical-align:middle; margin-right:6px;">
@@ -408,7 +543,6 @@
       </div>
       
       <form id="entry-form" onsubmit="submitEntry(event)">
-        <!-- ✅ BAGO: Hidden field for edit mode -->
         <input type="hidden" id="edit-row-index" value="">
         
         <div class="form-group">
@@ -416,9 +550,15 @@
           <input type="date" class="form-input" id="input-date" required>
         </div>
         
-        <div class="form-group">
-          <label class="form-label">Sample Point</label>
-          <input type="text" class="form-input" id="input-point" placeholder="e.g., Tank 1" required>
+        <!-- ✅ BAGO: Sample Point Dropdown with Manage Button -->
+        <div class="sample-point-group">
+          <div class="form-group" style="flex:1">
+            <label class="form-label">Sample Point</label>
+            <select class="form-select" id="input-point" required>
+              <option value="">Select sample point...</option>
+            </select>
+          </div>
+          <button type="button" class="manage-points-btn" onclick="openManagePointsModal()">⚙️ Manage</button>
         </div>
         
         <div class="form-group">
@@ -470,16 +610,58 @@
     </div>
   </div>
 
-  <!-- ✅ BAGO: Confirm Delete Modal -->
+  <!-- ✅ BAGO: Manage Sample Points Modal -->
+  <div class="modal" id="manage-points-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Manage Sample Points</div>
+        <button class="modal-close" onclick="closeManagePointsModal()">×</button>
+      </div>
+      
+      <div class="points-list" id="points-list">
+        <!-- Points will be loaded here -->
+      </div>
+      
+      <button class="add-point-btn" onclick="openAddPointModal()">+ Add New Sample Point</button>
+    </div>
+  </div>
+
+  <!-- ✅ BAGO: Add/Edit Sample Point Modal -->
+  <div class="modal" id="add-point-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title" id="point-modal-title">Add Sample Point</div>
+        <button class="modal-close" onclick="closeAddPointModal()">×</button>
+      </div>
+      
+      <form id="point-form" onsubmit="submitSamplePoint(event)">
+        <input type="hidden" id="edit-point-row-index" value="">
+        
+        <div class="form-group">
+          <label class="form-label">Name *</label>
+          <input type="text" class="form-input" id="point-name" placeholder="e.g., Tank 1" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <input type="text" class="form-input" id="point-description" placeholder="Location or details">
+        </div>
+        
+        <button type="submit" class="submit-btn" id="point-submit-btn">Save Sample Point</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Confirm Delete Modal -->
   <div class="confirm-modal" id="confirm-modal">
     <div class="confirm-content">
-      <div class="confirm-title">Delete Entry?</div>
-      <div class="confirm-message">
+      <div class="confirm-title" id="confirm-title">Delete Entry?</div>
+      <div class="confirm-message" id="confirm-message">
         This will permanently delete this test result. This action cannot be undone.
       </div>
       <div class="confirm-actions">
         <button class="confirm-btn cancel" onclick="closeConfirmModal()">Cancel</button>
-        <button class="confirm-btn confirm" onclick="deleteCurrentEntry()">Delete</button>
+        <button class="confirm-btn confirm" id="confirm-action-btn" onclick="deleteCurrentEntry()">Delete</button>
       </div>
     </div>
   </div>
@@ -492,13 +674,16 @@
     // ═══════════════════════════════════════
     const SHEET_ID = '1-lhBa3FTi_gcFGS1Z0Q9w6yCYoq_BnToI3ZKBl8k8Cs';
     const SHEET_NAME = 'Results';
-    const WEATHER_API_KEY = '44692e0366a24e13c3ea18e3ba743cf0'; // ⬅️ Replace with your key from openweathermap.org
+    const SAMPLE_POINTS_SHEET = 'SamplePoints'; // ✅ BAGO
+    const WEATHER_API_KEY = '44692e0366a24e13c3ea18e3ba743cf0';
     
     let currentMonth = new Date().getMonth();
     let currentYear = new Date().getFullYear();
     let entries = [];
+    let samplePoints = []; // ✅ BAGO
     let selectedDate = null;
-    let currentEntry = null; // ✅ BAGO: Track currently displayed entry
+    let currentEntry = null;
+    let currentPoint = null; // ✅ BAGO: For editing sample points
     let token = null;
     let isDark = false;
 
@@ -593,12 +778,241 @@
       }
       
       renderCalendar();
+      loadSamplePoints(); // ✅ BAGO: Load sample points first
       loadEntries();
       document.getElementById('input-date').valueAsDate = new Date();
     })();
 
     // ═══════════════════════════════════════
-    // CALENDAR FUNCTIONS
+    // ✅ BAGO: SAMPLE POINTS FUNCTIONS
+    // ═══════════════════════════════════════
+    function loadSamplePoints() {
+      if (!token) return;
+      
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SAMPLE_POINTS_SHEET}!A:D`;
+      
+      fetch(url, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      })
+      .then(r => {
+        if (!r.ok) throw new Error('Failed to load sample points');
+        return r.json();
+      })
+      .then(data => {
+        if (data.values && data.values.length > 1) {
+          const headers = data.values[0];
+          samplePoints = data.values.slice(1).map((row, index) => {
+            const obj = { _rowIndex: index + 2 };
+            headers.forEach((h, i) => {
+              obj[h] = row[i] || '';
+            });
+            return obj;
+          }).filter(p => p.Active === 'TRUE'); // Only show active points
+          
+          populateSamplePointDropdown();
+        }
+      })
+      .catch(err => {
+        console.error('Load sample points error:', err);
+        showToast('⚠️ Failed to load sample points');
+      });
+    }
+
+    function populateSamplePointDropdown() {
+      const select = document.getElementById('input-point');
+      select.innerHTML = '<option value="">Select sample point...</option>';
+      
+      samplePoints.forEach(point => {
+        const option = document.createElement('option');
+        option.value = point.Name;
+        option.textContent = point.Name;
+        if (point.Description) {
+          option.textContent += ` (${point.Description})`;
+        }
+        select.appendChild(option);
+      });
+    }
+
+    function openManagePointsModal() {
+      renderSamplePointsList();
+      document.getElementById('manage-points-modal').classList.add('show');
+    }
+
+    function closeManagePointsModal() {
+      document.getElementById('manage-points-modal').classList.remove('show');
+    }
+
+    function renderSamplePointsList() {
+      const list = document.getElementById('points-list');
+      
+      if (samplePoints.length === 0) {
+        list.innerHTML = '<p style="text-align:center; color:var(--text3); padding:20px;">No sample points yet. Add your first one below!</p>';
+        return;
+      }
+      
+      list.innerHTML = samplePoints.map(point => `
+        <div class="point-item">
+          <div class="point-info">
+            <div class="point-name">${point.Name}</div>
+            <div class="point-desc">${point.Description || 'No description'}</div>
+          </div>
+          <div class="point-actions">
+            <button class="point-action-btn edit" onclick='editSamplePoint(${JSON.stringify(point)})'>✏️</button>
+            <button class="point-action-btn delete" onclick='confirmDeletePoint(${JSON.stringify(point)})'>🗑️</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openAddPointModal() {
+      document.getElementById('point-modal-title').textContent = 'Add Sample Point';
+      document.getElementById('point-submit-btn').textContent = 'Save Sample Point';
+      document.getElementById('edit-point-row-index').value = '';
+      document.getElementById('point-form').reset();
+      document.getElementById('add-point-modal').classList.add('show');
+    }
+
+    function closeAddPointModal() {
+      document.getElementById('add-point-modal').classList.remove('show');
+      document.getElementById('point-form').reset();
+      currentPoint = null;
+    }
+
+    function editSamplePoint(point) {
+      currentPoint = point;
+      document.getElementById('point-name').value = point.Name;
+      document.getElementById('point-description').value = point.Description || '';
+      document.getElementById('edit-point-row-index').value = point._rowIndex;
+      document.getElementById('point-modal-title').textContent = 'Edit Sample Point';
+      document.getElementById('point-submit-btn').textContent = 'Update Sample Point';
+      document.getElementById('add-point-modal').classList.add('show');
+    }
+
+    async function submitSamplePoint(event) {
+      event.preventDefault();
+      
+      if (!token) {
+        showToast('❌ Not authenticated');
+        return;
+      }
+      
+      const name = document.getElementById('point-name').value.trim();
+      const description = document.getElementById('point-description').value.trim();
+      const editRowIndex = document.getElementById('edit-point-row-index').value;
+      const isEditMode = editRowIndex !== '';
+      
+      if (!name) {
+        showToast('⚠️ Name is required');
+        return;
+      }
+      
+      showToast(isEditMode ? '⏳ Updating...' : '⏳ Saving...');
+      
+      const id = isEditMode ? currentPoint.ID : Date.now();
+      const rowData = [id, name, description, 'TRUE'];
+      
+      if (isEditMode) {
+        const range = `${SAMPLE_POINTS_SHEET}!A${editRowIndex}:D${editRowIndex}`;
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
+        
+        fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ values: [rowData] })
+        })
+        .then(r => r.json())
+        .then(data => {
+          showToast('✅ Sample point updated!');
+          closeAddPointModal();
+          loadSamplePoints();
+          renderSamplePointsList();
+        })
+        .catch(err => {
+          console.error('Update error:', err);
+          showToast('❌ Failed to update');
+        });
+      } else {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SAMPLE_POINTS_SHEET}!A:D:append?valueInputOption=USER_ENTERED`;
+        
+        fetch(url, {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ values: [rowData] })
+        })
+        .then(r => r.json())
+        .then(data => {
+          showToast('✅ Sample point added!');
+          closeAddPointModal();
+          loadSamplePoints();
+          renderSamplePointsList();
+        })
+        .catch(err => {
+          console.error('Save error:', err);
+          showToast('❌ Failed to save');
+        });
+      }
+    }
+
+    function confirmDeletePoint(point) {
+      currentPoint = point;
+      document.getElementById('confirm-title').textContent = 'Delete Sample Point?';
+      document.getElementById('confirm-message').textContent = `Are you sure you want to delete "${point.Name}"? This will not affect existing test results.`;
+      document.getElementById('confirm-action-btn').onclick = deleteSamplePoint;
+      document.getElementById('confirm-modal').classList.add('show');
+    }
+
+    function deleteSamplePoint() {
+      if (!currentPoint || !token) return;
+      
+      closeConfirmModal();
+      showToast('⏳ Deleting...');
+      
+      const rowIndex = currentPoint._rowIndex;
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`;
+      
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          requests: [{
+            deleteDimension: {
+              range: {
+                sheetId: 0, // ⚠️ Update if SamplePoints is not first sheet
+                dimension: 'ROWS',
+                startIndex: rowIndex - 1,
+                endIndex: rowIndex
+              }
+            }
+          }]
+        })
+      })
+      .then(r => {
+        if (!r.ok) throw new Error('Delete failed');
+        return r.json();
+      })
+      .then(data => {
+        showToast('✅ Sample point deleted!');
+        currentPoint = null;
+        loadSamplePoints();
+        renderSamplePointsList();
+      })
+      .catch(err => {
+        console.error('Delete error:', err);
+        showToast('❌ Failed to delete');
+      });
+    }
+
+    // ═══════════════════════════════════════
+    // CALENDAR FUNCTIONS (unchanged)
     // ═══════════════════════════════════════
     function renderCalendar() {
       const firstDay = new Date(currentYear, currentMonth, 1).getDay();
@@ -697,16 +1111,23 @@
 
     function displayEntries(dayEntries) {
       const entry = dayEntries[0];
-      currentEntry = entry; // ✅ BAGO: Store current entry
+      currentEntry = entry;
       
       document.getElementById('entry-date').textContent = new Date(entry.Date).toLocaleDateString('en-US', {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
       });
       
-      document.getElementById('entry-weather').innerHTML = `
-        <span>${getWeatherIcon(entry['Picture Weather'])}</span>
-        <span>${entry['Picture Weather'] || '—'}</span>
-      `;
+        // ✅ ENHANCED: Render detailed weather
+        let weatherData = entry['Picture Weather'];
+        if (weatherData) {
+          try {
+            // Try to parse as JSON (new format)
+            weatherData = JSON.parse(weatherData);
+          } catch (e) {
+            // Keep as string (legacy format)
+          }
+        }
+        renderWeatherDetails(weatherData);
       
       const grid = document.getElementById('entry-grid');
       grid.innerHTML = `
@@ -780,7 +1201,7 @@
         if (data.values && data.values.length > 1) {
           const headers = data.values[0];
           entries = data.values.slice(1).map((row, index) => {
-            const obj = { _rowIndex: index + 2 }; // ✅ BAGO: Store row index (header is row 1)
+            const obj = { _rowIndex: index + 2 };
             headers.forEach((h, i) => {
               obj[h] = row[i] || '';
             });
@@ -832,14 +1253,16 @@
       const hardness = document.getElementById('input-hardness').value;
       const turbidity = document.getElementById('input-turbidity').value;
       
-      const weather = await getCurrentWeather();
+        // ✅ ENHANCED: Get full weather object
+      const weatherData = await getCurrentWeather();
+      const weatherString = weatherData ? JSON.stringify(weatherData) : 'N/A';
       
       const imageFile = document.getElementById('input-image').files[0];
       let imageUrl = '';
       if (imageFile) {
         imageUrl = await resizeAndUploadImage(imageFile);
       } else if (isEditMode && currentEntry) {
-        imageUrl = currentEntry.Picture || ''; // Keep existing image if not changed
+        imageUrl = currentEntry.Picture || '';
       }
       
       const id = isEditMode ? currentEntry.ID : Date.now();
@@ -849,7 +1272,6 @@
       ];
       
       if (isEditMode) {
-        // ✅ UPDATE existing row
         const range = `${SHEET_NAME}!A${editRowIndex}:L${editRowIndex}`;
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
         
@@ -868,14 +1290,13 @@
           showToast('✅ Entry updated!');
           closeAddModal();
           loadEntries();
-          setTimeout(() => selectDate(date), 500); // Reselect date to refresh display
+          setTimeout(() => selectDate(date), 500);
         })
         .catch(err => {
           console.error('Update error:', err);
           showToast('❌ Failed to update entry');
         });
       } else {
-        // ✅ APPEND new row
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:L:append?valueInputOption=USER_ENTERED`;
         
         fetch(url, {
@@ -902,14 +1323,12 @@
       }
     }
 
-    // ✅ BAGO: Edit current entry
     function editCurrentEntry() {
       if (!currentEntry) {
         showToast('⚠️ No entry selected');
         return;
       }
       
-      // Populate form with current entry data
       document.getElementById('input-date').value = currentEntry.Date;
       document.getElementById('input-point').value = currentEntry['Sample Point'];
       document.getElementById('input-desc').value = currentEntry.Description || '';
@@ -920,14 +1339,12 @@
       document.getElementById('input-hardness').value = currentEntry.Hardness || '';
       document.getElementById('input-turbidity').value = currentEntry.Turbidity || '';
       
-      // Show existing image if available
       if (currentEntry.Picture) {
         const preview = document.getElementById('image-preview');
         preview.src = currentEntry.Picture;
         preview.classList.add('show');
       }
       
-      // Set edit mode
       document.getElementById('edit-row-index').value = currentEntry._rowIndex;
       document.getElementById('modal-title').textContent = 'Edit Test Entry';
       document.getElementById('submit-btn').textContent = 'Update Entry';
@@ -935,12 +1352,14 @@
       openAddModal();
     }
 
-    // ✅ BAGO: Confirm delete
     function confirmDelete() {
       if (!currentEntry) {
         showToast('⚠️ No entry selected');
         return;
       }
+      document.getElementById('confirm-title').textContent = 'Delete Entry?';
+      document.getElementById('confirm-message').textContent = 'This will permanently delete this test result. This action cannot be undone.';
+      document.getElementById('confirm-action-btn').onclick = deleteCurrentEntry;
       document.getElementById('confirm-modal').classList.add('show');
     }
 
@@ -948,7 +1367,6 @@
       document.getElementById('confirm-modal').classList.remove('show');
     }
 
-    // ✅ BAGO: Delete current entry
     function deleteCurrentEntry() {
       if (!currentEntry || !token) return;
       
@@ -956,9 +1374,6 @@
       showToast('⏳ Deleting entry...');
       
       const rowIndex = currentEntry._rowIndex;
-      
-      // Google Sheets API doesn't have a direct "delete row" endpoint
-      // We need to use batchUpdate to delete the row
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`;
       
       fetch(url, {
@@ -972,9 +1387,9 @@
             {
               deleteDimension: {
                 range: {
-                  sheetId: 0, // ⚠️ Change this if your sheet is not the first one (check Sheet ID in URL)
+                  sheetId: 0,
                   dimension: 'ROWS',
-                  startIndex: rowIndex - 1, // 0-indexed
+                  startIndex: rowIndex - 1,
                   endIndex: rowIndex
                 }
               }
@@ -1060,12 +1475,12 @@
       });
     }
 
-    // ═══════════════════════════════════════
-    // WEATHER FUNCTIONS
+        // ═══════════════════════════════════════
+    // ✅ ENHANCED: WEATHER FUNCTIONS
     // ═══════════════════════════════════════
     async function getCurrentWeather() {
       if (!WEATHER_API_KEY || WEATHER_API_KEY === 'YOUR_OPENWEATHER_API_KEY') {
-        return 'N/A';
+        return null; // Return null instead of 'N/A'
       }
       
       try {
@@ -1081,13 +1496,169 @@
         const response = await fetch(url);
         const data = await response.json();
         
-        return `${data.weather[0].main}, ${Math.round(data.main.temp)}°C`;
+        // ✅ Return full weather object
+        return {
+          condition: data.weather[0].main,
+          description: data.weather[0].description,
+          icon: data.weather[0].icon,
+          temp: Math.round(data.main.temp),
+          feelsLike: Math.round(data.main.feels_like),
+          tempMin: Math.round(data.main.temp_min),
+          tempMax: Math.round(data.main.temp_max),
+          humidity: data.main.humidity,
+          pressure: data.main.pressure,
+          windSpeed: data.wind.speed,
+          windDeg: data.wind.deg,
+          visibility: data.visibility ? Math.round(data.visibility / 1000) : null,
+          location: data.name,
+          timestamp: new Date().toISOString()
+        };
       } catch (err) {
         console.error('Weather error:', err);
-        return 'N/A';
+        return null;
       }
     }
 
+    function getWeatherIcon(weatherData) {
+      if (!weatherData) return '☀️';
+      
+      // Use OpenWeather icon codes
+      const iconMap = {
+        '01d': '☀️', '01n': '🌙',
+        '02d': '⛅', '02n': '☁️',
+        '03d': '☁️', '03n': '☁️',
+        '04d': '☁️', '04n': '☁️',
+        '09d': '🌧️', '09n': '🌧️',
+        '10d': '🌦️', '10n': '🌧️',
+        '11d': '⛈️', '11n': '⛈️',
+        '13d': '🌨️', '13n': '🌨️',
+        '50d': '🌫️', '50n': '🌫️'
+      };
+      
+      if (typeof weatherData === 'string') {
+        // Legacy format (plain text)
+        const w = weatherData.toLowerCase();
+        if (w.includes('rain')) return '🌧️';
+        if (w.includes('cloud')) return '☁️';
+        if (w.includes('sun') || w.includes('clear')) return '☀️';
+        if (w.includes('storm')) return '⛈️';
+        return '☀️';
+      }
+      
+      // New format (weather object)
+      return iconMap[weatherData.icon] || '☀️';
+    }
+
+    function getWindDirection(degrees) {
+      const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+      const index = Math.round(degrees / 45) % 8;
+      return directions[index];
+    }
+
+    function renderWeatherDetails(weatherData) {
+      const weatherEl = document.getElementById('entry-weather');
+      
+      if (!weatherData || typeof weatherData === 'string') {
+        // Legacy format or no data
+        weatherEl.innerHTML = `
+          <div class="weather-main">
+            <div class="weather-icon-box">${getWeatherIcon(weatherData)}</div>
+            <div class="weather-primary">
+              <div class="weather-condition">${weatherData || 'No weather data'}</div>
+            </div>
+          </div>
+        `;
+        weatherEl.style.display = 'block';
+        return;
+      }
+      
+      // Parse if stored as JSON string
+      if (typeof weatherData === 'string') {
+        try {
+          weatherData = JSON.parse(weatherData);
+        } catch (e) {
+          // If parsing fails, treat as legacy text
+          weatherEl.innerHTML = `
+            <div class="weather-main">
+              <div class="weather-icon-box">${getWeatherIcon(weatherData)}</div>
+              <div class="weather-primary">
+                <div class="weather-condition">${weatherData}</div>
+              </div>
+            </div>
+          `;
+          weatherEl.style.display = 'block';
+          return;
+        }
+      }
+      
+      // ✅ Render detailed weather
+      weatherEl.innerHTML = `
+        <div class="weather-main">
+          <div class="weather-icon-box">${getWeatherIcon(weatherData)}</div>
+          <div class="weather-primary">
+            <div class="weather-condition">${weatherData.condition}</div>
+            <div class="weather-temp">${weatherData.temp}°C</div>
+            <div class="weather-feels">Feels like ${weatherData.feelsLike}°C</div>
+          </div>
+        </div>
+        
+        <div class="weather-details">
+          <div class="weather-detail-item">
+            <div class="weather-detail-icon">💧</div>
+            <div class="weather-detail-info">
+              <div class="weather-detail-label">Humidity</div>
+              <div class="weather-detail-value">${weatherData.humidity}%</div>
+            </div>
+          </div>
+          
+          <div class="weather-detail-item">
+            <div class="weather-detail-icon">💨</div>
+            <div class="weather-detail-info">
+              <div class="weather-detail-label">Wind</div>
+              <div class="weather-detail-value">${weatherData.windSpeed} m/s ${getWindDirection(weatherData.windDeg)}</div>
+            </div>
+          </div>
+          
+          <div class="weather-detail-item">
+            <div class="weather-detail-icon">🌡️</div>
+            <div class="weather-detail-info">
+              <div class="weather-detail-label">Min / Max</div>
+              <div class="weather-detail-value">${weatherData.tempMin}° / ${weatherData.tempMax}°</div>
+            </div>
+          </div>
+          
+          <div class="weather-detail-item">
+            <div class="weather-detail-icon">🔽</div>
+            <div class="weather-detail-info">
+              <div class="weather-detail-label">Pressure</div>
+              <div class="weather-detail-value">${weatherData.pressure} hPa</div>
+            </div>
+          </div>
+          
+          ${weatherData.visibility ? `
+          <div class="weather-detail-item">
+            <div class="weather-detail-icon">👁️</div>
+            <div class="weather-detail-info">
+              <div class="weather-detail-label">Visibility</div>
+              <div class="weather-detail-value">${weatherData.visibility} km</div>
+            </div>
+          </div>
+          ` : ''}
+          
+          ${weatherData.location ? `
+          <div class="weather-detail-item">
+            <div class="weather-detail-icon">📍</div>
+            <div class="weather-detail-info">
+              <div class="weather-detail-label">Location</div>
+              <div class="weather-detail-value">${weatherData.location}</div>
+            </div>
+          </div>
+          ` : ''}
+        </div>
+      `;
+      
+      weatherEl.style.display = 'block';
+    }
     // ═══════════════════════════════════════
     // UI FUNCTIONS
     // ═══════════════════════════════════════
@@ -1101,7 +1672,6 @@
 
     function closeAddModal() {
       document.getElementById('add-modal').classList.remove('show');
-      // Reset form
       document.getElementById('entry-form').reset();
       document.getElementById('edit-row-index').value = '';
       document.getElementById('modal-title').textContent = 'New Test Entry';
