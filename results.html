@@ -1504,13 +1504,14 @@
       console.log('✅ Entry updated successfully');
       showToast('✅ Entry updated!');
       closeAddModal();
-      await loadEntries();
       
-      // ✅ FIX: Auto-select date to show updated entry
-      setTimeout(() => {
-        selectDate(date);
-        console.log('✅ Auto-selected date:', date);
-      }, 500);
+      // ✅ CRITICAL FIX: AWAIT loadEntries BEFORE selectDate
+      await loadEntries();
+      console.log('✅ Entries reloaded');
+      
+      // Now select the date with fresh data
+      selectDate(date);
+      console.log('✅ Auto-selected date:', date);
       
     } else {
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:L:append?valueInputOption=USER_ENTERED`;
@@ -1533,14 +1534,15 @@
       console.log('✅ Entry saved successfully');
       showToast('✅ Entry saved!');
       closeAddModal();
-      await loadEntries();
       document.getElementById('entry-form').reset();
       
-      // ✅ FIX: Auto-select date to show new entry with weather
-      setTimeout(() => {
-        selectDate(date);
-        console.log('✅ Auto-selected date:', date);
-      }, 500);
+      // ✅ CRITICAL FIX: AWAIT loadEntries BEFORE selectDate
+      await loadEntries();
+      console.log('✅ Entries reloaded');
+      
+      // Now select the date with fresh data
+      selectDate(date);
+      console.log('✅ Auto-selected date:', date);
     }
     
   } catch (err) {
@@ -1550,6 +1552,8 @@
     hideLoading();
   }
 }
+
+
     function editCurrentEntry() {
       if (!currentEntry) {
         showToast('⚠️ No entry selected');
