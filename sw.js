@@ -1,21 +1,8 @@
-// sw.js
-const CACHE_VERSION = 'siadeel-v1.0.3'; // ⬅️ Palitan ang version number bawat update
+const CACHE_VERSION = 'v1.0.5';
 const CACHE_NAME = CACHE_VERSION;
 
-const urlsToCache = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
-];
-
 self.addEventListener('install', (event) => {
-  self.skipWaiting(); // ⬅️ Force immediate activation
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
-  );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -24,13 +11,13 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName); // ⬅️ Delete old caches
+            return caches.delete(cacheName);
           }
         })
       );
     })
   );
-  return self.clients.claim(); // ⬅️ Take control immediately
+  return self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
