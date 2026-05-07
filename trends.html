@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0052A3">
+  <title>Trends - Siadeel Water</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  
+  <style>
+    :root {
+      --bg: #f5f7fa; --bg2: #e9ecf1; --shadow-d: #c8d1dc; --shadow-l: #ffffff;
+      --text: #0052A3; --text2: #5a6c7d; --text3: #8b98a5;
+      --blue: #0052A3; --blue-d: #003d7a; --blue-l: #1a6bbf; --card: #f5f7fa;
+      --red: #e74c3c; --red-d: #c0392b; --green: #27ae60; --green-d: #229954;
+      --yellow: #f39c12; --purple: #9b59b6;
+      --neu-out: 8px 8px 16px var(--shadow-d), -6px -6px 12px var(--shadow-l);
+      --neu-in:  inset 5px 5px 10px var(--shadow-d), inset -4px -4px 9px var(--shadow-l);
+      --neu-sm:  5px 5px 10px var(--shadow-d), -4px -4px 8px var(--shadow-l);
+      --neu-xs:  3px 3px 7px var(--shadow-d), -2px -2px 6px var(--shadow-l);
+    }
+    
+    body.dark {
+      --bg: #1a1f2e; --bg2: #232a3a; --shadow-d: #0f1219; --shadow-l: #2e3547;
+      --text: #1a6bbf; --text2: #8b98a5; --text3: #5a6c7d; --card: #1a1f2e;
+      --neu-out: 6px 6px 14px var(--shadow-d), -4px -4px 10px var(--shadow-l);
+      --neu-in:  inset 5px 5px 10px var(--shadow-d), inset -4px -4px 9px var(--shadow-l);
+      --neu-sm:  5px 5px 10px var(--shadow-d), -4px -4px 8px var(--shadow-l);
+      --neu-xs:  3px 3px 8px var(--shadow-d), -2px -2px 7px var(--shadow-l);
+    }
+    
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent }
+    html,body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; transition:background 0.4s,color 0.4s }
+    
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7); z-index: 500;
+      display: none; align-items: center; justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    .loading-overlay.show { display: flex; }
+    .loading-spinner {
+      width: 60px; height: 60px;
+      border: 4px solid rgba(255, 255, 255, 0.2);
+      border-top-color: white; border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .trends-page { display:flex; flex-direction:column; height:100dvh; width:100%; }
+    
+    /* Header */
+    .trends-header {
+      background:#0052A3; padding:14px 18px;
+      padding-top:calc(env(safe-area-inset-top,0px) + 14px);
+      display:flex; align-items:center; justify-content:space-between;
+      box-shadow:0 3px 10px rgba(0,0,0,0.15);
+      position:relative; overflow:hidden; z-index:10;
+    }
+    #header-wave-canvas {
+      position:absolute; top:0; left:0; width:100%; height:100%;
+      pointer-events:none; z-index:1; opacity:0.3;
+    }
+    .trends-back {
+      width:36px; height:36px; border-radius:10px;
+      background:rgba(255,255,255,0.15); border:none;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; transition:background 0.2s; color:white;
+      position:relative; z-index:2;
+    }
+    .trends-back:active { background:rgba(255,255,255,0.25); }
+    .trends-header h1 {
+      font-size:20px; font-weight:700; color:white;
+      letter-spacing:0.5px; position:relative; z-index:2;
+    }
+    .header-spacer { width:36px; }
+    
+    /* Content */
+    .trends-content {
+      flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
+      padding:20px 18px; padding-bottom:calc(40px + env(safe-area-inset-bottom,0px));
+    }
+    
+    /* Filter Card */
+    .filter-card {
+      background:var(--bg); border-radius:18px;
+      box-shadow:var(--neu-out); padding:20px; margin-bottom:20px;
+    }
+    .filter-title {
+      font-size:16px; font-weight:700; color:var(--text);
+      margin-bottom:16px; display:flex; align-items:center; gap:8px;
+    }
+    .form-group {
+      margin-bottom:16px;
+    }
+    .form-label {
+      font-size:12px; font-weight:600; color:var(--text2);
+      margin-bottom:8px; display:block;
+    }
+    .form-select, .form-input {
+      width:100%; padding:14px; background:var(--bg);
+      border:none; border-radius:12px; box-shadow:var(--neu-in);
+      font-size:14px; color:var(--text); font-family:'Inter',sans-serif;
+      outline:none;
+    }
+    .form-select:focus, .form-input:focus {
+      box-shadow:var(--neu-in), 0 0 0 2px var(--blue-l);
+    }
+    
+    .date-range-group {
+      display:grid; grid-template-columns:1fr 1fr; gap:12px;
+    }
+    
+    .parameter-grid {
+      display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;
+      margin-bottom:16px;
+    }
+    .parameter-btn {
+      padding:12px; background:var(--bg); border:none;
+      border-radius:12px; box-shadow:var(--neu-sm);
+      font-size:13px; font-weight:600; color:var(--text2);
+      cursor:pointer; transition:all 0.2s;
+      font-family:'Inter',sans-serif;
+      display:flex; align-items:center; justify-content:center;
+      gap:6px;
+    }
+    .parameter-btn:active {
+      box-shadow:var(--neu-in); transform:scale(0.98);
+    }
+    .parameter-btn.active {
+      background:var(--blue); color:white;
+      box-shadow:0 4px 12px rgba(0,82,163,0.3);
+    }
+    
+    .analyze-btn {
+      width:100%; padding:16px; background:var(--blue);
+      border:none; border-radius:14px; color:white;
+      font-size:15px; font-weight:600; cursor:pointer;
+      box-shadow:0 4px 12px rgba(0,82,163,0.3);
+      transition:transform 0.1s; font-family:'Inter',sans-serif;
+    }
+    .analyze-btn:active { transform:scale(0.98); }
+    .analyze-btn:disabled {
+      opacity:0.5; cursor:not-allowed;
+    }
+    
+    /* Stats Card */
+    .stats-card {
+      background:var(--bg); border-radius:18px;
+      box-shadow:var(--neu-out); padding:20px; margin-bottom:20px;
+      display:none;
+    }
+    .stats-card.show { display:block; }
+    .stats-header {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:16px; padding-bottom:16px;
+      border-bottom:1px solid var(--shadow-d);
+    }
+    .stats-title {
+      font-size:16px; font-weight:700; color:var(--text);
+    }
+    .stats-badge {
+      padding:6px 12px; background:var(--blue);
+      border-radius:8px; color:white; font-size:11px;
+      font-weight:600; letter-spacing:0.5px;
+    }
+    .stats-grid {
+      display:grid; grid-template-columns:repeat(2, 1fr); gap:12px;
+      margin-bottom:16px;
+    }
+    .stat-item {
+      background:var(--bg); border-radius:12px;
+      box-shadow:var(--neu-xs); padding:14px;
+    }
+    .stat-label {
+      font-size:10px; font-weight:600; letter-spacing:1px;
+      text-transform:uppercase; color:var(--text3); margin-bottom:6px;
+    }
+    .stat-value {
+      font-size:20px; font-weight:700; color:var(--blue);
+    }
+    .stat-unit {
+      font-size:12px; color:var(--text3); margin-left:4px;
+    }
+    .trend-indicator {
+      display:inline-flex; align-items:center; gap:4px;
+      padding:4px 8px; border-radius:6px; font-size:11px;
+      font-weight:600; margin-top:8px;
+    }
+    .trend-indicator.up {
+      background:rgba(231,76,60,0.1); color:var(--red);
+    }
+    .trend-indicator.down {
+      background:rgba(39,174,96,0.1); color:var(--green);
+    }
+    .trend-indicator.stable {
+      background:rgba(243,156,18,0.1); color:var(--yellow);
+    }
+    
+    /* Chart Card */
+    .chart-card {
+      background:var(--bg); border-radius:18px;
+      box-shadow:var(--neu-out); padding:20px; margin-bottom:20px;
+      display:none;
+    }
+    .chart-card.show { display:block; }
+    .chart-header {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:16px;
+    }
+    .chart-title {
+      font-size:15px; font-weight:700; color:var(--text);
+    }
+    .chart-type-toggle {
+      display:flex; gap:6px; background:var(--bg);
+      padding:4px; border-radius:10px; box-shadow:var(--neu-in);
+    }
+    .chart-type-btn {
+      padding:8px 12px; background:transparent; border:none;
+      border-radius:8px; font-size:12px; font-weight:600;
+      color:var(--text3); cursor:pointer; transition:all 0.2s;
+      font-family:'Inter',sans-serif;
+    }
+    .chart-type-btn.active {
+      background:var(--blue); color:white;
+      box-shadow:var(--neu-xs);
+    }
+    .chart-container {
+      position:relative; height:300px; width:100%;
+    }
+    
+    /* Weather Overlay */
+    .weather-overlay {
+      background:var(--bg); border-radius:12px;
+      box-shadow:var(--neu-xs); padding:12px;
+      margin-top:16px;
+    }
+    .weather-overlay-title {
+      font-size:12px; font-weight:600; color:var(--text3);
+      margin-bottom:10px; text-transform:uppercase;
+      letter-spacing:0.5px;
+    }
+    .weather-chips {
+      display:flex; flex-wrap:wrap; gap:8px;
+    }
+    .weather-chip {
+      padding:6px 12px; background:var(--bg);
+      border-radius:8px; box-shadow:var(--neu-xs);
+      font-size:11px; color:var(--text2);
+      display:flex; align-items:center; gap:6px;
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align:center; padding:60px 20px;
+      color:var(--text3);
+    }
+    .empty-icon {
+      font-size:64px; margin-bottom:16px; opacity:0.3;
+    }
+    .empty-title {
+      font-size:18px; font-weight:600; color:var(--text2);
+      margin-bottom:8px;
+    }
+    .empty-message {
+      font-size:14px; line-height:1.6;
+    }
+    
+    /* Toast */
+    .toast {
+      position:fixed; bottom:calc(30px + env(safe-area-inset-bottom,0px));
+      left:50%; transform:translateX(-50%); background:var(--bg);
+      border-radius:14px; box-shadow:var(--neu-out);
+      border-left:4px solid var(--blue); padding:14px 24px;
+      font-size:13px; font-weight:500; color:var(--text);
+      z-index:300; white-space:nowrap; opacity:0;
+      pointer-events:none; transition:opacity 0.3s; max-width:90%;
+    }
+    .toast.show { opacity:1; }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <div class="trends-page">
+    <!-- Header -->
+    <div class="trends-header">
+      <canvas id="header-wave-canvas"></canvas>
+      <button class="trends-back" onclick="goBack()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <h1>Trends Analysis</h1>
+      <div class="header-spacer"></div>
+    </div>
+
+    <!-- Content -->
+    <div class="trends-content">
+      <!-- Filter Card -->
+      <div class="filter-card">
+        <div class="filter-title">
+          <span>🔍</span>
+          <span>Analysis Filters</span>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Sample Point *</label>
+          <select class="form-select" id="filter-point" required>
+            <option value="">Select sample point...</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Date Range</label>
+          <div class="date-range-group">
+            <input type="date" class="form-input" id="filter-date-from" placeholder="From">
+            <input type="date" class="form-input" id="filter-date-to" placeholder="To">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Parameters to Analyze *</label>
+          <div class="parameter-grid" id="parameter-grid">
+            <button type="button" class="parameter-btn" data-param="pH">
+              <span>💧</span> pH
+            </button>
+            <button type="button" class="parameter-btn" data-param="Conductivity">
+              <span>⚡</span> Conductivity
+            </button>
+            <button type="button" class="parameter-btn" data-param="Free Chlorine (FRC)">
+              <span>🧪</span> Chlorine
+            </button>
+            <button type="button" class="parameter-btn" data-param="Iron">
+              <span>🔬</span> Iron
+            </button>
+            <button type="button" class="parameter-btn" data-param="Hardness">
+              <span>💎</span> Hardness
+            </button>
+            <button type="button" class="parameter-btn" data-param="Turbidity">
+              <span>🌫️</span> Turbidity
+            </button>
+          </div>
+        </div>
+        
+        <button class="analyze-btn" id="analyze-btn" onclick="analyzeData()">
+          📊 Generate Trends
+        </button>
+      </div>
+      
+      <!-- Stats Card -->
+      <div class="stats-card" id="stats-card">
+        <div class="stats-header">
+          <div class="stats-title" id="stats-title">Statistics</div>
+          <div class="stats-badge" id="stats-badge">0 entries</div>
+        </div>
+        <div class="stats-grid" id="stats-grid"></div>
+      </div>
+      
+      <!-- Chart Card -->
+      <div class="chart-card" id="chart-card">
+        <div class="chart-header">
+          <div class="chart-title" id="chart-title">Trend Chart</div>
+          <div class="chart-type-toggle">
+            <button class="chart-type-btn active" data-type="line" onclick="changeChartType('line')">Line</button>
+            <button class="chart-type-btn" data-type="bar" onclick="changeChartType('bar')">Bar</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="trend-chart"></canvas>
+        </div>
+        <div class="weather-overlay" id="weather-overlay" style="display:none;">
+          <div class="weather-overlay-title">Weather Conditions During Tests</div>
+          <div class="weather-chips" id="weather-chips"></div>
+        </div>
+      </div>
+      
+      <!-- Empty State -->
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">📈</div>
+        <div class="empty-title">No Analysis Yet</div>
+        <div class="empty-message">
+          Select a sample point and parameters above,<br>
+          then tap "Generate Trends" to see your data analysis.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ═══════════════════════════════════════
+    // CONFIGURATION
+    // ═══════════════════════════════════════
+    const CODE_VERSION = '1.0';
+    console.log('🚀 Trends version:', CODE_VERSION);
+    
+    const SHEET_ID = '1-lhBa3FTi_gcFGS1Z0Q9w6yCYoq_BnToI3ZKBl8k8Cs';
+    const SHEET_NAME = 'Results';
+    const SAMPLE_POINTS_SHEET = 'SamplePoints';
+    
+    let token = null;
+    let isDark = false;
+    let entries = [];
+    let samplePoints = [];
+    let selectedParameters = [];
+    let currentChart = null;
+    let currentChartType = 'line';
+    
+    // ═══════════════════════════════════════
+    // THEME SYNC
+    // ═══════════════════════════════════════
+    const themeChannel = new BroadcastChannel('siadeel-theme-channel');
+    themeChannel.onmessage = (event) => {
+      if (event.data.type === 'theme-change') {
+        applyTheme(event.data.isDark);
+        if (currentChart) {
+          updateChartTheme();
+        }
+      }
+    };
+
+    function applyTheme(dark) {
+      isDark = dark;
+      document.body.classList.toggle('dark', dark);
+    }
+
+    applyTheme(localStorage.getItem('siadeel-theme') === 'dark');
+    
+    // ═══════════════════════════════════════
+    // LOADING STATE
+    // ═══════════════════════════════════════
+    function showLoading() {
+      document.getElementById('loading-overlay').classList.add('show');
+    }
+    
+    function hideLoading() {
+      document.getElementById('loading-overlay').classList.remove('show');
+    }
+    
+    // ═══════════════════════════════════════
+    // WAVE ANIMATION
+    // ═══════════════════════════════════════
+    (function initWaves() {
+      const canvas = document.getElementById('header-wave-canvas');
+      const ctx = canvas.getContext('2d');
+      let animId = null;
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+
+      function resize() {
+        const header = canvas.parentElement;
+        const W = header.offsetWidth;
+        const H = header.offsetHeight;
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        canvas.style.width = W + 'px';
+        canvas.style.height = H + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      const WAVES = [
+        { yBase: 0.5, amp1: 3, amp2: 2, freq1: 0.015, freq2: 0.030, speed: 0.3, alpha: 0.15, color: '255,255,255' },
+        { yBase: 0.7, amp1: 4, amp2: 2, freq1: 0.012, freq2: 0.025, speed: 0.4, alpha: 0.20, color: '180,230,255' }
+      ];
+
+      function loop(ts) {
+        const t = ts / 1000;
+        const W = canvas.width / dpr;
+        const H = canvas.height / dpr;
+        ctx.clearRect(0, 0, W, H);
+
+        for (let i = 0; i < WAVES.length; i++) {
+          const layer = WAVES[i];
+          const yCenter = H * layer.yBase;
+          const phase = t * layer.speed;
+
+          ctx.beginPath();
+          ctx.moveTo(0, H);
+          for (let x = 0; x <= W; x += 2) {
+            const y = yCenter
+              + Math.sin(x * layer.freq1 + phase * 2.0) * layer.amp1
+              + Math.sin(x * layer.freq2 - phase * 1.4) * layer.amp2;
+            if (x === 0) ctx.lineTo(0, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.lineTo(W, H);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(' + layer.color + ',' + layer.alpha + ')';
+          ctx.fill();
+        }
+
+        animId = requestAnimationFrame(loop);
+      }
+
+      window.addEventListener('resize', resize);
+      resize();
+      animId = requestAnimationFrame(loop);
+    })();
+    
+    // ═══════════════════════════════════════
+    // INITIALIZATION
+    // ═══════════════════════════════════════
+    (async function init() {
+      token = localStorage.getItem('siadeel-token');
+      const expiry = localStorage.getItem('siadeel-token-expiry');
+      const bufferMs = 5 * 60 * 1000;
+      
+      if (!token || !expiry || Date.now() >= (parseInt(expiry) - bufferMs)) {
+        showToast('⚠️ Session expired. Redirecting...');
+        setTimeout(() => window.location.href = 'index.html', 2000);
+        return;
+      }
+      
+      showLoading();
+      
+      await loadSamplePoints();
+      await loadEntries();
+      
+      setupParameterButtons();
+      setupDateDefaults();
+      
+      hideLoading();
+    })();
+    
+    // ═══════════════════════════════════════
+    // DATA LOADING
+    // ═══════════════════════════════════════
+    async function loadSamplePoints() {
+      if (!token) return;
+      
+      try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SAMPLE_POINTS_SHEET}!A:D`;
+        
+        const response = await fetch(url, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        
+        if (!response.ok) throw new Error('Failed to load sample points');
+        
+        const data = await response.json();
+        
+        if (data.values && data.values.length > 1) {
+          const headers = data.values[0];
+          samplePoints = data.values.slice(1).map((row, index) => {
+            const obj = { _rowIndex: index + 2 };
+            headers.forEach((h, i) => {
+              obj[h] = row[i] || '';
+            });
+            return obj;
+          }).filter(p => p.Active === 'TRUE');
+          
+          populateSamplePointDropdown();
+        }
+      } catch (err) {
+        console.error('Load sample points error:', err);
+        showToast('⚠️ Failed to load sample points');
+      }
+    }
+    
+    function populateSamplePointDropdown() {
+      const select = document.getElementById('filter-point');
+      select.innerHTML = '<option value="">Select sample point...</option>';
+      
+      samplePoints.forEach(point => {
+        const option = document.createElement('option');
+        option.value = point.Name;
+        option.textContent = point.Name;
+        if (point.Description) {
+          option.textContent += ` (${point.Description})`;
+        }
+        select.appendChild(option);
+      });
+    }
+    
+    async function loadEntries() {
+      if (!token) return;
+      
+      try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A1:L1000`;
+        
+        const response = await fetch(url, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        
+        if (!response.ok) throw new Error('Failed to load entries');
+        
+        const data = await response.json();
+        
+        if (data.values && data.values.length > 1) {
+          const headers = data.values[0];
+          
+          entries = data.values.slice(1).map((row, index) => {
+            const obj = { _rowIndex: index + 2 };
+            
+            for (let i = 0; i < 12; i++) {
+              const header = headers[i];
+              const value = row[i] || '';
+              
+              if (header) {
+                obj[header] = value;
+              }
+            }
+            
+            return obj;
+          });
+          
+          console.log('✅ Loaded', entries.length, 'entries');
+        }
+      } catch (err) {
+        console.error('Load entries error:', err);
+        showToast('❌ Failed to load data');
+      }
+    }
+    
+    // ═══════════════════════════════════════
+    // UI SETUP
+    // ═══════════════════════════════════════
+    function setupParameterButtons() {
+      const buttons = document.querySelectorAll('.parameter-btn');
+      
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const param = btn.dataset.param;
+          
+          if (btn.classList.contains('active')) {
+            btn.classList.remove('active');
+            selectedParameters = selectedParameters.filter(p => p !== param);
+          } else {
+            btn.classList.add('active');
+            selectedParameters.push(param);
+          }
+          
+          updateAnalyzeButton();
+        });
+      });
+    }
+    
+    function setupDateDefaults() {
+      const today = new Date();
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(today.getDate() - 30);
+      
+      document.getElementById('filter-date-to').valueAsDate = today;
+      document.getElementById('filter-date-from').valueAsDate = thirtyDaysAgo;
+    }
+    
+    function updateAnalyzeButton() {
+      const point = document.getElementById('filter-point').value;
+      const hasParams = selectedParameters.length > 0;
+      
+      const btn = document.getElementById('analyze-btn');
+      btn.disabled = !point || !hasParams;
+    }
+    
+    // ═══════════════════════════════════════
+    // ANALYSIS LOGIC
+    // ═══════════════════════════════════════
+    function analyzeData() {
+      const point = document.getElementById('filter-point').value;
+      const dateFrom = document.getElementById('filter-date-from').value;
+      const dateTo = document.getElementById('filter-date-to').value;
+      
+      if (!point || selectedParameters.length === 0) {
+        showToast('⚠️ Select sample point and parameters');
+        return;
+      }
+      
+      showLoading();
+      
+      // Filter entries
+      let filteredEntries = entries.filter(e => e['Sample Point'] === point);
+      
+      if (dateFrom) {
+        filteredEntries = filteredEntries.filter(e => e.Date >= dateFrom);
+      }
+      if (dateTo) {
+        filteredEntries = filteredEntries.filter(e => e.Date <= dateTo);
+      }
+      
+      // Sort by date
+      filteredEntries.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+      
+      if (filteredEntries.length === 0) {
+        hideLoading();
+        showToast('⚠️ No data found for selected filters');
+        hideResults();
+        return;
+      }
+      
+      console.log('📊 Analyzing', filteredEntries.length, 'entries');
+      
+      // Generate statistics
+      generateStatistics(filteredEntries);
+      
+      // Generate chart
+      generateChart(filteredEntries);
+      
+      // Show weather overlay
+      generateWeatherOverlay(filteredEntries);
+      
+      // Show results
+      showResults();
+      
+      hideLoading();
+      showToast(`✅ Analyzed ${filteredEntries.length} entries`);
+    }
+    
+    // ═══════════════════════════════════════
+    // STATISTICS GENERATION
+    // ═══════════════════════════════════════
+    function generateStatistics(data) {
+      const statsGrid = document.getElementById('stats-grid');
+      statsGrid.innerHTML = '';
+      
+      document.getElementById('stats-badge').textContent = `${data.length} entries`;
+      
+      selectedParameters.forEach(param => {
+        const values = data
+          .map(e => parseFloat(e[param]))
+          .filter(v => !isNaN(v) && v !== null);
+        
+        if (values.length === 0) return;
+        
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const avg = values.reduce((a, b) => a + b, 0) / values.length;
+        
+        // Trend direction
+        const firstHalf = values.slice(0, Math.floor(values.length / 2));
+        const secondHalf = values.slice(Math.floor(values.length / 2));
+        const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+        const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+        const trend = secondAvg > firstAvg ? 'up' : secondAvg < firstAvg ? 'down' : 'stable';
+        
+        const unit = getParameterUnit(param);
+        
+        const statItem = document.createElement('div');
+        statItem.className = 'stat-item';
+        statItem.innerHTML = `
+          <div class="stat-label">${param}</div>
+          <div class="stat-value">
+            ${avg.toFixed(2)}
+            <span class="stat-unit">${unit}</span>
+          </div>
+          <div style="font-size:11px; color:var(--text3); margin-top:4px;">
+            Min: ${min.toFixed(2)} | Max: ${max.toFixed(2)}
+          </div>
+          <div class="trend-indicator ${trend}">
+            ${trend === 'up' ? '↗' : trend === 'down' ? '↘' : '→'}
+            ${trend === 'up' ? 'Increasing' : trend === 'down' ? 'Decreasing' : 'Stable'}
+          </div>
+        `;
+        
+        statsGrid.appendChild(statItem);
+      });
+    }
+    
+    function getParameterUnit(param) {
+      const units = {
+        'pH': '',
+        'Conductivity': 'µS/cm',
+        'Free Chlorine (FRC)': 'mg/L',
+        'Iron': 'mg/L',
+        'Hardness': 'mg/L',
+        'Turbidity': 'NTU'
+      };
+      return units[param] || '';
+    }
+    
+    // ═══════════════════════════════════════
+    // CHART GENERATION
+    // ═══════════════════════════════════════
+    function generateChart(data) {
+      const ctx = document.getElementById('trend-chart').getContext('2d');
+      
+      if (currentChart) {
+        currentChart.destroy();
+      }
+      
+      const datasets = selectedParameters.map((param, index) => {
+        const values = data.map(e => ({
+          x: e.Date,
+          y: parseFloat(e[param]) || null
+        }));
+        
+        const colors = [
+          '#0052A3', '#27ae60', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c'
+        ];
+        
+        return {
+          label: param,
+          data: values,
+          borderColor: colors[index % colors.length],
+          backgroundColor: colors[index % colors.length] + '20',
+          borderWidth: 3,
+          tension: 0.4,
+          fill: currentChartType === 'line',
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointBackgroundColor: colors[index % colors.length],
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2
+        };
+      });
+      
+      const textColor = isDark ? '#8b98a5' : '#5a6c7d';
+      const gridColor = isDark ? '#2e3547' : '#e9ecf1';
+      
+      currentChart = new Chart(ctx, {
+        type: currentChartType,
+        data: { datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          plugins: {
+            legend: {
+              display: selectedParameters.length > 1,
+              position: 'bottom',
+              labels: {
+                color: textColor,
+                font: { size: 11, weight: '600' },
+                padding: 12,
+                usePointStyle: true
+              }
+            },
+            tooltip: {
+              backgroundColor: isDark ? '#232a3a' : '#ffffff',
+              titleColor: textColor,
+              bodyColor: textColor,
+              borderColor: gridColor,
+              borderWidth: 1,
+              padding: 12,
+              displayColors: true,
+              callbacks: {
+                label: function(context) {
+                  const param = context.dataset.label;
+                  const value = context.parsed.y;
+                  const unit = getParameterUnit(param);
+                  return `${param}: ${value} ${unit}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              type: 'time',
+              time: {
+                unit: 'day',
+                displayFormats: { day: 'MMM d' }
+              },
+              grid: {
+                color: gridColor,
+                drawBorder: false
+              },
+              ticks: {
+                color: textColor,
+                font: { size: 10 }
+              }
+            },
+            y: {
+              beginAtZero: false,
+              grid: {
+                color: gridColor,
+                drawBorder: false
+              },
+              ticks: {
+                color: textColor,
+                font: { size: 10 }
+              }
+            }
+          }
+        }
+      });
+      
+      const point = document.getElementById('filter-point').value;
+      document.getElementById('chart-title').textContent = 
+        `${point} — ${selectedParameters.join(', ')}`;
+    }
+    
+    function changeChartType(type) {
+      currentChartType = type;
+      
+      document.querySelectorAll('.chart-type-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.type === type);
+      });
+      
+      if (currentChart) {
+        const point = document.getElementById('filter-point').value;
+        const dateFrom = document.getElementById('filter-date-from').value;
+        const dateTo = document.getElementById('filter-date-to').value;
+        
+        let filteredEntries = entries.filter(e => e['Sample Point'] === point);
+        
+        if (dateFrom) {
+          filteredEntries = filteredEntries.filter(e => e.Date >= dateFrom);
+        }
+        if (dateTo) {
+          filteredEntries = filteredEntries.filter(e => e.Date <= dateTo);
+        }
+        
+        filteredEntries.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+        
+        generateChart(filteredEntries);
+      }
+    }
+    
+    function updateChartTheme() {
+      if (!currentChart) return;
+      
+      const textColor = isDark ? '#8b98a5' : '#5a6c7d';
+      const gridColor = isDark ? '#2e3547' : '#e9ecf1';
+      
+      currentChart.options.plugins.legend.labels.color = textColor;
+      currentChart.options.plugins.tooltip.backgroundColor = isDark ? '#232a3a' : '#ffffff';
+      currentChart.options.plugins.tooltip.titleColor = textColor;
+      currentChart.options.plugins.tooltip.bodyColor = textColor;
+      currentChart.options.plugins.tooltip.borderColor = gridColor;
+      
+      currentChart.options.scales.x.grid.color = gridColor;
+      currentChart.options.scales.x.ticks.color = textColor;
+      currentChart.options.scales.y.grid.color = gridColor;
+      currentChart.options.scales.y.ticks.color = textColor;
+      
+      currentChart.update();
+    }
+    
+    // ═══════════════════════════════════════
+    // WEATHER OVERLAY
+    // ═══════════════════════════════════════
+    function generateWeatherOverlay(data) {
+      const weatherChips = document.getElementById('weather-chips');
+      weatherChips.innerHTML = '';
+      
+      const weatherCounts = {};
+      
+      data.forEach(entry => {
+        const weatherRaw = entry['Picture Weather'];
+        
+        if (!weatherRaw || weatherRaw === 'N/A' || weatherRaw.trim() === '') {
+          return;
+        }
+        
+        let weatherData;
+        try {
+          weatherData = JSON.parse(weatherRaw);
+        } catch (e) {
+          return;
+        }
+        
+        const condition = weatherData.condition || 'Unknown';
+        weatherCounts[condition] = (weatherCounts[condition] || 0) + 1;
+      });
+      
+      if (Object.keys(weatherCounts).length === 0) {
+        document.getElementById('weather-overlay').style.display = 'none';
+        return;
+      }
+      
+      Object.entries(weatherCounts)
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([condition, count]) => {
+          const chip = document.createElement('div');
+          chip.className = 'weather-chip';
+          chip.innerHTML = `
+            <span>${getWeatherIcon(condition)}</span>
+            <span>${condition} (${count})</span>
+          `;
+          weatherChips.appendChild(chip);
+        });
+      
+      document.getElementById('weather-overlay').style.display = 'block';
+    }
+    
+    function getWeatherIcon(condition) {
+      const icons = {
+        'Clear': '☀️',
+        'Clouds': '☁️',
+        'Rain': '🌧️',
+        'Drizzle': '🌦️',
+        'Thunderstorm': '⛈️',
+        'Snow': '🌨️',
+        'Mist': '🌫️',
+        'Fog': '🌫️',
+        'Haze': '🌫️'
+      };
+      return icons[condition] || '🌤️';
+    }
+    
+    // ═══════════════════════════════════════
+    // UI HELPERS
+    // ═══════════════════════════════════════
+    function showResults() {
+      document.getElementById('empty-state').style.display = 'none';
+      document.getElementById('stats-card').classList.add('show');
+      document.getElementById('chart-card').classList.add('show');
+    }
+    
+    function hideResults() {
+      document.getElementById('empty-state').style.display = 'block';
+      document.getElementById('stats-card').classList.remove('show');
+      document.getElementById('chart-card').classList.remove('show');
+    }
+    
+    function goBack() {
+      window.location.href = 'index.html';
+    }
+    
+    let toastTimer;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+    
+    // ═══════════════════════════════════════
+    // DROPDOWN CHANGE HANDLER
+    // ═══════════════════════════════════════
+    document.getElementById('filter-point').addEventListener('change', updateAnalyzeButton);
+  </script>
+</body>
+</html>
