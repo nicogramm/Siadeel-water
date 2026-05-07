@@ -890,533 +890,517 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    // ═══════════════════════════════════════
-    // CONFIGURATION
-    // ═══════════════════════════════════════
-    const CODE_VERSION = '1.1'; // ✅ Updated version
-    console.log('🚀 Treatment version:', CODE_VERSION);
-    
-    const SHEET_ID = '1-lhBa3FTi_gcFGS1Z0Q9w6yCYoq_BnToI3ZKBl8k8Cs';
-    const ACTIVITIES_SHEET = 'TreatmentActivities';
-    
-    let token = null;
-    let isDark = false;
-    let activities = [];
-    let currentActivity = null;
-    let treatmentSheetId = null; // ✅ Cache para sa sheet ID
-    
-    // ═══════════════════════════════════════
-    // THEME SYNC
-    // ═══════════════════════════════════════
-    const themeChannel = new BroadcastChannel('siadeel-theme-channel');
-    themeChannel.onmessage = (event) => {
-      if (event.data.type === 'theme-change') {
-        applyTheme(event.data.isDark);
-      }
-    };
+  // ═══════════════════════════════════════
+  // CONFIGURATION
+  // ═══════════════════════════════════════
+  const CODE_VERSION = '1.2'; // ✅ Updated version
+  console.log('🚀 Treatment version:', CODE_VERSION);
+  
+  const SHEET_ID = '1-lhBa3FTi_gcFGS1Z0Q9w6yCYoq_BnToI3ZKBl8k8Cs';
+  const ACTIVITIES_SHEET = 'TreatmentActivities';
+  
+  let token = null;
+  let isDark = false;
+  let activities = [];
+  let currentActivity = null;
+  let treatmentSheetId = null;
+  
+  // ═══════════════════════════════════════
+  // THEME SYNC
+  // ═══════════════════════════════════════
+  const themeChannel = new BroadcastChannel('siadeel-theme-channel');
+  themeChannel.onmessage = (event) => {
+    if (event.data.type === 'theme-change') {
+      applyTheme(event.data.isDark);
+    }
+  };
 
-    function applyTheme(dark) {
-      isDark = dark;
-      document.body.classList.toggle('dark', dark);
-    }
+  function applyTheme(dark) {
+    isDark = dark;
+    document.body.classList.toggle('dark', dark);
+  }
 
-    applyTheme(localStorage.getItem('siadeel-theme') === 'dark');
+  applyTheme(localStorage.getItem('siadeel-theme') === 'dark');
+  
+  // ═══════════════════════════════════════
+  // LOADING STATE
+  // ═══════════════════════════════════════
+  function showLoading() {
+    document.getElementById('loading-overlay').classList.add('show');
+  }
+  
+  function hideLoading() {
+    document.getElementById('loading-overlay').classList.remove('show');
+  }
+  
+  // ═══════════════════════════════════════
+  // GET SHEET ID
+  // ═══════════════════════════════════════
+  async function getSheetId() {
+    if (treatmentSheetId !== null) return treatmentSheetId;
     
-    // ═══════════════════════════════════════
-    // LOADING STATE
-    // ═══════════════════════════════════════
-    function showLoading() {
-      document.getElementById('loading-overlay').classList.add('show');
-    }
-    
-    function hideLoading() {
-      document.getElementById('loading-overlay').classList.remove('show');
-    }
-    
-    // ═══════════════════════════════════════
-    // ✅ GET SHEET ID (BAGONG FUNCTION)
-    // ═══════════════════════════════════════
-    async function getSheetId() {
-      if (treatmentSheetId !== null) return treatmentSheetId;
+    try {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?fields=sheets(properties(sheetId,title))`;
       
-      try {
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?fields=sheets(properties(sheetId,title))`;
+      const response = await fetch(url, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      
+      if (!response.ok) throw new Error('Failed to get sheet metadata');
+      
+      const data = await response.json();
+      const sheet = data.sheets.find(s => s.properties.title === ACTIVITIES_SHEET);
+      
+      if (!sheet) throw new Error('TreatmentActivities sheet not found');
+      
+      treatmentSheetId = sheet.properties.sheetId;
+      console.log('✅ Found sheet ID:', treatmentSheetId);
+      
+      return treatmentSheetId;
+      
+    } catch (err) {
+      console.error('Get sheet ID error:', err);
+      return 0;
+    }
+  }
+  
+  // ═══════════════════════════════════════
+  // WAVE ANIMATION
+  // ═══════════════════════════════════════
+  (function initWaves() {
+    const canvas = document.getElementById('header-wave-canvas');
+    const ctx = canvas.getContext('2d');
+    let animId = null;
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+
+    function resize() {
+      const header = canvas.parentElement;
+      const W = header.offsetWidth;
+      const H = header.offsetHeight;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    const WAVES = [
+      { yBase: 0.5, amp1: 3, amp2: 2, freq1: 0.015, freq2: 0.030, speed: 0.3, alpha: 0.15, color: '255,255,255' },
+      { yBase: 0.7, amp1: 4, amp2: 2, freq1: 0.012, freq2: 0.025, speed: 0.4, alpha: 0.20, color: '180,230,255' }
+    ];
+
+    function loop(ts) {
+      const t = ts / 1000;
+      const W = canvas.width / dpr;
+      const H = canvas.height / dpr;
+      ctx.clearRect(0, 0, W, H);
+
+      for (let i = 0; i < WAVES.length; i++) {
+        const layer = WAVES[i];
+        const yCenter = H * layer.yBase;
+        const phase = t * layer.speed;
+
+        ctx.beginPath();
+        ctx.moveTo(0, H);
+        for (let x = 0; x <= W; x += 2) {
+          const y = yCenter
+            + Math.sin(x * layer.freq1 + phase * 2.0) * layer.amp1
+            + Math.sin(x * layer.freq2 - phase * 1.4) * layer.amp2;
+          if (x === 0) ctx.lineTo(0, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.lineTo(W, H);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(' + layer.color + ',' + layer.alpha + ')';
+        ctx.fill();
+      }
+
+      animId = requestAnimationFrame(loop);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+    animId = requestAnimationFrame(loop);
+  })();
+  
+  // ═══════════════════════════════════════
+  // INITIALIZATION
+  // ═══════════════════════════════════════
+  (async function init() {
+    token = localStorage.getItem('siadeel-token');
+    const expiry = localStorage.getItem('siadeel-token-expiry');
+    const bufferMs = 5 * 60 * 1000;
+    
+    if (!token || !expiry || Date.now() >= (parseInt(expiry) - bufferMs)) {
+      showToast('⚠️ Session expired. Redirecting...');
+      setTimeout(() => window.location.href = 'index.html', 2000);
+      return;
+    }
+    
+    showLoading();
+    
+    await loadActivities();
+    renderActivities();
+    
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('activity-datetime').value = now.toISOString().slice(0, 16);
+    
+    hideLoading();
+  })();
+  
+  // ═══════════════════════════════════════
+  // TAB SWITCHING
+  // ═══════════════════════════════════════
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-panel').forEach(panel => {
+      panel.classList.remove('active');
+    });
+    
+    event.target.classList.add('active');
+    document.getElementById(`${tab}-panel`).classList.add('active');
+  }
+  
+  // ═══════════════════════════════════════
+  // DATA LOADING
+  // ═══════════════════════════════════════
+  async function loadActivities() {
+    if (!token) return;
+    
+    try {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A:H`;
+      
+      const response = await fetch(url, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.log('Activities sheet not found, will create on first activity');
+          activities = [];
+          return;
+        }
+        throw new Error('Failed to load activities');
+      }
+      
+      const data = await response.json();
+      
+      if (data.values && data.values.length > 1) {
+        const headers = data.values[0];
         
-        const response = await fetch(url, {
-          headers: { 'Authorization': 'Bearer ' + token }
+        activities = data.values.slice(1).map((row, index) => {
+          const obj = {
+            _rowIndex: index + 2,
+            _originalIndex: index
+          };
+          
+          headers.forEach((h, i) => {
+            obj[h] = row[i] || '';
+          });
+          
+          return obj;
         });
         
-        if (!response.ok) throw new Error('Failed to get sheet metadata');
+        activities.sort((a, b) => {
+          const dateA = new Date(a.DateTime);
+          const dateB = new Date(b.DateTime);
+          return dateB - dateA;
+        });
         
-        const data = await response.json();
-        const sheet = data.sheets.find(s => s.properties.title === ACTIVITIES_SHEET);
-        
-        if (!sheet) throw new Error('TreatmentActivities sheet not found');
-        
-        treatmentSheetId = sheet.properties.sheetId;
-        console.log('✅ Found sheet ID:', treatmentSheetId);
-        
-        return treatmentSheetId;
-        
-      } catch (err) {
-        console.error('Get sheet ID error:', err);
-        return 0; // Fallback to 0
+        console.log('✅ Loaded', activities.length, 'activities');
+        console.log('📋 Sample activity:', activities[0]);
+      } else {
+        activities = [];
       }
+    } catch (err) {
+      console.error('Load activities error:', err);
+      activities = [];
+    }
+  }
+  
+  // ═══════════════════════════════════════
+  // RENDER ACTIVITIES (FIXED)
+  // ═══════════════════════════════════════
+  function renderActivities() {
+    const list = document.getElementById('activities-list');
+    const empty = document.getElementById('activities-empty');
+    
+    if (activities.length === 0) {
+      list.style.display = 'none';
+      empty.style.display = 'block';
+      return;
     }
     
-    // ═══════════════════════════════════════
-    // WAVE ANIMATION
-    // ═══════════════════════════════════════
-    (function initWaves() {
-      const canvas = document.getElementById('header-wave-canvas');
-      const ctx = canvas.getContext('2d');
-      let animId = null;
-      const dpr = Math.max(1, window.devicePixelRatio || 1);
-
-      function resize() {
-        const header = canvas.parentElement;
-        const W = header.offsetWidth;
-        const H = header.offsetHeight;
-        canvas.width = W * dpr;
-        canvas.height = H * dpr;
-        canvas.style.width = W + 'px';
-        canvas.style.height = H + 'px';
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      }
-
-      const WAVES = [
-        { yBase: 0.5, amp1: 3, amp2: 2, freq1: 0.015, freq2: 0.030, speed: 0.3, alpha: 0.15, color: '255,255,255' },
-        { yBase: 0.7, amp1: 4, amp2: 2, freq1: 0.012, freq2: 0.025, speed: 0.4, alpha: 0.20, color: '180,230,255' }
-      ];
-
-      function loop(ts) {
-        const t = ts / 1000;
-        const W = canvas.width / dpr;
-        const H = canvas.height / dpr;
-        ctx.clearRect(0, 0, W, H);
-
-        for (let i = 0; i < WAVES.length; i++) {
-          const layer = WAVES[i];
-          const yCenter = H * layer.yBase;
-          const phase = t * layer.speed;
-
-          ctx.beginPath();
-          ctx.moveTo(0, H);
-          for (let x = 0; x <= W; x += 2) {
-            const y = yCenter
-              + Math.sin(x * layer.freq1 + phase * 2.0) * layer.amp1
-              + Math.sin(x * layer.freq2 - phase * 1.4) * layer.amp2;
-            if (x === 0) ctx.lineTo(0, y);
-            else ctx.lineTo(x, y);
-          }
-          ctx.lineTo(W, H);
-          ctx.closePath();
-          ctx.fillStyle = 'rgba(' + layer.color + ',' + layer.alpha + ')';
-          ctx.fill();
-        }
-
-        animId = requestAnimationFrame(loop);
-      }
-
-      window.addEventListener('resize', resize);
-      resize();
-      animId = requestAnimationFrame(loop);
-    })();
+    list.style.display = 'flex';
+    empty.style.display = 'none';
     
-    // ═══════════════════════════════════════
-    // INITIALIZATION
-    // ═══════════════════════════════════════
-    (async function init() {
-      token = localStorage.getItem('siadeel-token');
-      const expiry = localStorage.getItem('siadeel-token-expiry');
-      const bufferMs = 5 * 60 * 1000;
+    list.innerHTML = activities.map((activity, index) => {
+      const datetime = new Date(activity.DateTime);
+      const dateStr = datetime.toLocaleDateString('en-US', { 
+        year: 'numeric', month: 'short', day: 'numeric' 
+      });
+      const timeStr = datetime.toLocaleTimeString('en-US', { 
+        hour: '2-digit', minute: '2-digit' 
+      });
       
-      if (!token || !expiry || Date.now() >= (parseInt(expiry) - bufferMs)) {
-        showToast('⚠️ Session expired. Redirecting...');
-        setTimeout(() => window.location.href = 'index.html', 2000);
-        return;
+      const typeIcon = getTypeIcon(activity.Type);
+      const typeLabel = getTypeLabel(activity.Type);
+      
+      return `
+        <div class="activity-card ${activity.Type}">
+          <div class="activity-header">
+            <div>
+              <div class="activity-title">${activity.Title}</div>
+              <div class="activity-type">${typeIcon} ${typeLabel}</div>
+            </div>
+          </div>
+          <div class="activity-meta">
+            <div class="activity-meta-item">
+              <span>📅</span>
+              <span>${dateStr}</span>
+            </div>
+            <div class="activity-meta-item">
+              <span>🕐</span>
+              <span>${timeStr}</span>
+            </div>
+            ${activity.Duration ? `
+            <div class="activity-meta-item">
+              <span>⏱️</span>
+              <span>${activity.Duration} min</span>
+            </div>
+            ` : ''}
+            ${activity.Operator ? `
+            <div class="activity-meta-item">
+              <span>👤</span>
+              <span>${activity.Operator}</span>
+            </div>
+            ` : ''}
+          </div>
+          ${activity.Description ? `
+          <div class="activity-description">${activity.Description}</div>
+          ` : ''}
+          <div class="activity-actions">
+            <button class="activity-action-btn delete" onclick="confirmDeleteActivity(${index})">
+              🗑️ Delete
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+  
+  function getTypeIcon(type) {
+    const icons = {
+      'maintenance': '🔧',
+      'cleaning': '🧹',
+      'inspection': '🔍',
+      'repair': '⚠️',
+      'testing': '🧪',
+      'other': '📝'
+    };
+    return icons[type] || '📝';
+  }
+  
+  function getTypeLabel(type) {
+    const labels = {
+      'maintenance': 'Maintenance',
+      'cleaning': 'Cleaning',
+      'inspection': 'Inspection',
+      'repair': 'Repair',
+      'testing': 'Testing',
+      'other': 'Other'
+    };
+    return labels[type] || 'Activity';
+  }
+  
+  // ═══════════════════════════════════════
+  // ACTIVITY MODAL
+  // ═══════════════════════════════════════
+  function openActivityModal() {
+    document.getElementById('activity-modal').classList.add('show');
+  }
+  
+  function closeActivityModal() {
+    document.getElementById('activity-modal').classList.remove('show');
+    document.getElementById('activity-form').reset();
+    
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('activity-datetime').value = now.toISOString().slice(0, 16);
+  }
+  
+  // ═══════════════════════════════════════
+  // SUBMIT ACTIVITY
+  // ═══════════════════════════════════════
+  async function submitActivity(event) {
+    event.preventDefault();
+    
+    if (!token) {
+      showToast('❌ Not authenticated');
+      return;
+    }
+    
+    showLoading();
+    
+    const id = Date.now();
+    const type = document.getElementById('activity-type').value;
+    const title = document.getElementById('activity-title').value;
+    const datetime = document.getElementById('activity-datetime').value;
+    const operator = document.getElementById('activity-operator').value;
+    const description = document.getElementById('activity-description').value;
+    const duration = document.getElementById('activity-duration').value;
+    const createdAt = new Date().toISOString();
+    
+    const rowData = [
+      id, type, title, datetime, operator, description, duration, createdAt
+    ];
+    
+    try {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A:H:append?valueInputOption=USER_ENTERED`;
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ values: [rowData] })
+      });
+      
+      if (!response.ok) throw new Error('Save failed');
+      
+      showToast('✅ Activity logged!');
+      
+      closeActivityModal();
+      await loadActivities();
+      renderActivities();
+      
+    } catch (err) {
+      console.error('Submit activity error:', err);
+      showToast('❌ Failed to save');
+    } finally {
+      hideLoading();
+    }
+  }
+  
+  // ═══════════════════════════════════════
+  // DELETE ACTIVITY (FINAL FIX)
+  // ═══════════════════════════════════════
+  function confirmDeleteActivity(index) {
+    currentActivity = activities[index];
+    console.log('🗑️ Selected activity for deletion:', currentActivity);
+    document.getElementById('confirm-modal').classList.add('show');
+  }
+  
+  function closeConfirmModal() {
+    document.getElementById('confirm-modal').classList.remove('show');
+    currentActivity = null;
+  }
+  
+  async function deleteCurrentActivity() {
+    if (!currentActivity || !token) return;
+    
+    closeConfirmModal();
+    showLoading();
+    
+    try {
+      const activityId = currentActivity.ID;
+      
+      if (!activityId) {
+        throw new Error('Activity ID not found');
       }
       
-      showLoading();
+      console.log('🔍 Searching for activity ID:', activityId);
+      
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A:A`;
+      
+      const response = await fetch(url, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      
+      if (!response.ok) throw new Error('Failed to load sheet data');
+      
+      const data = await response.json();
+      
+      let rowIndex = -1;
+      if (data.values) {
+        for (let i = 1; i < data.values.length; i++) {
+          if (data.values[i][0] === activityId.toString()) {
+            rowIndex = i + 1;
+            break;
+          }
+        }
+      }
+      
+      if (rowIndex === -1) {
+        throw new Error('Activity not found in sheet');
+      }
+      
+      console.log('✅ Found activity at row:', rowIndex);
+      
+      const sheetId = await getSheetId();
+      
+      const deleteUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`;
+      
+      const deleteResponse = await fetch(deleteUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          requests: [
+            {
+              deleteDimension: {
+                range: {
+                  sheetId: sheetId,
+                  dimension: 'ROWS',
+                  startIndex: rowIndex - 1,
+                  endIndex: rowIndex
+                }
+              }
+            }
+          ]
+        })
+      });
+      
+      if (!deleteResponse.ok) {
+        const error = await deleteResponse.json();
+        console.error('Delete error:', error);
+        throw new Error('Failed to delete activity');
+      }
+      
+      showToast('✅ Activity deleted!');
       
       await loadActivities();
       renderActivities();
       
-      // Set default datetime to now
-      const now = new Date();
-      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-      document.getElementById('activity-datetime').value = now.toISOString().slice(0, 16);
-      
+    } catch (err) {
+      console.error('Delete activity error:', err);
+      showToast('❌ Failed to delete: ' + err.message);
+    } finally {
       hideLoading();
-    })();
-    
-    // ═══════════════════════════════════════
-    // TAB SWITCHING
-    // ═══════════════════════════════════════
-    function switchTab(tab) {
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-      });
-      document.querySelectorAll('.tab-panel').forEach(panel => {
-        panel.classList.remove('active');
-      });
-      
-      event.target.classList.add('active');
-      document.getElementById(`${tab}-panel`).classList.add('active');
     }
-    
-    // ═══════════════════════════════════════
-    // DATA LOADING
-    // ═══════════════════════════════════════
-    // ═══════════════════════════════════════
-// DATA LOADING (FIXED)
-// ═══════════════════════════════════════
-async function loadActivities() {
-  if (!token) return;
-  
-  try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A:H`;
-    
-    const response = await fetch(url, {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
-    
-    if (!response.ok) {
-      if (response.status === 404) {
-        console.log('Activities sheet not found, will create on first activity');
-        activities = [];
-        return;
-      }
-      throw new Error('Failed to load activities');
-    }
-    
-    const data = await response.json();
-    
-    if (data.values && data.values.length > 1) {
-      const headers = data.values[0];
-      
-      activities = data.values.slice(1).map((row, index) => {
-        const obj = {
-          _rowIndex: index + 2,  // ✅ Store row index (1-based, +1 for header)
-          _originalIndex: index  // ✅ Store original position para sa debugging
-        };
-        
-        headers.forEach((h, i) => {
-          obj[h] = row[i] || '';
-        });
-        
-        return obj;
-      });
-      
-      // ✅ Sort by datetime descending BUT preserve _rowIndex
-      activities.sort((a, b) => {
-        const dateA = new Date(a.DateTime);
-        const dateB = new Date(b.DateTime);
-        return dateB - dateA;
-      });
-      
-      console.log('✅ Loaded', activities.length, 'activities');
-      console.log('📋 Sample activity with _rowIndex:', activities[0]); // Debug log
-    } else {
-      activities = [];
-    }
-  } catch (err) {
-    console.error('Load activities error:', err);
-    activities = [];
   }
-}
-    // ═══════════════════════════════════════
-    // RENDER ACTIVITIES
-    // ═══════════════════════════════════════
-    function renderActivities() {
-      const list = document.getElementById('activities-list');
-      const empty = document.getElementById('activities-empty');
-      
-      if (activities.length === 0) {
-        list.style.display = 'none';
-        empty.style.display = 'block';
-        return;
-      }
-      
-      list.style.display = 'flex';
-      empty.style.display = 'none';
-      
-      list.innerHTML = activities.map(activity => {
-        const datetime = new Date(activity.DateTime);
-        const dateStr = datetime.toLocaleDateString('en-US', { 
-          year: 'numeric', month: 'short', day: 'numeric' 
-        });
-        const timeStr = datetime.toLocaleTimeString('en-US', { 
-          hour: '2-digit', minute: '2-digit' 
-        });
-        
-        const typeIcon = getTypeIcon(activity.Type);
-        const typeLabel = getTypeLabel(activity.Type);
-        
-        // ✅ Escape JSON properly para sa onclick
-        const activityJson = JSON.stringify(activity).replace(/"/g, '&quot;');
-        
-        return `
-          <div class="activity-card ${activity.Type}">
-            <div class="activity-header">
-              <div>
-                <div class="activity-title">${activity.Title}</div>
-                <div class="activity-type">${typeIcon} ${typeLabel}</div>
-              </div>
-            </div>
-            <div class="activity-meta">
-              <div class="activity-meta-item">
-                <span>📅</span>
-                <span>${dateStr}</span>
-              </div>
-              <div class="activity-meta-item">
-                <span>🕐</span>
-                <span>${timeStr}</span>
-              </div>
-              ${activity.Duration ? `
-              <div class="activity-meta-item">
-                <span>⏱️</span>
-                <span>${activity.Duration} min</span>
-              </div>
-              ` : ''}
-              ${activity.Operator ? `
-              <div class="activity-meta-item">
-                <span>👤</span>
-                <span>${activity.Operator}</span>
-              </div>
-              ` : ''}
-            </div>
-            ${activity.Description ? `
-            <div class="activity-description">${activity.Description}</div>
-            ` : ''}
-            <div class="activity-actions">
-              <button class="activity-action-btn delete" onclick='confirmDeleteActivity(${activityJson})'>
-                🗑️ Delete
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-    
-    function getTypeIcon(type) {
-      const icons = {
-        'maintenance': '🔧',
-        'cleaning': '🧹',
-        'inspection': '🔍',
-        'repair': '⚠️',
-        'testing': '🧪',
-        'other': '📝'
-      };
-      return icons[type] || '📝';
-    }
-    
-    function getTypeLabel(type) {
-      const labels = {
-        'maintenance': 'Maintenance',
-        'cleaning': 'Cleaning',
-        'inspection': 'Inspection',
-        'repair': 'Repair',
-        'testing': 'Testing',
-        'other': 'Other'
-      };
-      return labels[type] || 'Activity';
-    }
-    
-    // ═══════════════════════════════════════
-    // ACTIVITY MODAL
-    // ═══════════════════════════════════════
-    function openActivityModal() {
-      document.getElementById('activity-modal').classList.add('show');
-    }
-    
-    function closeActivityModal() {
-      document.getElementById('activity-modal').classList.remove('show');
-      document.getElementById('activity-form').reset();
-      
-      // Reset datetime to now
-      const now = new Date();
-      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-      document.getElementById('activity-datetime').value = now.toISOString().slice(0, 16);
-    }
-    
-    // ═══════════════════════════════════════
-    // SUBMIT ACTIVITY
-    // ═══════════════════════════════════════
-    async function submitActivity(event) {
-      event.preventDefault();
-      
-      if (!token) {
-        showToast('❌ Not authenticated');
-        return;
-      }
-      
-      showLoading();
-      
-      const id = Date.now();
-      const type = document.getElementById('activity-type').value;
-      const title = document.getElementById('activity-title').value;
-      const datetime = document.getElementById('activity-datetime').value;
-      const operator = document.getElementById('activity-operator').value;
-      const description = document.getElementById('activity-description').value;
-      const duration = document.getElementById('activity-duration').value;
-      const createdAt = new Date().toISOString();
-      
-      const rowData = [
-        id, type, title, datetime, operator, description, duration, createdAt
-      ];
-      
-      try {
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A:H:append?valueInputOption=USER_ENTERED`;
-        
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Bearer ' + token,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ values: [rowData] })
-        });
-        
-        if (!response.ok) throw new Error('Save failed');
-        
-        showToast('✅ Activity logged!');
-        
-        closeActivityModal();
-        await loadActivities();
-        renderActivities();
-        
-      } catch (err) {
-        console.error('Submit activity error:', err);
-        showToast('❌ Failed to save');
-      } finally {
-        hideLoading();
-      }
-    }
-    
-    // ═══════════════════════════════════════
-    // ✅ DELETE ACTIVITY (FIXED - GUMAGANA NA!)
-    // ═══════════════════════════════════════
-    function confirmDeleteActivity(activity) {
-      currentActivity = activity;
-      document.getElementById('confirm-modal').classList.add('show');
-    }
-    
-    function closeConfirmModal() {
-      document.getElementById('confirm-modal').classList.remove('show');
-      currentActivity = null;
-    }
-    
-    // ═══════════════════════════════════════
-// ✅ DELETE ACTIVITY (ALTERNATIVE METHOD - GAMIT ANG ID)
-// ═══════════════════════════════════════
-async function deleteCurrentActivity() {
-  if (!currentActivity || !token) return;
   
-  closeConfirmModal();
-  showLoading();
-  
-  try {
-    // ✅ Hanapin ang row gamit ang ID
-    const activityId = currentActivity.ID;
-    
-    if (!activityId) {
-      throw new Error('Activity ID not found');
-    }
-    
-    console.log('🔍 Searching for activity ID:', activityId);
-    
-    // ✅ Load raw data para hanapin ang exact row
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A:A`;
-    
-    const response = await fetch(url, {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
-    
-    if (!response.ok) throw new Error('Failed to load sheet data');
-    
-    const data = await response.json();
-    
-    // ✅ Hanapin ang row index gamit ang ID
-    let rowIndex = -1;
-    if (data.values) {
-      for (let i = 1; i < data.values.length; i++) { // Start from 1 (skip header)
-        if (data.values[i][0] === activityId.toString()) {
-          rowIndex = i + 1; // 1-based index
-          break;
-        }
-      }
-    }
-    
-    if (rowIndex === -1) {
-      throw new Error('Activity not found in sheet');
-    }
-    
-    console.log('✅ Found activity at row:', rowIndex);
-    
-    // ✅ Kumuha ng sheet ID
-    const sheetId = await getSheetId();
-    
-    // ✅ Delete the row
-    const deleteUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`;
-    
-    const deleteResponse = await fetch(deleteUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        requests: [
-          {
-            deleteDimension: {
-              range: {
-                sheetId: sheetId,
-                dimension: 'ROWS',
-                startIndex: rowIndex - 1, // 0-indexed
-                endIndex: rowIndex
-              }
-            }
-          }
-        ]
-      })
-    });
-    
-    if (!deleteResponse.ok) {
-      const error = await deleteResponse.json();
-      console.error('Delete error:', error);
-      throw new Error('Failed to delete activity');
-    }
-    
-    showToast('✅ Activity deleted!');
-    
-    // ✅ Reload activities
-    await loadActivities();
-    renderActivities();
-    
-  } catch (err) {
-    console.error('Delete activity error:', err);
-    showToast('❌ Failed to delete: ' + err.message);
-  } finally {
-    hideLoading();
+  // ═══════════════════════════════════════
+  // UI HELPERS
+  // ═══════════════════════════════════════
+  function goBack() {
+    window.location.href = 'index.html';
   }
-}
-    
-    // ═══════════════════════════════════════
-    // UI HELPERS
-    // ═══════════════════════════════════════
-    function goBack() {
-      window.location.href = 'index.html';
-    }
-    
-    let toastTimer;
-    function showToast(msg) {
-      const toast = document.getElementById('toast');
-      toast.textContent = msg;
-      toast.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
-    }
-  </script>
+  
+  let toastTimer;
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+</script>
 </body>
 </html>
