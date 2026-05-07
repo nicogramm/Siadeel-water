@@ -58,15 +58,42 @@
     .google-btn:active { box-shadow:var(--neu-in); transform:scale(0.98); }
     .google-btn svg { width:20px; height:20px; flex-shrink:0; }
     #s-app { background:var(--bg); flex-direction:column; }
-    .topbar { background:#0052A3; display:flex; align-items:center; justify-content:space-between; padding:14px 18px; padding-top:calc(env(safe-area-inset-top,0px) + 14px); flex-shrink:0; box-shadow:0 3px 10px rgba(0,0,0,0.15); }
-    .tb-brand { display:flex; align-items:center; gap:10px; }
+    
+    /* ✅ BAGO: Topbar with Wave Animation */
+    .topbar { 
+      background:#0052A3; 
+      display:flex; 
+      align-items:center; 
+      justify-content:space-between; 
+      padding:14px 18px; 
+      padding-top:calc(env(safe-area-inset-top,0px) + 14px); 
+      flex-shrink:0; 
+      box-shadow:0 3px 10px rgba(0,0,0,0.15);
+      position:relative;
+      overflow:hidden; /* ⬅️ Para hindi lumabas ang waves */
+    }
+    
+    /* ✅ Wave Canvas sa Topbar */
+    #topbar-wave-canvas {
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      pointer-events:none;
+      z-index:1;
+      opacity:0.3; /* ⬅️ Subtle lang para hindi masyadong distracting */
+    }
+    
+    .tb-brand { display:flex; align-items:center; gap:10px; position:relative; z-index:2; }
     .tb-logo  { width:36px; height:36px; }
     .tb-brand-text { font-size:16px; font-weight:700; letter-spacing:0.5px; }
     .tb-brand-text .siadeel { color:#ffffff; }
     .tb-brand-text .water   { color:#00e5cc; }
-    .tb-right  { display:flex; align-items:center; gap:12px; }
+    .tb-right  { display:flex; align-items:center; gap:12px; position:relative; z-index:2; }
     .tb-title  { font-size:10px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.8); }
     .tb-avatar { width:32px; height:32px; border-radius:50%; border:2px solid white; object-fit:cover; box-shadow:0 2px 6px rgba(0,0,0,0.2); }
+    
     .page-wrap { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:16px; padding-bottom:90px; }
     .dash-header  { margin-bottom:22px; padding:0 2px; }
     .dash-eyebrow { font-size:10px; font-weight:600; letter-spacing:2.5px; text-transform:uppercase; color:var(--text3); margin-bottom:5px; }
@@ -127,6 +154,9 @@
   </div>
   <div class="screen" id="s-app">
     <div class="topbar">
+  <!-- ✅ BAGO: Canvas para sa wave animation -->
+      <canvas id="topbar-wave-canvas"></canvas>
+      
       <div class="tb-brand">
         <svg class="tb-logo" viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg">
           <path d="M0,40 Q100,25 200,40 T400,40" stroke="white" stroke-width="8" fill="none" stroke-linecap="round"/>
@@ -141,6 +171,8 @@
         <img class="tb-avatar" id="user-avatar" src="" alt="">
       </div>
     </div>
+
+
     <div class="page-wrap">
       <div class="dash-header">
         <div class="dash-eyebrow">Water Management</div>
@@ -299,6 +331,83 @@
       }).observe(document.getElementById('s-login'), { attributes: true, attributeFilter: ['class'] });
       setTimeout(start, 60);
     })();
+
+        // ═══════════════════════════════════════
+    // TOPBAR WAVE ANIMATION (Subtle pulse)
+    // ═══════════════════════════════════════
+    (function initTopbarWaves() {
+      var canvas = document.getElementById('topbar-wave-canvas');
+      if (!canvas) return; // Hindi pa loaded ang dashboard
+      
+      var ctx    = canvas.getContext('2d');
+      var animId = null;
+      var dpr    = Math.max(1, window.devicePixelRatio || 1);
+
+      function resize() {
+        var topbar = canvas.parentElement;
+        if (!topbar) return;
+        var W = topbar.offsetWidth;
+        var H = topbar.offsetHeight;
+        canvas.width  = W * dpr;
+        canvas.height = H * dpr;
+        canvas.style.width  = W + 'px';
+        canvas.style.height = H + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      // Mas subtle waves para sa topbar (2 layers lang)
+      var TOPBAR_WAVES = [
+        { yBase: 0.5, amp1: 3, amp2: 2, freq1: 0.015, freq2: 0.030, speed: 0.3, alpha: 0.15, color: '255,255,255' },
+        { yBase: 0.7, amp1: 4, amp2: 2, freq1: 0.012, freq2: 0.025, speed: 0.4, alpha: 0.20, color: '180,230,255' }
+      ];
+
+      function loop(ts) {
+        var t = ts / 1000;
+        var W = canvas.width  / dpr;
+        var H = canvas.height / dpr;
+        ctx.clearRect(0, 0, W, H);
+
+        // Draw subtle wave layers
+        for (var i = 0; i < TOPBAR_WAVES.length; i++) {
+          var layer = TOPBAR_WAVES[i];
+          var yCenter = H * layer.yBase;
+          var phase   = t * layer.speed;
+
+          ctx.beginPath();
+          ctx.moveTo(0, H);
+          for (var x = 0; x <= W; x += 2) {
+            var y = yCenter
+                  + Math.sin(x * layer.freq1 + phase * 2.0) * layer.amp1
+                  + Math.sin(x * layer.freq2 - phase * 1.4) * layer.amp2;
+            if (x === 0) ctx.lineTo(0, y);
+            else         ctx.lineTo(x, y);
+          }
+          ctx.lineTo(W, H);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(' + layer.color + ',' + layer.alpha + ')';
+          ctx.fill();
+        }
+
+        animId = requestAnimationFrame(loop);
+      }
+
+      function start() {
+        resize();
+        if (animId) cancelAnimationFrame(animId);
+        animId = requestAnimationFrame(loop);
+      }
+
+      window.addEventListener('resize', resize);
+      
+      // Start animation kapag naka-load na ang dashboard
+      var checkInterval = setInterval(function() {
+        if (document.getElementById('s-app').classList.contains('active')) {
+          clearInterval(checkInterval);
+          start();
+        }
+      }, 100);
+    })();
+
     // ═══════════════════════════════════════
     // CONFIG
     // ═══════════════════════════════════════
