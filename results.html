@@ -1164,106 +1164,122 @@
     }
 
     function displayEntries(dayEntries) {
-      if (dayEntries.length === 0) {
-        document.getElementById('entry-details').innerHTML = '';
-        return;
+  console.log('🎨 displayEntries() called with', dayEntries.length, 'entries');
+  
+  if (dayEntries.length === 0) {
+    document.getElementById('entry-details').innerHTML = '';
+    return;
+  }
+  
+  const detailsContainer = document.getElementById('entry-details');
+  detailsContainer.innerHTML = '';
+  
+  dayEntries.forEach((entry, index) => {
+    console.log(`🔍 Processing entry ${index + 1}:`, entry);
+    console.log(`🌤️ Weather data raw:`, entry['Picture Weather']);
+    
+    const entryCard = document.createElement('div');
+    entryCard.style.cssText = `
+      background: var(--bg);
+      border-radius: 18px;
+      box-shadow: var(--neu-out);
+      padding: 20px;
+      margin-bottom: 20px;
+    `;
+    
+    // ✅ CRITICAL FIX: Parse weather data properly
+    let weatherData = entry['Picture Weather'];
+    console.log('🔍 Weather data type:', typeof weatherData);
+    console.log('🔍 Weather data value:', weatherData);
+    
+    if (weatherData && weatherData !== 'N/A' && weatherData.trim() !== '') {
+      try {
+        weatherData = JSON.parse(weatherData);
+        console.log('✅ Weather parsed successfully:', weatherData);
+      } catch (e) {
+        console.error('❌ Weather parse error:', e);
+        console.log('📝 Raw weather string:', weatherData);
+        weatherData = null;
       }
-      
-      const detailsContainer = document.getElementById('entry-details');
-      detailsContainer.innerHTML = '';
-      
-      dayEntries.forEach((entry, index) => {
-        const entryCard = document.createElement('div');
-        entryCard.style.cssText = `
-          background: var(--bg);
-          border-radius: 18px;
-          box-shadow: var(--neu-out);
-          padding: 20px;
-          margin-bottom: 20px;
-        `;
-        
-        let weatherData = entry['Picture Weather'];
-        if (weatherData && weatherData !== 'N/A') {
-          try {
-            weatherData = JSON.parse(weatherData);
-          } catch (e) {
-            // Keep as string
-          }
-        }
-        
-        entryCard.innerHTML = `
-          <div class="entry-header" style="margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--shadow-d);">
-            <div class="entry-date" style="font-size:16px; font-weight:700; color:var(--text);">
-              ${new Date(entry.Date).toLocaleDateString('en-US', {
-                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-              })}
-              ${dayEntries.length > 1 ? `<span style="color:var(--text3); font-size:12px; margin-left:8px;">Entry ${index + 1} of ${dayEntries.length}</span>` : ''}
-            </div>
-          </div>
-          
-          ${weatherData && weatherData !== 'N/A' ? `
-            <div class="entry-weather">
-              ${renderWeatherHTML(weatherData)}
-            </div>
-          ` : ''}
-          
-          <div class="entry-actions" style="display:flex; gap:10px; margin-bottom:16px;">
-            <button class="entry-btn edit" onclick='editEntryByIndex(${index})'>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline-block; vertical-align:middle; margin-right:6px;">
-                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              Edit
-            </button>
-            <button class="entry-btn delete" onclick='confirmDeleteByIndex(${index})'>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline-block; vertical-align:middle; margin-right:6px;">
-                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              Delete
-            </button>
-          </div>
-          
-          <div class="entry-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
-            <div class="entry-item">
-              <div class="entry-label">Sample Point</div>
-              <div class="entry-value" style="font-size:14px">${entry['Sample Point'] || '—'}</div>
-            </div>
-            <div class="entry-item">
-              <div class="entry-label">pH</div>
-              <div class="entry-value">${entry.pH || '—'}</div>
-            </div>
-            <div class="entry-item">
-              <div class="entry-label">Conductivity</div>
-              <div class="entry-value" style="font-size:14px">${entry.Conductivity || '—'} µS/cm</div>
-            </div>
-            <div class="entry-item">
-              <div class="entry-label">Free Chlorine</div>
-              <div class="entry-value" style="font-size:14px">${entry['Free Chlorine (FRC)'] || '—'} mg/L</div>
-            </div>
-            <div class="entry-item">
-              <div class="entry-label">Iron</div>
-              <div class="entry-value" style="font-size:14px">${entry.Iron || '—'} mg/L</div>
-            </div>
-            <div class="entry-item">
-              <div class="entry-label">Hardness</div>
-              <div class="entry-value" style="font-size:14px">${entry.Hardness || '—'} mg/L</div>
-            </div>
-            <div class="entry-item">
-              <div class="entry-label">Turbidity</div>
-              <div class="entry-value" style="font-size:14px">${entry.Turbidity || '—'} NTU</div>
-            </div>
-          </div>
-          
-          ${entry.Picture ? `
-            <img class="entry-image" src="${entry.Picture}" alt="Test photo" style="display:block; width:100%; border-radius:12px; box-shadow:var(--neu-sm);">
-          ` : ''}
-        `;
-        
-        detailsContainer.appendChild(entryCard);
-      });
-      
-      window.currentDayEntries = dayEntries;
+    } else {
+      console.warn('⚠️ No weather data or N/A');
+      weatherData = null;
     }
+    
+    entryCard.innerHTML = `
+      <div class="entry-header" style="margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--shadow-d);">
+        <div class="entry-date" style="font-size:16px; font-weight:700; color:var(--text);">
+          ${new Date(entry.Date).toLocaleDateString('en-US', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+          })}
+          ${dayEntries.length > 1 ? `<span style="color:var(--text3); font-size:12px; margin-left:8px;">Entry ${index + 1} of ${dayEntries.length}</span>` : ''}
+        </div>
+      </div>
+      
+      ${weatherData ? `
+        <div class="entry-weather">
+          ${renderWeatherHTML(weatherData)}
+        </div>
+      ` : '<div style="padding:12px; background:var(--bg2); border-radius:12px; margin-bottom:16px; text-align:center; color:var(--text3); font-size:13px;">No weather data available</div>'}
+      
+      <div class="entry-actions" style="display:flex; gap:10px; margin-bottom:16px;">
+        <button class="entry-btn edit" onclick='editEntryByIndex(${index})'>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline-block; vertical-align:middle; margin-right:6px;">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Edit
+        </button>
+        <button class="entry-btn delete" onclick='confirmDeleteByIndex(${index})'>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline-block; vertical-align:middle; margin-right:6px;">
+            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Delete
+        </button>
+      </div>
+      
+      <div class="entry-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+        <div class="entry-item">
+          <div class="entry-label">Sample Point</div>
+          <div class="entry-value" style="font-size:14px">${entry['Sample Point'] || '—'}</div>
+        </div>
+        <div class="entry-item">
+          <div class="entry-label">pH</div>
+          <div class="entry-value">${entry.pH || '—'}</div>
+        </div>
+        <div class="entry-item">
+          <div class="entry-label">Conductivity</div>
+          <div class="entry-value" style="font-size:14px">${entry.Conductivity || '—'} µS/cm</div>
+        </div>
+        <div class="entry-item">
+          <div class="entry-label">Free Chlorine</div>
+          <div class="entry-value" style="font-size:14px">${entry['Free Chlorine (FRC)'] || '—'} mg/L</div>
+        </div>
+        <div class="entry-item">
+          <div class="entry-label">Iron</div>
+          <div class="entry-value" style="font-size:14px">${entry.Iron || '—'} mg/L</div>
+        </div>
+        <div class="entry-item">
+          <div class="entry-label">Hardness</div>
+          <div class="entry-value" style="font-size:14px">${entry.Hardness || '—'} mg/L</div>
+        </div>
+        <div class="entry-item">
+          <div class="entry-label">Turbidity</div>
+          <div class="entry-value" style="font-size:14px">${entry.Turbidity || '—'} NTU</div>
+        </div>
+      </div>
+      
+      ${entry.Picture ? `
+        <img class="entry-image" src="${entry.Picture}" alt="Test photo" style="display:block; width:100%; border-radius:12px; box-shadow:var(--neu-sm);">
+      ` : ''}
+    `;
+    
+    detailsContainer.appendChild(entryCard);
+  });
+  
+  window.currentDayEntries = dayEntries;
+  console.log('✅ displayEntries() completed');
+}
 
     function renderWeatherHTML(weatherData) {
       if (!weatherData || weatherData === 'N/A') {
