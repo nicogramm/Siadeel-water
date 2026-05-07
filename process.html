@@ -12,17 +12,20 @@
       --bg: #f5f7fa; --text: #0052A3; --blue: #0052A3;
       --shadow-d: #c8d1dc; --shadow-l: #ffffff;
       --neu-out: 8px 8px 16px var(--shadow-d), -6px -6px 12px var(--shadow-l);
+      --text2: #5a6c7d; --text3: #8b98a5;
     }
     
     body.dark {
       --bg: #1a1f2e; --text: #1a6bbf; 
       --shadow-d: #0f1219; --shadow-l: #2e3547;
+      --text2: #8b98a5; --text3: #5a6c7d;
     }
     
     * { box-sizing:border-box; margin:0; padding:0; }
     body { 
       font-family:'Inter',sans-serif; background:var(--bg); 
       color:var(--text); transition:background 0.4s; 
+      overflow:hidden;
     }
     
     .process-page { 
@@ -32,22 +35,35 @@
     
     .process-header {
       background:#0052A3; padding:14px 18px;
+      padding-top:calc(env(safe-area-inset-top,0px) + 14px);
       display:flex; align-items:center; justify-content:space-between;
       box-shadow:0 3px 10px rgba(0,0,0,0.15);
+      position:relative; overflow:hidden; z-index:10;
+    }
+    
+    #header-wave-canvas {
+      position:absolute; top:0; left:0; width:100%; height:100%;
+      pointer-events:none; z-index:1; opacity:0.3;
     }
     
     .process-header h1 {
       font-size:20px; font-weight:700; color:white;
+      position:relative; z-index:2;
     }
     
     .back-btn {
       width:36px; height:36px; border-radius:10px;
       background:rgba(255,255,255,0.15); border:none;
-      color:white; cursor:pointer;
+      color:white; cursor:pointer; position:relative; z-index:2;
+      display:flex; align-items:center; justify-content:center;
     }
+    .back-btn:active { background:rgba(255,255,255,0.25); }
+    
+    .header-spacer { width:36px; }
     
     .content {
-      flex:1; overflow-y:auto; padding:20px;
+      flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
+      padding:20px; padding-bottom:calc(40px + env(safe-area-inset-bottom,0px));
       display:grid; grid-template-columns:1fr 1fr; gap:20px;
     }
     
@@ -58,11 +74,12 @@
     .editor-panel, .preview-panel {
       background:var(--bg); border-radius:18px;
       box-shadow:var(--neu-out); padding:20px;
+      height:fit-content;
     }
     
     .panel-title {
       font-size:16px; font-weight:700; margin-bottom:16px;
-      color:var(--text);
+      color:var(--text); display:flex; align-items:center; gap:8px;
     }
     
     #code-editor {
@@ -72,12 +89,17 @@
       color:var(--text); resize:vertical;
       box-shadow:inset 5px 5px 10px var(--shadow-d), 
                  inset -4px -4px 9px var(--shadow-l);
+      outline:none;
     }
     
     .preview-container {
       min-height:400px; padding:20px;
       background:white; border-radius:12px;
-      overflow:auto;
+      overflow:auto; box-shadow:var(--neu-out);
+    }
+    
+    body.dark .preview-container {
+      background:#232a3a;
     }
     
     .btn-group {
@@ -112,52 +134,97 @@
       border-radius:12px; box-shadow:var(--neu-out);
       font-size:12px; font-weight:600; color:var(--text);
       cursor:pointer; font-family:'Inter',sans-serif;
+      transition:all 0.15s;
     }
     
     .template-btn:active { 
       box-shadow:inset 5px 5px 10px var(--shadow-d), 
                  inset -4px -4px 9px var(--shadow-l);
+      transform:scale(0.98);
     }
+    
+    .info-card {
+      background:var(--bg); border-radius:12px;
+      box-shadow:var(--neu-out); padding:16px;
+      margin-bottom:16px; border-left:4px solid var(--blue);
+    }
+    
+    .info-title {
+      font-size:13px; font-weight:600; color:var(--text);
+      margin-bottom:8px;
+    }
+    
+    .info-text {
+      font-size:12px; color:var(--text2); line-height:1.6;
+    }
+    
+    .toast {
+      position:fixed; bottom:calc(30px + env(safe-area-inset-bottom,0px));
+      left:50%; transform:translateX(-50%); background:var(--bg);
+      border-radius:14px; box-shadow:var(--neu-out);
+      border-left:4px solid var(--blue); padding:14px 24px;
+      font-size:13px; font-weight:500; color:var(--text);
+      z-index:300; white-space:nowrap; opacity:0;
+      pointer-events:none; transition:opacity 0.3s; max-width:90%;
+    }
+    .toast.show { opacity:1; }
   </style>
 </head>
 <body>
   <div class="process-page">
     <div class="process-header">
-      <button class="back-btn" onclick="goBack()">←</button>
-      <h1>Process Flow Diagrams</h1>
-      <div style="width:36px"></div>
+      <canvas id="header-wave-canvas"></canvas>
+      <button class="back-btn" onclick="goBack()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <h1>Process Flow</h1>
+      <div class="header-spacer"></div>
     </div>
     
     <div class="content">
       <!-- Editor Panel -->
       <div class="editor-panel">
-        <div class="panel-title">📝 Diagram Code</div>
+        <div class="panel-title">
+          <span>📝</span>
+          <span>Diagram Code</span>
+        </div>
+        
+        <div class="info-card">
+          <div class="info-title">💡 Siadeel Water System</div>
+          <div class="info-text">
+            Current flow: Well → Elevated Tank → Filtration → Distribution → Recycle Loop
+          </div>
+        </div>
         
         <div class="templates">
-          <button class="template-btn" onclick="loadTemplate('basic')">
-            🔵 Basic Flow
+          <button class="template-btn" onclick="loadTemplate('siadeel')">
+            💧 Siadeel System
           </button>
-          <button class="template-btn" onclick="loadTemplate('treatment')">
-            💧 Water Treatment
+          <button class="template-btn" onclick="loadTemplate('detailed')">
+            🔍 Detailed Flow
           </button>
-          <button class="template-btn" onclick="loadTemplate('decision')">
-            🔀 Decision Tree
+          <button class="template-btn" onclick="loadTemplate('simple')">
+            ⚡ Simple View
           </button>
-          <button class="template-btn" onclick="loadTemplate('cycle')">
-            🔄 Cycle Process
+          <button class="template-btn" onclick="loadTemplate('monitoring')">
+            📊 With Monitoring
           </button>
         </div>
         
-        <textarea id="code-editor" placeholder="Enter Mermaid diagram code...">
-graph TD
-    A[Raw Water Intake] --> B{Quality Test}
-    B -->|Pass| C[Filtration]
-    B -->|Fail| D[Pre-treatment]
-    D --> C
-    C --> E[Chlorination]
-    E --> F[Storage Tank]
-    F --> G[Distribution]
-        </textarea>
+        <textarea id="code-editor" placeholder="Enter Mermaid diagram code...">graph TB
+    A[🏞️ Well Source] -->|Pump| B[⬆️ Elevated Tank]
+    B -->|Gravity Feed| C[🔬 Filtration System]
+    C -->|Clean Water| D[🏘️ Distribution Network]
+    D -->|Partial Flow| E[🔄 Recycle Loop]
+    E -->|Return| B
+    
+    style A fill:#e3f2fd
+    style B fill:#fff3e0
+    style C fill:#e8f5e9
+    style D fill:#f3e5f5
+    style E fill:#fce4ec</textarea>
         
         <div class="btn-group">
           <button class="btn btn-primary" onclick="updatePreview()">
@@ -171,18 +238,23 @@ graph TD
       
       <!-- Preview Panel -->
       <div class="preview-panel">
-        <div class="panel-title">👁️ Live Preview</div>
+        <div class="panel-title">
+          <span>👁️</span>
+          <span>Live Preview</span>
+        </div>
         <div class="preview-container">
-          <div class="mermaid" id="preview">
-graph TD
-    A[Raw Water Intake] --> B{Quality Test}
-    B -->|Pass| C[Filtration]
-    B -->|Fail| D[Pre-treatment]
-    D --> C
-    C --> E[Chlorination]
-    E --> F[Storage Tank]
-    F --> G[Distribution]
-          </div>
+          <div class="mermaid" id="preview">graph TB
+    A[🏞️ Well Source] -->|Pump| B[⬆️ Elevated Tank]
+    B -->|Gravity Feed| C[🔬 Filtration System]
+    C -->|Clean Water| D[🏘️ Distribution Network]
+    D -->|Partial Flow| E[🔄 Recycle Loop]
+    E -->|Return| B
+    
+    style A fill:#e3f2fd
+    style B fill:#fff3e0
+    style C fill:#e8f5e9
+    style D fill:#f3e5f5
+    style E fill:#fce4ec</div>
         </div>
         
         <div class="btn-group">
@@ -197,19 +269,85 @@ graph TD
     </div>
   </div>
   
+  <div class="toast" id="toast"></div>
+  
   <script>
-    // Initialize Mermaid
+    // ═══════════════════════════════════════
+    // WAVE ANIMATION
+    // ═══════════════════════════════════════
+    (function initWaves() {
+      const canvas = document.getElementById('header-wave-canvas');
+      const ctx = canvas.getContext('2d');
+      let animId = null;
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+
+      function resize() {
+        const header = canvas.parentElement;
+        const W = header.offsetWidth;
+        const H = header.offsetHeight;
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        canvas.style.width = W + 'px';
+        canvas.style.height = H + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      const WAVES = [
+        { yBase: 0.5, amp1: 3, amp2: 2, freq1: 0.015, freq2: 0.030, speed: 0.3, alpha: 0.15, color: '255,255,255' },
+        { yBase: 0.7, amp1: 4, amp2: 2, freq1: 0.012, freq2: 0.025, speed: 0.4, alpha: 0.20, color: '180,230,255' }
+      ];
+
+      function loop(ts) {
+        const t = ts / 1000;
+        const W = canvas.width / dpr;
+        const H = canvas.height / dpr;
+        ctx.clearRect(0, 0, W, H);
+
+        for (let i = 0; i < WAVES.length; i++) {
+          const layer = WAVES[i];
+          const yCenter = H * layer.yBase;
+          const phase = t * layer.speed;
+
+          ctx.beginPath();
+          ctx.moveTo(0, H);
+          for (let x = 0; x <= W; x += 2) {
+            const y = yCenter
+              + Math.sin(x * layer.freq1 + phase * 2.0) * layer.amp1
+              + Math.sin(x * layer.freq2 - phase * 1.4) * layer.amp2;
+            if (x === 0) ctx.lineTo(0, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.lineTo(W, H);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(' + layer.color + ',' + layer.alpha + ')';
+          ctx.fill();
+        }
+
+        animId = requestAnimationFrame(loop);
+      }
+
+      window.addEventListener('resize', resize);
+      resize();
+      animId = requestAnimationFrame(loop);
+    })();
+    
+    // ═══════════════════════════════════════
+    // MERMAID INITIALIZATION
+    // ═══════════════════════════════════════
     mermaid.initialize({ 
       startOnLoad: true, 
       theme: 'neutral',
       flowchart: { 
         useMaxWidth: true,
         htmlLabels: true,
-        curve: 'basis'
+        curve: 'basis',
+        padding: 20
       }
     });
     
-    // Theme sync
+    // ═══════════════════════════════════════
+    // THEME SYNC
+    // ═══════════════════════════════════════
     const themeChannel = new BroadcastChannel('siadeel-theme-channel');
     themeChannel.onmessage = (event) => {
       if (event.data.type === 'theme-change') {
@@ -224,45 +362,75 @@ graph TD
     const isDark = localStorage.getItem('siadeel-theme') === 'dark';
     document.body.classList.toggle('dark', isDark);
     
-    // Templates
+    // ═══════════════════════════════════════
+    // TEMPLATES
+    // ═══════════════════════════════════════
     const templates = {
-      basic: `graph TD
-    A[Start] --> B[Process 1]
-    B --> C[Process 2]
-    C --> D[End]`,
+      siadeel: `graph TB
+    A[🏞️ Well Source] -->|Pump| B[⬆️ Elevated Tank]
+    B -->|Gravity Feed| C[🔬 Filtration System]
+    C -->|Clean Water| D[🏘️ Distribution Network]
+    D -->|Partial Flow| E[🔄 Recycle Loop]
+    E -->|Return| B
+    
+    style A fill:#e3f2fd
+    style B fill:#fff3e0
+    style C fill:#e8f5e9
+    style D fill:#f3e5f5
+    style E fill:#fce4ec`,
       
-      treatment: `graph TD
-    A[Raw Water Source] --> B[Screening]
-    B --> C[Coagulation]
-    C --> D[Sedimentation]
-    D --> E[Filtration]
-    E --> F[Disinfection]
-    F --> G[Storage]
-    G --> H[Distribution]`,
+      detailed: `graph TB
+    A[🏞️ Deep Well<br/>Source Water] -->|Submersible Pump| B[⬆️ Elevated Storage Tank<br/>Capacity: 10,000L]
+    B -->|Gravity Distribution| C{Water Quality<br/>Check}
+    C -->|Pass| D[🔬 Multi-Stage Filtration]
+    C -->|Fail| F[⚠️ Treatment Required]
+    F --> D
+    D -->|Sand Filter| G[Carbon Filter]
+    G -->|UV Treatment| H[🏘️ Distribution Network]
+    H -->|Consumption| I[End Users]
+    H -->|Excess/Overflow| J[🔄 Recycle System]
+    J -->|Return Line| B
+    
+    style A fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    style B fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    style C fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
+    style D fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    style F fill:#ffebee,stroke:#d32f2f,stroke-width:2px
+    style H fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    style J fill:#fce4ec,stroke:#c2185b,stroke-width:2px`,
       
-      decision: `graph TD
-    A[Water Sample] --> B{pH Test}
-    B -->|pH < 6.5| C[Add Alkali]
-    B -->|pH > 8.5| D[Add Acid]
-    B -->|6.5-8.5| E[Acceptable]
-    C --> F[Re-test]
-    D --> F
-    F --> E
-    E --> G[Next Stage]`,
+      simple: `graph LR
+    A[Well] --> B[Tank]
+    B --> C[Filter]
+    C --> D[Users]
+    D --> E[Recycle]
+    E --> B`,
       
-      cycle: `graph LR
-    A[Intake] --> B[Treatment]
-    B --> C[Storage]
-    C --> D[Distribution]
-    D --> E[Monitoring]
-    E --> A`
+      monitoring: `graph TB
+    A[🏞️ Well Source] -->|Flow Meter| B[⬆️ Elevated Tank]
+    B -->|Level Sensor| C[🔬 Filtration]
+    C -->|Quality Monitor| D[🏘️ Distribution]
+    D -->|Pressure Gauge| E[End Users]
+    D -->|Flow Control| F[🔄 Recycle]
+    F -->|Return Valve| B
+    
+    G[📊 Monitoring System] -.->|Monitor| B
+    G -.->|Monitor| C
+    G -.->|Monitor| D
+    G -.->|Monitor| F
+    
+    style G fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,stroke-dasharray: 5 5`
     };
     
     function loadTemplate(name) {
       document.getElementById('code-editor').value = templates[name];
       updatePreview();
+      showToast('✅ Template loaded!');
     }
     
+    // ═══════════════════════════════════════
+    // PREVIEW UPDATE
+    // ═══════════════════════════════════════
     function updatePreview() {
       const code = document.getElementById('code-editor').value;
       const preview = document.getElementById('preview');
@@ -270,13 +438,23 @@ graph TD
       preview.innerHTML = code;
       preview.removeAttribute('data-processed');
       
-      mermaid.init(undefined, preview);
+      try {
+        mermaid.init(undefined, preview);
+        showToast('✅ Preview updated!');
+      } catch (err) {
+        console.error('Mermaid error:', err);
+        preview.innerHTML = '<div style="color:red; padding:20px;">⚠️ Syntax error in diagram code</div>';
+        showToast('❌ Syntax error!');
+      }
     }
     
+    // ═══════════════════════════════════════
+    // EXPORT FUNCTIONS
+    // ═══════════════════════════════════════
     async function exportPNG() {
       const svg = document.querySelector('#preview svg');
       if (!svg) {
-        alert('Generate preview first!');
+        showToast('⚠️ Generate preview first!');
         return;
       }
       
@@ -286,16 +464,19 @@ graph TD
       const img = new Image();
       
       img.onload = () => {
-        canvas.width = img.width;
-        canvas.height = img.height;
+        canvas.width = img.width * 2;
+        canvas.height = img.height * 2;
+        ctx.scale(2, 2);
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0);
         
         const link = document.createElement('a');
-        link.download = `process-flow-${Date.now()}.png`;
+        link.download = `siadeel-process-flow-${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
+        
+        showToast('✅ PNG exported!');
       };
       
       img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
@@ -304,7 +485,7 @@ graph TD
     function exportSVG() {
       const svg = document.querySelector('#preview svg');
       if (!svg) {
-        alert('Generate preview first!');
+        showToast('⚠️ Generate preview first!');
         return;
       }
       
@@ -313,23 +494,57 @@ graph TD
       const url = URL.createObjectURL(blob);
       
       const link = document.createElement('a');
-      link.download = `process-flow-${Date.now()}.svg`;
+      link.download = `siadeel-process-flow-${Date.now()}.svg`;
       link.href = url;
       link.click();
+      
+      showToast('✅ SVG exported!');
     }
     
+    // ═══════════════════════════════════════
+    // SAVE FUNCTION
+    // ═══════════════════════════════════════
     function saveFlow() {
-      // TODO: Save to Google Sheets
       const code = document.getElementById('code-editor').value;
-      localStorage.setItem('process-flow-draft', code);
-      alert('✅ Saved locally! (Google Sheets integration coming next)');
+      localStorage.setItem('siadeel-process-flow', code);
+      localStorage.setItem('siadeel-process-flow-date', new Date().toISOString());
+      showToast('✅ Saved locally!');
+      
+      // TODO: Save to Google Sheets
+      // Will implement in next iteration
     }
     
+    // ═══════════════════════════════════════
+    // LOAD SAVED FLOW
+    // ═══════════════════════════════════════
+    function loadSavedFlow() {
+      const saved = localStorage.getItem('siadeel-process-flow');
+      if (saved) {
+        document.getElementById('code-editor').value = saved;
+        updatePreview();
+      }
+    }
+    
+    // ═══════════════════════════════════════
+    // UI HELPERS
+    // ═══════════════════════════════════════
     function goBack() {
       window.location.href = 'index.html';
     }
     
-    // Auto-update on load
+    let toastTimer;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+    
+    // ═══════════════════════════════════════
+    // AUTO-LOAD ON INIT
+    // ═══════════════════════════════════════
+    loadSavedFlow();
     updatePreview();
   </script>
 </body>
