@@ -1068,50 +1068,63 @@
     // ═══════════════════════════════════════
     // DATA LOADING
     // ═══════════════════════════════════════
-    async function loadActivities() {
-      if (!token) return;
-      
-      try {
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A:H`;
-        
-        const response = await fetch(url, {
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
-        
-        if (!response.ok) {
-          if (response.status === 404) {
-            console.log('Activities sheet not found, will create on first activity');
-            activities = [];
-            return;
-          }
-          throw new Error('Failed to load activities');
-        }
-        
-        const data = await response.json();
-        
-        if (data.values && data.values.length > 1) {
-          const headers = data.values[0];
-          
-          activities = data.values.slice(1).map((row, index) => {
-            const obj = { _rowIndex: index + 2 }; // ✅ Store row index (1-based, +1 for header)
-            
-            headers.forEach((h, i) => {
-              obj[h] = row[i] || '';
-            });
-            
-            return obj;
-          });
-          
-          // Sort by datetime descending
-          activities.sort((a, b) => new Date(b.DateTime) - new Date(a.DateTime));
-          
-          console.log('✅ Loaded', activities.length, 'activities');
-        }
-      } catch (err) {
-        console.error('Load activities error:', err);
+    // ═══════════════════════════════════════
+// DATA LOADING (FIXED)
+// ═══════════════════════════════════════
+async function loadActivities() {
+  if (!token) return;
+  
+  try {
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A:H`;
+    
+    const response = await fetch(url, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        console.log('Activities sheet not found, will create on first activity');
+        activities = [];
+        return;
       }
+      throw new Error('Failed to load activities');
     }
     
+    const data = await response.json();
+    
+    if (data.values && data.values.length > 1) {
+      const headers = data.values[0];
+      
+      activities = data.values.slice(1).map((row, index) => {
+        const obj = {
+          _rowIndex: index + 2,  // ✅ Store row index (1-based, +1 for header)
+          _originalIndex: index  // ✅ Store original position para sa debugging
+        };
+        
+        headers.forEach((h, i) => {
+          obj[h] = row[i] || '';
+        });
+        
+        return obj;
+      });
+      
+      // ✅ Sort by datetime descending BUT preserve _rowIndex
+      activities.sort((a, b) => {
+        const dateA = new Date(a.DateTime);
+        const dateB = new Date(b.DateTime);
+        return dateB - dateA;
+      });
+      
+      console.log('✅ Loaded', activities.length, 'activities');
+      console.log('📋 Sample activity with _rowIndex:', activities[0]); // Debug log
+    } else {
+      activities = [];
+    }
+  } catch (err) {
+    console.error('Load activities error:', err);
+    activities = [];
+  }
+}
     // ═══════════════════════════════════════
     // RENDER ACTIVITIES
     // ═══════════════════════════════════════
@@ -1294,66 +1307,100 @@
       currentActivity = null;
     }
     
-    async function deleteCurrentActivity() {
-      if (!currentActivity || !token) return;
-      
-      closeConfirmModal();
-      showLoading();
-      
-      try {
-        const rowIndex = currentActivity._rowIndex;
-        
-        if (!rowIndex) {
-          throw new Error('Row index not found');
+    // ═══════════════════════════════════════
+// ✅ DELETE ACTIVITY (ALTERNATIVE METHOD - GAMIT ANG ID)
+// ═══════════════════════════════════════
+async function deleteCurrentActivity() {
+  if (!currentActivity || !token) return;
+  
+  closeConfirmModal();
+  showLoading();
+  
+  try {
+    // ✅ Hanapin ang row gamit ang ID
+    const activityId = currentActivity.ID;
+    
+    if (!activityId) {
+      throw new Error('Activity ID not found');
+    }
+    
+    console.log('🔍 Searching for activity ID:', activityId);
+    
+    // ✅ Load raw data para hanapin ang exact row
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A:A`;
+    
+    const response = await fetch(url, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    
+    if (!response.ok) throw new Error('Failed to load sheet data');
+    
+    const data = await response.json();
+    
+    // ✅ Hanapin ang row index gamit ang ID
+    let rowIndex = -1;
+    if (data.values) {
+      for (let i = 1; i < data.values.length; i++) { // Start from 1 (skip header)
+        if (data.values[i][0] === activityId.toString()) {
+          rowIndex = i + 1; // 1-based index
+          break;
         }
-        
-        // ✅ Kumuha ng tamang sheet ID
-        const sheetId = await getSheetId();
-        
-        // ✅ Gamitin ang batchUpdate para mag-delete ng row
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`;
-        
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Bearer ' + token,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            requests: [
-              {
-                deleteDimension: {
-                  range: {
-                    sheetId: sheetId,
-                    dimension: 'ROWS',
-                    startIndex: rowIndex - 1, // 0-indexed
-                    endIndex: rowIndex
-                  }
-                }
-              }
-            ]
-          })
-        });
-        
-        if (!response.ok) {
-          const error = await response.json();
-          console.error('Delete error:', error);
-          throw new Error('Failed to delete activity');
-        }
-        
-        showToast('✅ Activity deleted!');
-        
-        // ✅ Reload activities para makita ang changes
-        await loadActivities();
-        renderActivities();
-        
-      } catch (err) {
-        console.error('Delete activity error:', err);
-        showToast('❌ Failed to delete: ' + err.message);
-      } finally {
-        hideLoading();
       }
     }
+    
+    if (rowIndex === -1) {
+      throw new Error('Activity not found in sheet');
+    }
+    
+    console.log('✅ Found activity at row:', rowIndex);
+    
+    // ✅ Kumuha ng sheet ID
+    const sheetId = await getSheetId();
+    
+    // ✅ Delete the row
+    const deleteUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`;
+    
+    const deleteResponse = await fetch(deleteUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        requests: [
+          {
+            deleteDimension: {
+              range: {
+                sheetId: sheetId,
+                dimension: 'ROWS',
+                startIndex: rowIndex - 1, // 0-indexed
+                endIndex: rowIndex
+              }
+            }
+          }
+        ]
+      })
+    });
+    
+    if (!deleteResponse.ok) {
+      const error = await deleteResponse.json();
+      console.error('Delete error:', error);
+      throw new Error('Failed to delete activity');
+    }
+    
+    showToast('✅ Activity deleted!');
+    
+    // ✅ Reload activities
+    await loadActivities();
+    renderActivities();
+    
+  } catch (err) {
+    console.error('Delete activity error:', err);
+    showToast('❌ Failed to delete: ' + err.message);
+  } finally {
+    hideLoading();
+  }
+}
     
     // ═══════════════════════════════════════
     // UI HELPERS
