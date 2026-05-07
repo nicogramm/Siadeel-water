@@ -444,6 +444,22 @@
       localStorage.setItem('siadeel-theme', dark ? 'dark' : 'light');
     }
     applyTheme(localStorage.getItem('siadeel-theme') === 'dark');
+    // ✅ BAGO: Listen for theme changes from other pages
+    window.addEventListener('storage', function(e) {
+      if (e.key === 'siadeel-theme' || !e.key) {
+        const newTheme = localStorage.getItem('siadeel-theme') === 'dark';
+        applyTheme(newTheme);
+      }
+    });
+
+    // ✅ BAGO: Also listen for custom storage event (same tab)
+    window.addEventListener('storage', function() {
+      const newTheme = localStorage.getItem('siadeel-theme') === 'dark';
+      if (newTheme !== isDark) {
+        applyTheme(newTheme);
+      }
+    });
+
     (function init() {
       let deferredPrompt;
       window.addEventListener('beforeinstallprompt', (e) => {
