@@ -562,16 +562,23 @@
       document.getElementById('dash-name').textContent = gr + ', ' + firstName + '!';
       document.getElementById('dash-date').textContent = now.toLocaleDateString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
     }
+
     function buildDashboard() {
       document.getElementById('mod-grid').innerHTML = ALL_MODULES.map(m => {
         const icon = ICONS[m.icon] || '';
-        const onclick = `showToast('${m.label} — coming soon')`;
+        // ✅ BAGO: Check kung settings module, redirect to settings.html
+        const onclick = m.id === 'settings' 
+          ? `window.location.href='settings.html'` 
+          : `showToast('${m.label} — coming soon')`;
+        
         if (m.wide) {
           return `<div class="mod-card wide" onclick="${onclick}"><div class="mod-icon-box">${icon}</div><div><div class="mod-label">${m.label}</div><div class="mod-value" id="${m.stat}">—</div><div class="mod-sub">${m.sub}</div></div></div>`;
         }
         return `<div class="mod-card" onclick="${onclick}"><div class="mod-icon-box">${icon}</div><div class="mod-label">${m.label}</div><div class="mod-value" id="${m.stat}">—</div><div class="mod-sub">${m.sub}</div></div>`;
       }).join('');
     }
+
+
     function loadDashboardStats() {
       if (!token) return;
       setTimeout(() => {
