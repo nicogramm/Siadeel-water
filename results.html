@@ -1480,6 +1480,7 @@
   ];
   
   console.log('📤 Saving row data:', rowData);
+  console.log('🔍 Weather in row data:', rowData[11]);
   
   try {
     if (isEditMode) {
@@ -1503,15 +1504,6 @@
       
       console.log('✅ Entry updated successfully');
       showToast('✅ Entry updated!');
-      closeAddModal();
-      
-      // ✅ CRITICAL FIX: AWAIT loadEntries BEFORE selectDate
-      await loadEntries();
-      console.log('✅ Entries reloaded');
-      
-      // Now select the date with fresh data
-      selectDate(date);
-      console.log('✅ Auto-selected date:', date);
       
     } else {
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:L:append?valueInputOption=USER_ENTERED`;
@@ -1533,16 +1525,36 @@
       
       console.log('✅ Entry saved successfully');
       showToast('✅ Entry saved!');
-      closeAddModal();
-      document.getElementById('entry-form').reset();
+    }
+    
+    // ✅ CRITICAL FIX: Close modal first, then reload and display
+    closeAddModal();
+    document.getElementById('entry-form').reset();
+    
+    // ✅ Reload entries from Google Sheets
+    console.log('🔄 Reloading entries...');
+    await loadEntries();
+    console.log('✅ Entries reloaded, count:', entries.length);
+    
+    // ✅ Force display the date's entries
+    console.log('📅 Selecting date:', date);
+    const dayEntries = entries.filter(e => e.Date === date);
+    console.log('📊 Found entries for date:', dayEntries.length);
+    
+    if (dayEntries.length > 0) {
+      console.log('🔍 First entry weather:', dayEntries[0]['Picture Weather']);
+      displayEntries(dayEntries);
       
-      // ✅ CRITICAL FIX: AWAIT loadEntries BEFORE selectDate
-      await loadEntries();
-      console.log('✅ Entries reloaded');
-      
-      // Now select the date with fresh data
-      selectDate(date);
-      console.log('✅ Auto-selected date:', date);
+      // ✅ Highlight the calendar day
+      document.querySelectorAll('.calendar-day').forEach(day => {
+        day.classList.remove('selected');
+        const dayNum = date.split('-')[2];
+        if (day.textContent === dayNum && !day.classList.contains('other-month')) {
+          day.classList.add('selected');
+        }
+      });
+    } else {
+      console.warn('⚠️ No entries found for date:', date);
     }
     
   } catch (err) {
@@ -1552,7 +1564,6 @@
     hideLoading();
   }
 }
-
 
     function editCurrentEntry() {
       if (!currentEntry) {
