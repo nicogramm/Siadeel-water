@@ -1414,7 +1414,7 @@
       }
     }
 
-    async function submitEntry(event) {
+  async function submitEntry(event) {
   event.preventDefault();
   
   if (!token) {
@@ -1443,7 +1443,7 @@
   const hardness = document.getElementById('input-hardness').value;
   const turbidity = document.getElementById('input-turbidity').value;
   
-  // ✅ FIX: Weather fetch is now AWAITED properly
+  // ✅ Weather fetch with fallback
   let weatherString = 'N/A';
   try {
     console.log('🌤️ Fetching weather...');
@@ -1458,7 +1458,7 @@
     console.error('⚠️ Weather error (non-critical):', err);
   }
   
-  // ✅ FIX: Process image AFTER weather
+  // Process image
   const imageFile = document.getElementById('input-image').files[0];
   let imageUrl = '';
   if (imageFile) {
@@ -1505,7 +1505,12 @@
       showToast('✅ Entry updated!');
       closeAddModal();
       await loadEntries();
-      setTimeout(() => selectDate(date), 500);
+      
+      // ✅ FIX: Auto-select date to show updated entry
+      setTimeout(() => {
+        selectDate(date);
+        console.log('✅ Auto-selected date:', date);
+      }, 500);
       
     } else {
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:L:append?valueInputOption=USER_ENTERED`;
@@ -1530,8 +1535,8 @@
       closeAddModal();
       await loadEntries();
       document.getElementById('entry-form').reset();
-
-      // ✅ FIX: Auto-select the date to show the entry with weather
+      
+      // ✅ FIX: Auto-select date to show new entry with weather
       setTimeout(() => {
         selectDate(date);
         console.log('✅ Auto-selected date:', date);
@@ -1545,7 +1550,6 @@
     hideLoading();
   }
 }
-
     function editCurrentEntry() {
       if (!currentEntry) {
         showToast('⚠️ No entry selected');
