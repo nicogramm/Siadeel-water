@@ -635,19 +635,83 @@
       }).join('');
     }
 
-    function loadDashboardStats() {
-      if (!token) return;
-      setTimeout(() => {
-        // ✅ BAGO: Load stats dynamically based on configured modules
-        const modules = typeof SIADEEL_MODULES !== 'undefined' ? SIADEEL_MODULES : [];
-        modules.forEach(m => {
-          const el = document.getElementById(m.stat);
-          if (el && m.value) {
-            el.textContent = m.value;
-          }
-        });
-      }, 500);
+// ═══════════════════════════════════════
+// ✅ UPDATED: Load Real Dashboard Stats
+// ═══════════════════════════════════════
+function loadDashboardStats() {
+  if (!token) return;
+  
+  const STATS_SHEET = 'DashboardStats';
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${STATS_SHEET}!A:B`;
+  
+  // Show loading state
+  const modules = typeof SIADEEL_MODULES !== 'undefined' ? SIADEEL_MODULES : [];
+  modules.forEach(m => {
+    const el = document.getElementById(m.stat);
+    if (el && m.metric) {
+      el.textContent = '⏳'; // Loading indicator
     }
+  });
+  
+  fetch(url, {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(r => {
+    if (!r.ok) throw new Error('Failed to load stats');
+    return r.json();
+  })
+  .then(data => {
+    if (!data.values || data.values.length < 2) {
+      console.warn('No stats data found');
+      return;
+    }
+    
+    // Parse stats into a map
+    const statsMap = {};
+    for (let i = 1; i < data.values.length; i++) { // Skip header row
+      const row = data.values[i];
+      if (row[0] && row[1]) {
+        statsMap[row[0]] = row[1]; // metric name → value
+      }
+    }
+    
+    // Update module values
+    modules.forEach(m => {
+      const el = document.getElementById(m.stat);
+      if (el && m.metric && statsMap[m.metric]) {
+        let value = statsMap[m.metric];
+        
+        // Format based on metric type
+        if (m.metric.includes('Avg')) {
+          // Average values — show 2 decimal places
+          value = parseFloat(value).toFixed(2);
+        } else if (!isNaN(value)) {
+          // Count values — show as integer
+          value = Math.round(parseFloat(value));
+        }
+        
+        el.textContent = value;
+      } else if (el && !m.metric) {
+        // No metric (e.g., Settings) — show dash
+        el.textContent = '—';
+      } else if (el) {
+        // Metric not found — show error
+        el.textContent = '—';
+      }
+    });
+  })
+  .catch(err => {
+    console.error('Load stats error:', err);
+    
+    // Show error state
+    modules.forEach(m => {
+      const el = document.getElementById(m.stat);
+      if (el && m.metric) {
+        el.textContent = '—';
+      }
+    });
+  });
+}
 
     let toastTimer;
     function showToast(msg) {
