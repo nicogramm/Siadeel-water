@@ -22,10 +22,14 @@
       --neu-sm:  5px 5px 10px var(--shadow-d), -4px -4px 8px var(--shadow-l);
       --neu-xs:  3px 3px 7px var(--shadow-d), -2px -2px 6px var(--shadow-l);
     }
+    /* ✅ FIXED: Matching dark mode with index.html */
     body.dark {
-      --bg: #0a1628; --bg2: #0f1e35; --shadow-d: #050b14; --shadow-l: #152a45;
-      --text: #4a9eff; --text2: #7ab3ff; --text3: #3d6a9e; --card: #0a1628;
-      --blue: #4a9eff; --blue-d: #2563eb; --blue-l: #60a5fa;
+      --bg: #1a1f2e; --bg2: #232a3a; --shadow-d: #0f1219; --shadow-l: #2e3547;
+      --text: #1a6bbf; --text2: #8b98a5; --text3: #5a6c7d; --card: #1a1f2e;
+      --neu-out: 6px 6px 14px var(--shadow-d), -4px -4px 10px var(--shadow-l);
+      --neu-in:  inset 5px 5px 10px var(--shadow-d), inset -4px -4px 9px var(--shadow-l);
+      --neu-sm:  5px 5px 10px var(--shadow-d), -4px -4px 8px var(--shadow-l);
+      --neu-xs:  3px 3px 8px var(--shadow-d), -2px -2px 7px var(--shadow-l);
     }
     *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent }
     html,body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; transition:background 0.4s,color 0.4s }
@@ -257,7 +261,7 @@
       padding-right:40px;
     }
     body.dark .custom-select {
-      background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234a9eff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%231a6bbf' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     }
     
     /* Range Slider */
@@ -899,8 +903,19 @@
     // FUNCTIONS
     // ═══════════════════════════════════════
     
+    // ✅ FIXED: Back button redirects to dashboard, not welcome page
     function goBack() {
-      window.location.href = 'index.html';
+      // Check if user has valid token
+      const savedToken = localStorage.getItem('siadeel-token');
+      const expiry = localStorage.getItem('siadeel-token-expiry');
+      
+      if (savedToken && expiry && Date.now() < parseInt(expiry)) {
+        // User is logged in, go to dashboard
+        window.location.href = 'index.html#dashboard';
+      } else {
+        // User is not logged in, go to login page
+        window.location.href = 'index.html';
+      }
     }
 
     function showToast(msg) {
