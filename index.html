@@ -486,7 +486,10 @@ if ('serviceWorker' in navigator) {
         document.getElementById('s-app').classList.remove('active');
       } else {
         token = savedToken;
-        loadUser();
+        // ✅ BAGO: Skip welcome animation, go straight to dashboard
+        document.getElementById('s-login').classList.remove('active');
+        document.getElementById('s-app').classList.add('active');
+        loadUserQuick(); // ⬅️ New function
       }
     })();
     function signIn() {
@@ -561,6 +564,52 @@ if ('serviceWorker' in navigator) {
         showToast('❌ Session expired. Please sign in again.');
       });
     }
+
+    function loadUserQuick() {
+  fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { 'Authorization': 'Bearer ' + token } })
+  .then(r => { if (!r.ok) throw new Error('Auth failed'); return r.json(); })
+  .then(u => {
+    const authorized = AUTHORIZED_USERS.find(au => au.email.toLowerCase() === u.email.toLowerCase());
+    if (!authorized) {
+      showToast('❌ Access denied. Your account is not authorized.');
+      localStorage.removeItem('siadeel-token'); 
+      localStorage.removeItem('siadeel-token-expiry');
+      document.getElementById('s-login').classList.add('active');
+      document.getElementById('s-app').classList.remove('active');
+      return;
+    }
+    
+    localStorage.setItem('siadeel-name',    authorized.name);
+    localStorage.setItem('siadeel-email',   u.email);
+    localStorage.setItem('siadeel-picture', u.picture || '');
+    
+    // ✅ NO DELAY - Direct to dashboard
+    document.getElementById('user-avatar').src = u.picture || '';
+    buildDashboard(); 
+    loadDashboardStats(); 
+    updateGreeting(authorized.name);
+    initPullToRefresh(document.querySelector('.page-wrap'), function(done) { 
+      loadDashboardStats(); 
+      setTimeout(done, 1000); 
+    });
+    initAutoRefresh(function(done) { 
+      loadDashboardStats(); 
+      done(); 
+    });
+  })
+  .catch(function(err) {
+    console.error('Load user error:', err);
+    localStorage.removeItem('siadeel-token'); 
+    localStorage.removeItem('siadeel-token-expiry');
+    document.getElementById('s-login').classList.add('active');
+    document.getElementById('s-app').classList.remove('active');
+    showToast('❌ Session expired. Please sign in again.');
+  });
+}
+
+
+
+
     function updateGreeting(firstName) {
       var now = new Date(), h = now.getHours();
       var gr  = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
