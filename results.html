@@ -1709,65 +1709,98 @@
     // ═══════════════════════════════════════
     // WEATHER FUNCTIONS
     // ═══════════════════════════════════════
-    async function getCurrentWeather() {
-      if (!WEATHER_API_KEY || WEATHER_API_KEY === 'YOUR_OPENWEATHER_API_KEY') {
-        return null;
+    // ═══════════════════════════════════════
+// WEATHER FUNCTIONS — ✅ IMPROVED WITH FALLBACK
+// ═══════════════════════════════════════
+async function getCurrentWeather() {
+  console.log('🌤️ getCurrentWeather() — START');
+  
+  if (!WEATHER_API_KEY || WEATHER_API_KEY === 'YOUR_OPENWEATHER_API_KEY') {
+    console.warn('⚠️ No API key configured');
+    return null;
+  }
+  
+  let lat, lon;
+  
+  try {
+    // ✅ TRY: Get user's actual location
+    console.log('📍 Requesting geolocation permission...');
+    
+    const position = await new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation not supported'));
+        return;
       }
       
-      try {
-        const position = await new Promise((resolve, reject) => {
-          if (!navigator.geolocation) {
-            reject(new Error('Geolocation not supported'));
-            return;
-          }
-          
-          navigator.geolocation.getCurrentPosition(
-            resolve,
-            reject,
-            { 
-              enableHighAccuracy: false,
-              timeout: 5000, // ✅ FIX: Reduced timeout
-              maximumAge: 300000
-            }
-          );
-        });
-        
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-        
-        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`;
-        
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-          throw new Error(`Weather API error: ${response.status}`);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          console.log('✅ Geolocation granted:', pos.coords.latitude, pos.coords.longitude);
+          resolve(pos);
+        },
+        (error) => {
+          console.warn('⚠️ Geolocation denied or failed:', error.message);
+          reject(error);
+        },
+        { 
+          enableHighAccuracy: false,
+          timeout: 8000,
+          maximumAge: 300000
         }
-        
-        const data = await response.json();
-        
-        return {
-          condition: data.weather[0].main,
-          description: data.weather[0].description,
-          icon: data.weather[0].icon,
-          temp: Math.round(data.main.temp),
-          feelsLike: Math.round(data.main.feels_like),
-          tempMin: Math.round(data.main.temp_min),
-          tempMax: Math.round(data.main.temp_max),
-          humidity: data.main.humidity,
-          pressure: data.main.pressure,
-          windSpeed: data.wind.speed,
-          windDeg: data.wind.deg,
-          visibility: data.visibility ? Math.round(data.visibility / 1000) : null,
-          location: data.name,
-          timestamp: new Date().toISOString()
-        };
-        
-      } catch (err) {
-        console.error('❌ Weather error:', err);
-        return null;
-      }
+      );
+    });
+    
+    lat = position.coords.latitude;
+    lon = position.coords.longitude;
+    
+  } catch (geoError) {
+    // ✅ FALLBACK: Use Manila coordinates if geolocation fails
+    console.warn('⚠️ Using fallback location (Manila)');
+    lat = 14.5995;
+    lon = 120.9842;
+  }
+  
+  try {
+    // ✅ Fetch weather data
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`;
+    
+    console.log('🌐 Fetching weather from:', url);
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Weather API error:', response.status, errorText);
+      throw new Error(`Weather API error: ${response.status}`);
     }
-
+    
+    const data = await response.json();
+    console.log('✅ Weather data received:', data);
+    
+    const weatherResult = {
+      condition: data.weather[0].main,
+      description: data.weather[0].description,
+      icon: data.weather[0].icon,
+      temp: Math.round(data.main.temp),
+      feelsLike: Math.round(data.main.feels_like),
+      tempMin: Math.round(data.main.temp_min),
+      tempMax: Math.round(data.main.temp_max),
+      humidity: data.main.humidity,
+      pressure: data.main.pressure,
+      windSpeed: data.wind.speed,
+      windDeg: data.wind.deg,
+      visibility: data.visibility ? Math.round(data.visibility / 1000) : null,
+      location: data.name,
+      timestamp: new Date().toISOString()
+    };
+    
+    console.log('✅ Weather object created:', weatherResult);
+    return weatherResult;
+    
+  } catch (apiError) {
+    console.error('❌ Weather fetch failed:', apiError);
+    return null;
+  }
+}
     function getWeatherIcon(weatherData) {
       if (!weatherData) return '☀️';
       
