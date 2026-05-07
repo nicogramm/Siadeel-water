@@ -1415,118 +1415,130 @@
     }
 
     async function submitEntry(event) {
-      event.preventDefault();
+  event.preventDefault();
+  
+  if (!token) {
+    showToast('❌ Not authenticated');
+    return;
+  }
+  
+  const date = document.getElementById('input-date').value;
+  const point = document.getElementById('input-point').value;
+  
+  if (!date || !point) {
+    showToast('⚠️ Date and Sample Point are required');
+    return;
+  }
+  
+  const editRowIndex = document.getElementById('edit-row-index').value;
+  const isEditMode = editRowIndex !== '';
+  
+  showLoading();
+  
+  const desc = document.getElementById('input-desc').value;
+  const pH = document.getElementById('input-ph').value;
+  const conductivity = document.getElementById('input-conductivity').value;
+  const chlorine = document.getElementById('input-chlorine').value;
+  const iron = document.getElementById('input-iron').value;
+  const hardness = document.getElementById('input-hardness').value;
+  const turbidity = document.getElementById('input-turbidity').value;
+  
+  // ✅ FIX: Weather fetch is now AWAITED properly
+  let weatherString = 'N/A';
+  try {
+    console.log('🌤️ Fetching weather...');
+    const weatherData = await getCurrentWeather();
+    if (weatherData) {
+      weatherString = JSON.stringify(weatherData);
+      console.log('✅ Weather captured:', weatherString);
+    } else {
+      console.warn('⚠️ No weather data available');
+    }
+  } catch (err) {
+    console.error('⚠️ Weather error (non-critical):', err);
+  }
+  
+  // ✅ FIX: Process image AFTER weather
+  const imageFile = document.getElementById('input-image').files[0];
+  let imageUrl = '';
+  if (imageFile) {
+    try {
+      console.log('📷 Processing image...');
+      imageUrl = await resizeAndUploadImage(imageFile);
+      console.log('✅ Image processed');
+    } catch (err) {
+      console.error('❌ Image error:', err);
+    }
+  } else if (isEditMode && currentEntry) {
+    imageUrl = currentEntry.Picture || '';
+  }
+  
+  const id = isEditMode ? currentEntry.ID : Date.now();
+  
+  const rowData = [
+    id, date, point, desc, pH, conductivity, chlorine, iron, hardness, turbidity, imageUrl, weatherString
+  ];
+  
+  console.log('📤 Saving row data:', rowData);
+  
+  try {
+    if (isEditMode) {
+      const range = `${SHEET_NAME}!A${editRowIndex}:L${editRowIndex}`;
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
       
-      if (!token) {
-        showToast('❌ Not authenticated');
-        return;
-      }
-      
-      const date = document.getElementById('input-date').value;
-      const point = document.getElementById('input-point').value;
-      
-      if (!date || !point) {
-        showToast('⚠️ Date and Sample Point are required');
-        return;
-      }
-      
-      const editRowIndex = document.getElementById('edit-row-index').value;
-      const isEditMode = editRowIndex !== '';
-      
-      showLoading();
-      
-      const desc = document.getElementById('input-desc').value;
-      const pH = document.getElementById('input-ph').value;
-      const conductivity = document.getElementById('input-conductivity').value;
-      const chlorine = document.getElementById('input-chlorine').value;
-      const iron = document.getElementById('input-iron').value;
-      const hardness = document.getElementById('input-hardness').value;
-      const turbidity = document.getElementById('input-turbidity').value;
-      
-      // ✅ FIX: Weather fetch is now non-blocking
-      let weatherString = 'N/A';
-      getCurrentWeather().then(weatherData => {
-        if (weatherData) {
-          weatherString = JSON.stringify(weatherData);
-        }
-      }).catch(err => {
-        console.error('⚠️ Weather error (non-critical):', err);
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ values: [rowData] })
       });
       
-      const imageFile = document.getElementById('input-image').files[0];
-      let imageUrl = '';
-      if (imageFile) {
-        try {
-          imageUrl = await resizeAndUploadImage(imageFile);
-        } catch (err) {
-          console.error('❌ Image error:', err);
-        }
-      } else if (isEditMode && currentEntry) {
-        imageUrl = currentEntry.Picture || '';
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Update failed:', errorText);
+        throw new Error(`HTTP ${response.status}`);
       }
       
-      const id = isEditMode ? currentEntry.ID : Date.now();
+      console.log('✅ Entry updated successfully');
+      showToast('✅ Entry updated!');
+      closeAddModal();
+      await loadEntries();
+      setTimeout(() => selectDate(date), 500);
       
-      const rowData = [
-        id, date, point, desc, pH, conductivity, chlorine, iron, hardness, turbidity, imageUrl, weatherString
-      ];
+    } else {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:L:append?valueInputOption=USER_ENTERED`;
       
-      try {
-        if (isEditMode) {
-          const range = `${SHEET_NAME}!A${editRowIndex}:L${editRowIndex}`;
-          const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
-          
-          const response = await fetch(url, {
-            method: 'PUT',
-            headers: {
-              'Authorization': 'Bearer ' + token,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ values: [rowData] })
-          });
-          
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error('❌ Update failed:', errorText);
-            throw new Error(`HTTP ${response.status}`);
-          }
-          
-          showToast('✅ Entry updated!');
-          closeAddModal();
-          await loadEntries();
-          setTimeout(() => selectDate(date), 500);
-          
-        } else {
-          const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:L:append?valueInputOption=USER_ENTERED`;
-          
-          const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-              'Authorization': 'Bearer ' + token,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ values: [rowData] })
-          });
-          
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error('❌ Save failed:', errorText);
-            throw new Error(`HTTP ${response.status}`);
-          }
-          
-          showToast('✅ Entry saved!');
-          closeAddModal();
-          await loadEntries();
-          document.getElementById('entry-form').reset();
-        }
-        
-      } catch (err) {
-        console.error('❌ Submit error:', err);
-        showToast('❌ Save failed: ' + err.message);
-      } finally {
-        hideLoading();
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ values: [rowData] })
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Save failed:', errorText);
+        throw new Error(`HTTP ${response.status}`);
       }
+      
+      console.log('✅ Entry saved successfully');
+      showToast('✅ Entry saved!');
+      closeAddModal();
+      await loadEntries();
+      document.getElementById('entry-form').reset();
     }
+    
+  } catch (err) {
+    console.error('❌ Submit error:', err);
+    showToast('❌ Save failed: ' + err.message);
+  } finally {
+    hideLoading();
+  }
+}
 
     function editCurrentEntry() {
       if (!currentEntry) {
