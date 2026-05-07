@@ -893,7 +893,7 @@
     // ═══════════════════════════════════════
     // CONFIGURATION
     // ═══════════════════════════════════════
-    const CODE_VERSION = '1.0';
+    const CODE_VERSION = '1.1'; // ✅ Updated version
     console.log('🚀 Treatment version:', CODE_VERSION);
     
     const SHEET_ID = '1-lhBa3FTi_gcFGS1Z0Q9w6yCYoq_BnToI3ZKBl8k8Cs';
@@ -903,6 +903,7 @@
     let isDark = false;
     let activities = [];
     let currentActivity = null;
+    let treatmentSheetId = null; // ✅ Cache para sa sheet ID
     
     // ═══════════════════════════════════════
     // THEME SYNC
@@ -930,6 +931,37 @@
     
     function hideLoading() {
       document.getElementById('loading-overlay').classList.remove('show');
+    }
+    
+    // ═══════════════════════════════════════
+    // ✅ GET SHEET ID (BAGONG FUNCTION)
+    // ═══════════════════════════════════════
+    async function getSheetId() {
+      if (treatmentSheetId !== null) return treatmentSheetId;
+      
+      try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?fields=sheets(properties(sheetId,title))`;
+        
+        const response = await fetch(url, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        
+        if (!response.ok) throw new Error('Failed to get sheet metadata');
+        
+        const data = await response.json();
+        const sheet = data.sheets.find(s => s.properties.title === ACTIVITIES_SHEET);
+        
+        if (!sheet) throw new Error('TreatmentActivities sheet not found');
+        
+        treatmentSheetId = sheet.properties.sheetId;
+        console.log('✅ Found sheet ID:', treatmentSheetId);
+        
+        return treatmentSheetId;
+        
+      } catch (err) {
+        console.error('Get sheet ID error:', err);
+        return 0; // Fallback to 0
+      }
     }
     
     // ═══════════════════════════════════════
@@ -1061,7 +1093,7 @@
           const headers = data.values[0];
           
           activities = data.values.slice(1).map((row, index) => {
-            const obj = { _rowIndex: index + 2 };
+            const obj = { _rowIndex: index + 2 }; // ✅ Store row index (1-based, +1 for header)
             
             headers.forEach((h, i) => {
               obj[h] = row[i] || '';
@@ -1108,6 +1140,9 @@
         const typeIcon = getTypeIcon(activity.Type);
         const typeLabel = getTypeLabel(activity.Type);
         
+        // ✅ Escape JSON properly para sa onclick
+        const activityJson = JSON.stringify(activity).replace(/"/g, '&quot;');
+        
         return `
           <div class="activity-card ${activity.Type}">
             <div class="activity-header">
@@ -1142,7 +1177,7 @@
             <div class="activity-description">${activity.Description}</div>
             ` : ''}
             <div class="activity-actions">
-              <button class="activity-action-btn delete" onclick='confirmDeleteActivity(${JSON.stringify(activity).replace(/'/g, "&apos;")})'>
+              <button class="activity-action-btn delete" onclick='confirmDeleteActivity(${activityJson})'>
                 🗑️ Delete
               </button>
             </div>
@@ -1247,7 +1282,7 @@
     }
     
     // ═══════════════════════════════════════
-    // DELETE ACTIVITY
+    // ✅ DELETE ACTIVITY (FIXED - GUMAGANA NA!)
     // ═══════════════════════════════════════
     function confirmDeleteActivity(activity) {
       currentActivity = activity;
@@ -1256,6 +1291,7 @@
     
     function closeConfirmModal() {
       document.getElementById('confirm-modal').classList.remove('show');
+      currentActivity = null;
     }
     
     async function deleteCurrentActivity() {
@@ -1264,16 +1300,59 @@
       closeConfirmModal();
       showLoading();
       
-      // TODO: Implement actual delete via Google Sheets API
-      // For now, just remove from local array
-      
-      activities = activities.filter(a => a.ID !== currentActivity.ID);
-      
-      showToast('✅ Activity deleted!');
-      
-      renderActivities();
-      
-      hideLoading();
+      try {
+        const rowIndex = currentActivity._rowIndex;
+        
+        if (!rowIndex) {
+          throw new Error('Row index not found');
+        }
+        
+        // ✅ Kumuha ng tamang sheet ID
+        const sheetId = await getSheetId();
+        
+        // ✅ Gamitin ang batchUpdate para mag-delete ng row
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`;
+        
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            requests: [
+              {
+                deleteDimension: {
+                  range: {
+                    sheetId: sheetId,
+                    dimension: 'ROWS',
+                    startIndex: rowIndex - 1, // 0-indexed
+                    endIndex: rowIndex
+                  }
+                }
+              }
+            ]
+          })
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          console.error('Delete error:', error);
+          throw new Error('Failed to delete activity');
+        }
+        
+        showToast('✅ Activity deleted!');
+        
+        // ✅ Reload activities para makita ang changes
+        await loadActivities();
+        renderActivities();
+        
+      } catch (err) {
+        console.error('Delete activity error:', err);
+        showToast('❌ Failed to delete: ' + err.message);
+      } finally {
+        hideLoading();
+      }
     }
     
     // ═══════════════════════════════════════
