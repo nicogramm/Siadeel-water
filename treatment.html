@@ -889,11 +889,11 @@
 
   <div class="toast" id="toast"></div>
 
-  <script>
+ <script>
     // ═══════════════════════════════════════
     // CONFIGURATION
     // ═══════════════════════════════════════
-    const CODE_VERSION = '1.4.0';
+    const CODE_VERSION = '1.5.0';
     console.log('🚀 Treatment version:', CODE_VERSION);
     
     const SHEET_ID = '1-lhBa3FTi_gcFGS1Z0Q9w6yCYoq_BnToI3ZKBl8k8Cs';
@@ -951,7 +951,10 @@
         const data = await response.json();
         const sheet = data.sheets.find(s => s.properties.title === ACTIVITIES_SHEET);
         
-        if (!sheet) throw new Error('TreatmentActivities sheet not found');
+        if (!sheet) {
+          console.log('⚠️ Sheet not found, will create on first save');
+          return 0;
+        }
         
         treatmentSheetId = sheet.properties.sheetId;
         console.log('✅ Found sheet ID:', treatmentSheetId);
@@ -965,15 +968,32 @@
     }
     
     // ═══════════════════════════════════════
-    // ✅ CREATE SHEET WITH HEADERS
+    // ✅ ENSURE HEADERS EXIST
     // ═══════════════════════════════════════
-    async function createActivitySheet() {
+    async function ensureHeaders() {
       try {
+        // Check if headers exist
+        const checkUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A1:H1`;
+        
+        const checkResponse = await fetch(checkUrl, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        
+        if (checkResponse.ok) {
+          const data = await checkResponse.json();
+          if (data.values && data.values.length > 0 && data.values[0].length > 0) {
+            console.log('✅ Headers already exist');
+            return true;
+          }
+        }
+        
+        // Create headers
+        console.log('📝 Creating headers...');
         const headers = ['ID', 'Type', 'Title', 'DateTime', 'Operator', 'Description', 'Duration', 'CreatedAt'];
         
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A1:H1?valueInputOption=USER_ENTERED`;
+        const createUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A1:H1?valueInputOption=USER_ENTERED`;
         
-        await fetch(url, {
+        const createResponse = await fetch(createUrl, {
           method: 'PUT',
           headers: {
             'Authorization': 'Bearer ' + token,
@@ -982,9 +1002,17 @@
           body: JSON.stringify({ values: [headers] })
         });
         
-        console.log('✅ Created headers');
+        if (createResponse.ok) {
+          console.log('✅ Headers created successfully');
+          return true;
+        } else {
+          console.error('❌ Failed to create headers');
+          return false;
+        }
+        
       } catch (err) {
-        console.error('❌ Create headers error:', err);
+        console.error('❌ Ensure headers error:', err);
+        return false;
       }
     }
     
@@ -1063,6 +1091,9 @@
       
       showLoading();
       
+      // ✅ Ensure headers exist first
+      await ensureHeaders();
+      
       await loadActivities();
       renderActivities();
       
@@ -1089,10 +1120,13 @@
     }
     
     // ═══════════════════════════════════════
-    // ✅ DATA LOADING (FIXED)
+    // ✅ DATA LOADING (COMPLETELY REWRITTEN)
     // ═══════════════════════════════════════
     async function loadActivities() {
-      if (!token) return;
+      if (!token) {
+        console.error('❌ No token');
+        return;
+      }
       
       try {
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A:H`;
@@ -1103,8 +1137,7 @@
         
         if (!response.ok) {
           if (response.status === 404) {
-            console.log('⚠️ Sheet not found, creating headers...');
-            await createActivitySheet();
+            console.log('⚠️ Sheet not found');
             activities = [];
             return;
           }
@@ -1113,53 +1146,45 @@
         
         const data = await response.json();
         
-        // ✅ FIX 1: Handle missing or empty sheet
-        if (!data.values || data.values.length === 0) {
-          console.log('⚠️ Empty sheet, creating headers...');
-          await createActivitySheet();
+        // ✅ Check if data exists
+        if (!data.values || data.values.length <= 1) {
+          console.log('⚠️ No activities found (only headers or empty)');
           activities = [];
           return;
         }
         
-        // ✅ FIX 2: Ensure headers exist
-        const headers = data.values[0];
-        if (!headers || headers.length === 0) {
-          console.log('⚠️ No headers, creating...');
-          await createActivitySheet();
-          activities = [];
-          return;
+        // ✅ Parse rows starting from row 2 (skip headers)
+        const rows = data.values.slice(1);
+        
+        activities = rows.map((row, index) => {
+          // ✅ Ensure all fields exist with fallback
+          return {
+            ID: row[0] || '',
+            Type: row[1] || '',
+            Title: row[2] || '',
+            DateTime: row[3] || '',
+            Operator: row[4] || '',
+            Description: row[5] || '',
+            Duration: row[6] || '',
+            CreatedAt: row[7] || '',
+            _sheetRow: index + 2  // ✅ Actual row number in sheet
+          };
+        }).filter(activity => activity.ID !== ''); // ✅ Remove empty rows
+        
+        // Sort by date (newest first)
+        activities.sort((a, b) => {
+          const dateA = new Date(a.DateTime);
+          const dateB = new Date(b.DateTime);
+          return dateB - dateA;
+        });
+        
+        console.log('✅ Loaded', activities.length, 'activities');
+        if (activities.length > 0) {
+          console.log('📋 First activity:', activities[0]);
         }
         
-        // ✅ FIX 3: Parse data with explicit ID handling
-        if (data.values.length > 1) {
-          activities = data.values.slice(1).map((row, index) => {
-            return {
-              ID: row[0] || '',           // ✅ Explicit ID column
-              Type: row[1] || '',
-              Title: row[2] || '',
-              DateTime: row[3] || '',
-              Operator: row[4] || '',
-              Description: row[5] || '',
-              Duration: row[6] || '',
-              CreatedAt: row[7] || '',
-              _sheetRow: index + 2        // ✅ Track actual sheet row
-            };
-          });
-          
-          // Sort by date (newest first)
-          activities.sort((a, b) => {
-            const dateA = new Date(a.DateTime);
-            const dateB = new Date(b.DateTime);
-            return dateB - dateA;
-          });
-          
-          console.log('✅ Loaded', activities.length, 'activities');
-          console.log('📋 Sample:', activities[0]);
-        } else {
-          activities = [];
-        }
       } catch (err) {
-        console.error('❌ Load error:', err);
+        console.error('❌ Load activities error:', err);
         activities = [];
       }
     }
@@ -1288,24 +1313,25 @@
       
       showLoading();
       
-      // ✅ Generate unique ID as string
-      const id = Date.now().toString();
-      const type = document.getElementById('activity-type').value;
-      const title = document.getElementById('activity-title').value;
-      const datetime = document.getElementById('activity-datetime').value;
-      const operator = document.getElementById('activity-operator').value;
-      const description = document.getElementById('activity-description').value;
-      const duration = document.getElementById('activity-duration').value;
-      const createdAt = new Date().toISOString();
-      
-      // ✅ Ensure headers exist first
-      await createActivitySheet();
-      
-      const rowData = [
-        id, type, title, datetime, operator, description, duration, createdAt
-      ];
-      
       try {
+        // ✅ Ensure headers exist
+        await ensureHeaders();
+        
+        const id = Date.now().toString();
+        const type = document.getElementById('activity-type').value;
+        const title = document.getElementById('activity-title').value;
+        const datetime = document.getElementById('activity-datetime').value;
+        const operator = document.getElementById('activity-operator').value;
+        const description = document.getElementById('activity-description').value;
+        const duration = document.getElementById('activity-duration').value;
+        const createdAt = new Date().toISOString();
+        
+        const rowData = [
+          id, type, title, datetime, operator, description, duration, createdAt
+        ];
+        
+        console.log('💾 Saving activity:', rowData);
+        
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A:H:append?valueInputOption=USER_ENTERED`;
         
         const response = await fetch(url, {
@@ -1317,9 +1343,13 @@
           body: JSON.stringify({ values: [rowData] })
         });
         
-        if (!response.ok) throw new Error('Save failed');
+        if (!response.ok) {
+          const error = await response.json();
+          console.error('❌ Save error:', error);
+          throw new Error('Save failed');
+        }
         
-        console.log('✅ Activity saved');
+        console.log('✅ Activity saved successfully');
         showToast('✅ Activity logged!');
         
         closeActivityModal();
@@ -1328,23 +1358,39 @@
         
       } catch (err) {
         console.error('❌ Submit error:', err);
-        showToast('❌ Failed to save');
+        showToast('❌ Failed to save: ' + err.message);
       } finally {
         hideLoading();
       }
     }
     
     // ═══════════════════════════════════════
-    // ✅ DELETE ACTIVITY (COMPLETELY REWRITTEN)
+    // ✅ DELETE ACTIVITY (FIXED WITH SAFETY CHECKS)
     // ═══════════════════════════════════════
     function confirmDeleteActivity(index) {
+      // ✅ Safety check
+      if (!activities || !activities[index]) {
+        console.error('❌ Invalid activity index:', index);
+        showToast('❌ Invalid activity');
+        return;
+      }
+      
       currentActivity = activities[index];
-      console.log('🗑️ Delete request:', {
+      
+      // ✅ Validate activity has required fields
+      if (!currentActivity.ID) {
+        console.error('❌ Activity missing ID:', currentActivity);
+        showToast('❌ Activity data corrupted');
+        return;
+      }
+      
+      console.log('🗑️ Confirm delete:', {
         index: index,
-        activity: currentActivity,
         ID: currentActivity.ID,
+        Title: currentActivity.Title,
         sheetRow: currentActivity._sheetRow
       });
+      
       document.getElementById('confirm-modal').classList.add('show');
     }
     
@@ -1354,8 +1400,16 @@
     }
     
     async function deleteCurrentActivity() {
-      if (!currentActivity || !token) {
-        console.error('❌ No activity or token');
+      // ✅ Safety checks
+      if (!currentActivity) {
+        console.error('❌ No current activity');
+        showToast('❌ No activity selected');
+        return;
+      }
+      
+      if (!token) {
+        console.error('❌ No token');
+        showToast('❌ Not authenticated');
         return;
       }
       
@@ -1363,19 +1417,28 @@
       showLoading();
       
       try {
-        const activityId = currentActivity.ID;
         const sheetRow = currentActivity._sheetRow;
+        const activityId = currentActivity.ID;
         
-        console.log('🔍 Deleting:', { ID: activityId, sheetRow: sheetRow });
+        console.log('🔍 Deleting activity:', {
+          ID: activityId,
+          Title: currentActivity.Title,
+          sheetRow: sheetRow
+        });
         
-        // ✅ STRATEGY: Use stored sheet row instead of searching
+        // ✅ Validate sheet row
         if (!sheetRow || sheetRow < 2) {
           throw new Error('Invalid sheet row: ' + sheetRow);
         }
         
         // Get sheet ID
         const sheetId = await getSheetId();
-        console.log('📋 Sheet ID:', sheetId);
+        
+        if (!sheetId) {
+          throw new Error('Could not get sheet ID');
+        }
+        
+        console.log('📋 Using sheet ID:', sheetId);
         
         // Delete the row
         const deleteUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`;
@@ -1393,8 +1456,8 @@
                   range: {
                     sheetId: sheetId,
                     dimension: 'ROWS',
-                    startIndex: sheetRow - 1,  // ✅ Zero-indexed
-                    endIndex: sheetRow          // ✅ Exclusive end
+                    startIndex: sheetRow - 1,
+                    endIndex: sheetRow
                   }
                 }
               }
@@ -1404,15 +1467,14 @@
         
         if (!deleteResponse.ok) {
           const error = await deleteResponse.json();
-          console.error('❌ API error:', error);
+          console.error('❌ Delete API error:', error);
           throw new Error(error.error?.message || 'Delete failed');
         }
         
-        console.log('✅ Row deleted from sheet');
-        
+        console.log('✅ Activity deleted from sheet');
         showToast('✅ Activity deleted!');
         
-        // Reload and re-render
+        // Reload data
         await loadActivities();
         renderActivities();
         
