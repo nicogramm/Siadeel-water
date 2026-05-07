@@ -655,6 +655,8 @@
   <div class="toast" id="toast"></div>
 
   <script>
+    const CODE_VERSION = '2.1';  // ← ADD THIS LINE
+  console.log('🚀 Code version:', CODE_VERSION);
     // ═══════════════════════════════════════
     // CONFIGURATION
     // ═══════════════════════════════════════
@@ -1387,48 +1389,75 @@
     // DATA FUNCTIONS
     // ═══════════════════════════════════════
     async function loadEntries() {
-      if (!token) return;
-      
-      try {
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:L`;
-        
-        const response = await fetch(url, {
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
-        
-        if (!response.ok) {
-          if (response.status === 401) {
-            throw new Error('Token expired');
-          }
-          throw new Error('Network error');
-        }
-        
-        const data = await response.json();
-        
-        if (data.values && data.values.length > 1) {
-          const headers = data.values[0];
-          entries = data.values.slice(1).map((row, index) => {
-            const obj = { _rowIndex: index + 2 };
-            headers.forEach((h, i) => {
-              obj[h] = row[i] || '';
-            });
-            return obj;
-          });
-          renderCalendar();
-          showToast(`✅ Loaded ${entries.length} entries`);
-        } else {
-          showToast('ℹ️ No entries yet');
-        }
-      } catch (err) {
-        console.error('Load entries error:', err);
-        if (err.message === 'Token expired') {
-          showToast('❌ Session expired');
-          setTimeout(() => window.location.href = 'index.html', 2000);
-        } else {
-          showToast('❌ Failed to load');
-        }
+  if (!token) return;
+  
+  try {
+    // ✅ Explicitly request A1:L (with row limit for safety)
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A1:L1000`;
+    
+    const response = await fetch(url, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Token expired');
       }
+      throw new Error('Network error');
     }
+    
+    const data = await response.json();
+    
+    if (data.values && data.values.length > 1) {
+      const headers = data.values[0];
+      
+      // ✅ CRITICAL: Log headers to verify
+      console.log('📋 RAW HEADERS from API:', headers);
+      console.log('📋 Header count:', headers.length);
+      console.log('📋 Column L (index 11):', headers[11]);
+      
+      entries = data.values.slice(1).map((row, index) => {
+        const obj = { _rowIndex: index + 2 };
+        
+        // ✅ CRITICAL FIX: Map exactly 12 columns (indices 0-11)
+        for (let i = 0; i < 12; i++) {
+          const header = headers[i];
+          const value = row[i] || '';
+          
+          if (header) {  // Only map if header exists
+            obj[header] = value;
+          }
+        }
+        
+        return obj;
+      });
+      
+      // ✅ DIAGNOSTIC: Verify first entry
+      if (entries.length > 0) {
+        console.log('🔍 First entry object:', entries[0]);
+        console.log('🔍 All keys:', Object.keys(entries[0]));
+        console.log('🔍 Picture Weather key exists?', 'Picture Weather' in entries[0]);
+        console.log('🔍 Picture Weather value:', entries[0]['Picture Weather']);
+      }
+      
+      renderCalendar();
+      showToast(`✅ Loaded ${entries.length} entries`);
+    } else {
+      showToast('ℹ️ No entries yet');
+    }
+  } catch (err) {
+    console.error('Load entries error:', err);
+    if (err.message === 'Token expired') {
+      showToast('❌ Session expired');
+      setTimeout(() => window.location.href = 'index.html', 2000);
+    } else {
+      showToast('❌ Failed to load');
+    }
+  }
+}
+
+
+
 
   async function submitEntry(event) {
   event.preventDefault();
