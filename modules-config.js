@@ -48,8 +48,8 @@ const SIADEEL_MODULES = [
     icon: 'filter',
     label: 'Treatment',
     stat: 'sv-treatment',
-    sub: 'Avg conductivity (µS/cm)',
-    metric: 'Avg Conductivity',
+    sub: 'Avg Chlorine (mg/L)',
+    metric: 'Avg Chlorine',
     page: 'treatment.html',
     wide: false
   },
