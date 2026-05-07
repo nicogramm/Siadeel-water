@@ -182,52 +182,54 @@
       <div class="mod-grid" id="mod-grid"></div>
     </div>
     <div class="bottom-nav">
-      <button class="bnav active">
-        <div class="bnav-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" stroke-width="2"/>
-            <path d="M9 22V12h6v10" stroke="currentColor" stroke-width="2"/>
-          </svg>
-        </div>
-        Home
-      </button>
-      <button class="bnav" onclick="showToast('Results module — coming soon')">
-        <div class="bnav-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </div>
-        Results
-      </button>
-      <button class="bnav" onclick="showToast('Trends module — coming soon')">
-        <div class="bnav-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <polyline points="17 6 23 6 23 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        Trends
-      </button>
-      <button class="bnav" onclick="showToast('Process Info — coming soon')">
-        <div class="bnav-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-            <path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </div>
-        Process
-      </button>
-      <button class="bnav" onclick="showToast('Settings — coming soon')">
-        <div class="bnav-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-            <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </div>
-        Settings
-      </button>
+  <button class="bnav active">
+    <div class="bnav-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" stroke-width="2"/>
+        <path d="M9 22V12h6v10" stroke="currentColor" stroke-width="2"/>
+      </svg>
     </div>
+    Home
+  </button>
+  <button class="bnav" onclick="showToast('Results module — coming soon')">
+    <div class="bnav-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    Results
+  </button>
+  <button class="bnav" onclick="showToast('Trends module — coming soon')">
+    <div class="bnav-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="17 6 23 6 23 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    Trends
+  </button>
+  <button class="bnav" onclick="showToast('Process Info — coming soon')">
+    <div class="bnav-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+        <path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    Process
+  </button>
+  
+  <!-- ✅ ITO YUNG BINAGO - Settings button -->
+  <button class="bnav" onclick="window.location.href='settings.html'">
+    <div class="bnav-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+        <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    Settings
+  </button>
+</div>
   </div>
   <div class="toast" id="toast"></div>
   <script>
