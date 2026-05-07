@@ -893,7 +893,7 @@
     // ═══════════════════════════════════════
     // CONFIGURATION
     // ═══════════════════════════════════════
-    const CODE_VERSION = '1.5.0';
+    const CODE_VERSION = '2.0.0-SIMPLE';
     console.log('🚀 Treatment version:', CODE_VERSION);
     
     const SHEET_ID = '1-lhBa3FTi_gcFGS1Z0Q9w6yCYoq_BnToI3ZKBl8k8Cs';
@@ -903,7 +903,6 @@
     let isDark = false;
     let activities = [];
     let currentActivity = null;
-    let treatmentSheetId = null;
     
     // ═══════════════════════════════════════
     // THEME SYNC
@@ -931,89 +930,6 @@
     
     function hideLoading() {
       document.getElementById('loading-overlay').classList.remove('show');
-    }
-    
-    // ═══════════════════════════════════════
-    // ✅ GET SHEET ID
-    // ═══════════════════════════════════════
-    async function getSheetId() {
-      if (treatmentSheetId !== null) return treatmentSheetId;
-      
-      try {
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?fields=sheets(properties(sheetId,title))`;
-        
-        const response = await fetch(url, {
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
-        
-        if (!response.ok) throw new Error('Failed to get sheet metadata');
-        
-        const data = await response.json();
-        const sheet = data.sheets.find(s => s.properties.title === ACTIVITIES_SHEET);
-        
-        if (!sheet) {
-          console.log('⚠️ Sheet not found, will create on first save');
-          return 0;
-        }
-        
-        treatmentSheetId = sheet.properties.sheetId;
-        console.log('✅ Found sheet ID:', treatmentSheetId);
-        
-        return treatmentSheetId;
-        
-      } catch (err) {
-        console.error('❌ Get sheet ID error:', err);
-        return 0;
-      }
-    }
-    
-    // ═══════════════════════════════════════
-    // ✅ ENSURE HEADERS EXIST
-    // ═══════════════════════════════════════
-    async function ensureHeaders() {
-      try {
-        // Check if headers exist
-        const checkUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A1:H1`;
-        
-        const checkResponse = await fetch(checkUrl, {
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
-        
-        if (checkResponse.ok) {
-          const data = await checkResponse.json();
-          if (data.values && data.values.length > 0 && data.values[0].length > 0) {
-            console.log('✅ Headers already exist');
-            return true;
-          }
-        }
-        
-        // Create headers
-        console.log('📝 Creating headers...');
-        const headers = ['ID', 'Type', 'Title', 'DateTime', 'Operator', 'Description', 'Duration', 'CreatedAt'];
-        
-        const createUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A1:H1?valueInputOption=USER_ENTERED`;
-        
-        const createResponse = await fetch(createUrl, {
-          method: 'PUT',
-          headers: {
-            'Authorization': 'Bearer ' + token,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ values: [headers] })
-        });
-        
-        if (createResponse.ok) {
-          console.log('✅ Headers created successfully');
-          return true;
-        } else {
-          console.error('❌ Failed to create headers');
-          return false;
-        }
-        
-      } catch (err) {
-        console.error('❌ Ensure headers error:', err);
-        return false;
-      }
     }
     
     // ═══════════════════════════════════════
@@ -1090,10 +1006,6 @@
       }
       
       showLoading();
-      
-      // ✅ Ensure headers exist first
-      await ensureHeaders();
-      
       await loadActivities();
       renderActivities();
       
@@ -1120,13 +1032,10 @@
     }
     
     // ═══════════════════════════════════════
-    // ✅ DATA LOADING (COMPLETELY REWRITTEN)
+    // ✅ LOAD ACTIVITIES - SUPER SIMPLE
     // ═══════════════════════════════════════
     async function loadActivities() {
-      if (!token) {
-        console.error('❌ No token');
-        return;
-      }
+      if (!token) return;
       
       try {
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A:H`;
@@ -1136,29 +1045,20 @@
         });
         
         if (!response.ok) {
-          if (response.status === 404) {
-            console.log('⚠️ Sheet not found');
-            activities = [];
-            return;
-          }
-          throw new Error('Failed to load activities');
-        }
-        
-        const data = await response.json();
-        
-        // ✅ Check if data exists
-        if (!data.values || data.values.length <= 1) {
-          console.log('⚠️ No activities found (only headers or empty)');
           activities = [];
           return;
         }
         
-        // ✅ Parse rows starting from row 2 (skip headers)
-        const rows = data.values.slice(1);
+        const data = await response.json();
         
-        activities = rows.map((row, index) => {
-          // ✅ Ensure all fields exist with fallback
-          return {
+        if (!data.values || data.values.length <= 1) {
+          activities = [];
+          return;
+        }
+        
+        // Skip header row, map to objects
+        activities = data.values.slice(1)
+          .map((row, index) => ({
             ID: row[0] || '',
             Type: row[1] || '',
             Title: row[2] || '',
@@ -1167,24 +1067,17 @@
             Description: row[5] || '',
             Duration: row[6] || '',
             CreatedAt: row[7] || '',
-            _sheetRow: index + 2  // ✅ Actual row number in sheet
-          };
-        }).filter(activity => activity.ID !== ''); // ✅ Remove empty rows
+            _rowNumber: index + 2  // Actual row in sheet (1-indexed, +1 for header)
+          }))
+          .filter(a => a.ID !== '');  // Remove empty rows
         
-        // Sort by date (newest first)
-        activities.sort((a, b) => {
-          const dateA = new Date(a.DateTime);
-          const dateB = new Date(b.DateTime);
-          return dateB - dateA;
-        });
+        // Sort by date
+        activities.sort((a, b) => new Date(b.DateTime) - new Date(a.DateTime));
         
         console.log('✅ Loaded', activities.length, 'activities');
-        if (activities.length > 0) {
-          console.log('📋 First activity:', activities[0]);
-        }
         
       } catch (err) {
-        console.error('❌ Load activities error:', err);
+        console.error('❌ Load error:', err);
         activities = [];
       }
     }
@@ -1262,24 +1155,16 @@
     
     function getTypeIcon(type) {
       const icons = {
-        'maintenance': '🔧',
-        'cleaning': '🧹',
-        'inspection': '🔍',
-        'repair': '⚠️',
-        'testing': '🧪',
-        'other': '📝'
+        'maintenance': '🔧', 'cleaning': '🧹', 'inspection': '🔍',
+        'repair': '⚠️', 'testing': '🧪', 'other': '📝'
       };
       return icons[type] || '📝';
     }
     
     function getTypeLabel(type) {
       const labels = {
-        'maintenance': 'Maintenance',
-        'cleaning': 'Cleaning',
-        'inspection': 'Inspection',
-        'repair': 'Repair',
-        'testing': 'Testing',
-        'other': 'Other'
+        'maintenance': 'Maintenance', 'cleaning': 'Cleaning', 'inspection': 'Inspection',
+        'repair': 'Repair', 'testing': 'Testing', 'other': 'Other'
       };
       return labels[type] || 'Activity';
     }
@@ -1301,7 +1186,7 @@
     }
     
     // ═══════════════════════════════════════
-    // ✅ SUBMIT ACTIVITY (FIXED)
+    // ✅ SUBMIT ACTIVITY
     // ═══════════════════════════════════════
     async function submitActivity(event) {
       event.preventDefault();
@@ -1314,9 +1199,6 @@
       showLoading();
       
       try {
-        // ✅ Ensure headers exist
-        await ensureHeaders();
-        
         const id = Date.now().toString();
         const type = document.getElementById('activity-type').value;
         const title = document.getElementById('activity-title').value;
@@ -1326,11 +1208,7 @@
         const duration = document.getElementById('activity-duration').value;
         const createdAt = new Date().toISOString();
         
-        const rowData = [
-          id, type, title, datetime, operator, description, duration, createdAt
-        ];
-        
-        console.log('💾 Saving activity:', rowData);
+        const rowData = [id, type, title, datetime, operator, description, duration, createdAt];
         
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A:H:append?valueInputOption=USER_ENTERED`;
         
@@ -1343,54 +1221,32 @@
           body: JSON.stringify({ values: [rowData] })
         });
         
-        if (!response.ok) {
-          const error = await response.json();
-          console.error('❌ Save error:', error);
-          throw new Error('Save failed');
-        }
+        if (!response.ok) throw new Error('Save failed');
         
-        console.log('✅ Activity saved successfully');
         showToast('✅ Activity logged!');
-        
         closeActivityModal();
         await loadActivities();
         renderActivities();
         
       } catch (err) {
         console.error('❌ Submit error:', err);
-        showToast('❌ Failed to save: ' + err.message);
+        showToast('❌ Failed to save');
       } finally {
         hideLoading();
       }
     }
     
     // ═══════════════════════════════════════
-    // ✅ DELETE ACTIVITY (FIXED WITH SAFETY CHECKS)
+    // ✅ DELETE - SIMPLEST METHOD: CLEAR ROW
     // ═══════════════════════════════════════
     function confirmDeleteActivity(index) {
-      // ✅ Safety check
-      if (!activities || !activities[index]) {
-        console.error('❌ Invalid activity index:', index);
+      if (!activities[index]) {
         showToast('❌ Invalid activity');
         return;
       }
       
       currentActivity = activities[index];
-      
-      // ✅ Validate activity has required fields
-      if (!currentActivity.ID) {
-        console.error('❌ Activity missing ID:', currentActivity);
-        showToast('❌ Activity data corrupted');
-        return;
-      }
-      
-      console.log('🗑️ Confirm delete:', {
-        index: index,
-        ID: currentActivity.ID,
-        Title: currentActivity.Title,
-        sheetRow: currentActivity._sheetRow
-      });
-      
+      console.log('🗑️ Will delete row:', currentActivity._rowNumber);
       document.getElementById('confirm-modal').classList.add('show');
     }
     
@@ -1400,87 +1256,45 @@
     }
     
     async function deleteCurrentActivity() {
-      // ✅ Safety checks
-      if (!currentActivity) {
-        console.error('❌ No current activity');
-        showToast('❌ No activity selected');
-        return;
-      }
-      
-      if (!token) {
-        console.error('❌ No token');
-        showToast('❌ Not authenticated');
-        return;
-      }
+      if (!currentActivity || !token) return;
       
       closeConfirmModal();
       showLoading();
       
       try {
-        const sheetRow = currentActivity._sheetRow;
-        const activityId = currentActivity.ID;
+        const rowNum = currentActivity._rowNumber;
         
-        console.log('🔍 Deleting activity:', {
-          ID: activityId,
-          Title: currentActivity.Title,
-          sheetRow: sheetRow
-        });
+        console.log('🔥 Clearing row', rowNum);
         
-        // ✅ Validate sheet row
-        if (!sheetRow || sheetRow < 2) {
-          throw new Error('Invalid sheet row: ' + sheetRow);
-        }
+        // ✅ STRATEGY: CLEAR THE ROW (set all cells to empty)
+        const clearUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ACTIVITIES_SHEET}!A${rowNum}:H${rowNum}?valueInputOption=USER_ENTERED`;
         
-        // Get sheet ID
-        const sheetId = await getSheetId();
-        
-        if (!sheetId) {
-          throw new Error('Could not get sheet ID');
-        }
-        
-        console.log('📋 Using sheet ID:', sheetId);
-        
-        // Delete the row
-        const deleteUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`;
-        
-        const deleteResponse = await fetch(deleteUrl, {
-          method: 'POST',
+        const clearResponse = await fetch(clearUrl, {
+          method: 'PUT',
           headers: {
             'Authorization': 'Bearer ' + token,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            requests: [
-              {
-                deleteDimension: {
-                  range: {
-                    sheetId: sheetId,
-                    dimension: 'ROWS',
-                    startIndex: sheetRow - 1,
-                    endIndex: sheetRow
-                  }
-                }
-              }
-            ]
+            values: [['', '', '', '', '', '', '', '']]  // 8 empty cells
           })
         });
         
-        if (!deleteResponse.ok) {
-          const error = await deleteResponse.json();
-          console.error('❌ Delete API error:', error);
-          throw new Error(error.error?.message || 'Delete failed');
+        if (!clearResponse.ok) {
+          const error = await clearResponse.json();
+          console.error('❌ Clear error:', error);
+          throw new Error('Delete failed');
         }
         
-        console.log('✅ Activity deleted from sheet');
+        console.log('✅ Row cleared successfully');
         showToast('✅ Activity deleted!');
         
-        // Reload data
         await loadActivities();
         renderActivities();
         
       } catch (err) {
         console.error('❌ Delete error:', err);
-        showToast('❌ Delete failed: ' + err.message);
+        showToast('❌ Failed: ' + err.message);
       } finally {
         hideLoading();
         currentActivity = null;
