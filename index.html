@@ -459,20 +459,23 @@
           }
         }, 3000);
       });
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => {
-            setInterval(() => reg.update(), 5 * 60 * 1000);
-            reg.update();
-            reg.addEventListener('updatefound', () => {
-              const nw = reg.installing;
-              nw.addEventListener('statechange', () => {
-                if (nw.state === 'installed' && navigator.serviceWorker.controller) window.location.reload();
-              });
-            });
-          })
-          .catch(err => console.error('[App] SW registration failed:', err));
-      }
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js')
+    .then(reg => {
+      reg.update();
+      setInterval(() => reg.update(), 60000);
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            showToast('🔄 Updating...');
+            setTimeout(() => window.location.reload(true), 1000);
+          }
+        });
+      });
+    })
+    .catch(err => console.error('[SW] Error:', err));
+}
       const savedToken = localStorage.getItem('siadeel-token');
       const expiry     = localStorage.getItem('siadeel-token-expiry');
       const bufferMs   = 5 * 60 * 1000;
