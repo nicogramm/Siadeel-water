@@ -905,17 +905,16 @@
     
     // ✅ FIXED: Back button redirects to dashboard, not welcome page
     function goBack() {
-      // Check if user has valid token
-      const savedToken = localStorage.getItem('siadeel-token');
-      const expiry = localStorage.getItem('siadeel-token-expiry');
+      // ✅ SIMPLE: Just go back to index.html
+      // Ang index.html mismo ang mag-decide kung login o dashboard
+      window.history.back();
       
-      if (savedToken && expiry && Date.now() < parseInt(expiry)) {
-        // User is logged in, go to dashboard
-        window.location.href = 'index.html#dashboard';
-      } else {
-        // User is not logged in, go to login page
-        window.location.href = 'index.html';
-      }
+      // ✅ FALLBACK: Kung walang history, go to index.html
+      setTimeout(() => {
+        if (window.location.href.includes('settings.html')) {
+          window.location.href = 'index.html';
+        }
+      }, 100);
     }
 
     function showToast(msg) {
