@@ -33,6 +33,33 @@
     *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent }
     html,body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; transition:background 0.4s,color 0.4s }
     
+    /* ✅ BAGO: Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    .loading-overlay.show { display: flex; }
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255, 255, 255, 0.2);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
     .results-page { display:flex; flex-direction:column; height:100dvh; width:100%; }
     
     .results-header {
@@ -142,70 +169,74 @@
       color:white;
     }
     
+    .entry-details {
+      background:var(--bg); border-radius:18px;
+      box-shadow:var(--neu-out); padding:20px;
+      display:none;
+    }
+    .entry-details.show { display:block; }
+    .entry-header {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:16px; padding-bottom:16px;
+      border-bottom:1px solid var(--shadow-d);
+    }
+    .entry-date {
+      font-size:16px; font-weight:700; color:var(--text);
+    }
+    
     .entry-weather {
       display:flex; flex-direction:column; gap:12px;
       background:var(--bg); border-radius:12px;
       box-shadow:var(--neu-xs); padding:16px;
       margin-bottom:16px;
     }
-
     .weather-main {
       display:flex; align-items:center; gap:12px;
     }
-
     .weather-icon-box {
       width:60px; height:60px; border-radius:12px;
       background:var(--bg); box-shadow:var(--neu-sm);
       display:flex; align-items:center; justify-content:center;
       font-size:32px;
     }
-
     .weather-primary {
       flex:1;
     }
-
     .weather-condition {
       font-size:16px; font-weight:700; color:var(--text);
       margin-bottom:4px;
     }
-
     .weather-temp {
       font-size:24px; font-weight:700; color:var(--blue);
       line-height:1;
     }
-
     .weather-feels {
       font-size:11px; color:var(--text3); margin-top:4px;
     }
-
     .weather-details {
       display:grid; grid-template-columns:1fr 1fr; gap:10px;
       padding-top:12px; border-top:1px solid var(--shadow-d);
     }
-
     .weather-detail-item {
       display:flex; align-items:center; gap:8px;
     }
-
     .weather-detail-icon {
       width:24px; height:24px; border-radius:6px;
       background:var(--bg); box-shadow:var(--neu-xs);
       display:flex; align-items:center; justify-content:center;
       font-size:12px; flex-shrink:0;
     }
-
     .weather-detail-info {
       flex:1;
     }
-
     .weather-detail-label {
       font-size:9px; font-weight:600; letter-spacing:0.5px;
       text-transform:uppercase; color:var(--text3);
     }
-
     .weather-detail-value {
       font-size:13px; font-weight:600; color:var(--text2);
     }
+    
     .entry-actions {
       display:flex; gap:10px; margin-bottom:16px;
     }
@@ -450,6 +481,11 @@
   </style>
 </head>
 <body>
+  <!-- ✅ BAGO: Loading Overlay -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
   <div class="results-page">
     <div class="results-header">
       <canvas id="header-wave-canvas"></canvas>
@@ -483,9 +519,7 @@
         <div class="calendar-days" id="calendar-days"></div>
       </div>
 
-      <!-- ✅ TAMA: Only this div, JavaScript will fill it dynamically -->
       <div id="entry-details"></div>
-
     </div>
   </div>
 
@@ -613,7 +647,7 @@
       </div>
       <div class="confirm-actions">
         <button class="confirm-btn cancel" onclick="closeConfirmModal()">Cancel</button>
-        <button class="confirm-btn confirm" id="confirm-action-btn">Delete</button>
+        <button class="confirm-btn confirm" id="confirm-action-btn" onclick="deleteCurrentEntry()">Delete</button>
       </div>
     </div>
   </div>
@@ -621,8 +655,1168 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    // [Keep the EXACT SAME JavaScript from the previous response - no changes needed]
-    // Copy the entire <script> section from my previous message
+    // ═══════════════════════════════════════
+    // CONFIGURATION
+    // ═══════════════════════════════════════
+    const SHEET_ID = '1-lhBa3FTi_gcFGS1Z0Q9w6yCYoq_BnToI3ZKBl8k8Cs';
+    const SHEET_NAME = 'Results';
+    const SAMPLE_POINTS_SHEET = 'SamplePoints';
+    const WEATHER_API_KEY = '44692e0366a24e13c3ea18e3ba743cf0';
+    
+    let currentMonth = new Date().getMonth();
+    let currentYear = new Date().getFullYear();
+    let entries = [];
+    let samplePoints = [];
+    let selectedDate = null;
+    let currentEntry = null;
+    let currentPoint = null;
+    let token = null;
+    let isDark = false;
+    let resultsSheetId = null; // ✅ BAGO: Store actual sheet ID
+    let pointsSheetId = null;  // ✅ BAGO: Store points sheet ID
+
+    // ✅ BAGO: Loading State Management
+    function showLoading() {
+      document.getElementById('loading-overlay').classList.add('show');
+    }
+    
+    function hideLoading() {
+      document.getElementById('loading-overlay').classList.remove('show');
+    }
+
+    // ═══════════════════════════════════════
+    // ✅ CRITICAL FIX: Get Actual Sheet IDs
+    // ═══════════════════════════════════════
+    async function getSheetIds() {
+      if (!token) return;
+      
+      try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?fields=sheets(properties(sheetId,title))`;
+        
+        const response = await fetch(url, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        
+        if (!response.ok) throw new Error('Failed to get sheet metadata');
+        
+        const data = await response.json();
+        
+        data.sheets.forEach(sheet => {
+          const title = sheet.properties.title;
+          const id = sheet.properties.sheetId;
+          
+          if (title === SHEET_NAME) {
+            resultsSheetId = id;
+            console.log('✅ Results Sheet ID:', id);
+          } else if (title === SAMPLE_POINTS_SHEET) {
+            pointsSheetId = id;
+            console.log('✅ Sample Points Sheet ID:', id);
+          }
+        });
+        
+        if (!resultsSheetId) {
+          console.error('❌ Results sheet not found');
+        }
+        if (!pointsSheetId) {
+          console.error('❌ Sample Points sheet not found');
+        }
+        
+      } catch (err) {
+        console.error('❌ getSheetIds error:', err);
+      }
+    }
+
+    // ═══════════════════════════════════════
+    // THEME SYNC
+    // ═══════════════════════════════════════
+    const themeChannel = new BroadcastChannel('siadeel-theme-channel');
+    themeChannel.onmessage = (event) => {
+      if (event.data.type === 'theme-change') {
+        applyTheme(event.data.isDark);
+      }
+    };
+
+    function applyTheme(dark) {
+      isDark = dark;
+      document.body.classList.toggle('dark', dark);
+    }
+
+    applyTheme(localStorage.getItem('siadeel-theme') === 'dark');
+
+    // ═══════════════════════════════════════
+    // WAVE ANIMATION
+    // ═══════════════════════════════════════
+    (function initWaves() {
+      const canvas = document.getElementById('header-wave-canvas');
+      const ctx = canvas.getContext('2d');
+      let animId = null;
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+
+      function resize() {
+        const header = canvas.parentElement;
+        const W = header.offsetWidth;
+        const H = header.offsetHeight;
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        canvas.style.width = W + 'px';
+        canvas.style.height = H + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      const WAVES = [
+        { yBase: 0.5, amp1: 3, amp2: 2, freq1: 0.015, freq2: 0.030, speed: 0.3, alpha: 0.15, color: '255,255,255' },
+        { yBase: 0.7, amp1: 4, amp2: 2, freq1: 0.012, freq2: 0.025, speed: 0.4, alpha: 0.20, color: '180,230,255' }
+      ];
+
+      function loop(ts) {
+        const t = ts / 1000;
+        const W = canvas.width / dpr;
+        const H = canvas.height / dpr;
+        ctx.clearRect(0, 0, W, H);
+
+        for (let i = 0; i < WAVES.length; i++) {
+          const layer = WAVES[i];
+          const yCenter = H * layer.yBase;
+          const phase = t * layer.speed;
+
+          ctx.beginPath();
+          ctx.moveTo(0, H);
+          for (let x = 0; x <= W; x += 2) {
+            const y = yCenter
+              + Math.sin(x * layer.freq1 + phase * 2.0) * layer.amp1
+              + Math.sin(x * layer.freq2 - phase * 1.4) * layer.amp2;
+            if (x === 0) ctx.lineTo(0, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.lineTo(W, H);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(' + layer.color + ',' + layer.alpha + ')';
+          ctx.fill();
+        }
+
+        animId = requestAnimationFrame(loop);
+      }
+
+      window.addEventListener('resize', resize);
+      resize();
+      animId = requestAnimationFrame(loop);
+    })();
+
+    // ═══════════════════════════════════════
+    // INITIALIZATION
+    // ═══════════════════════════════════════
+    (async function init() {
+      token = localStorage.getItem('siadeel-token');
+      const expiry = localStorage.getItem('siadeel-token-expiry');
+      const bufferMs = 5 * 60 * 1000;
+      
+      if (!token || !expiry || Date.now() >= (parseInt(expiry) - bufferMs)) {
+        showToast('⚠️ Session expired. Redirecting...');
+        setTimeout(() => window.location.href = 'index.html', 2000);
+        return;
+      }
+      
+      showLoading();
+      
+      // ✅ CRITICAL: Get sheet IDs first
+      await getSheetIds();
+      
+      renderCalendar();
+      await loadSamplePoints();
+      await loadEntries();
+      
+      hideLoading();
+      
+      document.getElementById('input-date').valueAsDate = new Date();
+    })();
+
+    // ═══════════════════════════════════════
+    // SAMPLE POINTS FUNCTIONS
+    // ═══════════════════════════════════════
+    async function loadSamplePoints() {
+      if (!token) return;
+      
+      try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SAMPLE_POINTS_SHEET}!A:D`;
+        
+        const response = await fetch(url, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        
+        if (!response.ok) throw new Error('Failed to load sample points');
+        
+        const data = await response.json();
+        
+        if (data.values && data.values.length > 1) {
+          const headers = data.values[0];
+          samplePoints = data.values.slice(1).map((row, index) => {
+            const obj = { _rowIndex: index + 2 };
+            headers.forEach((h, i) => {
+              obj[h] = row[i] || '';
+            });
+            return obj;
+          }).filter(p => p.Active === 'TRUE');
+          
+          populateSamplePointDropdown();
+        }
+      } catch (err) {
+        console.error('Load sample points error:', err);
+        showToast('⚠️ Failed to load sample points');
+      }
+    }
+
+    function populateSamplePointDropdown() {
+      const select = document.getElementById('input-point');
+      select.innerHTML = '<option value="">Select sample point...</option>';
+      
+      samplePoints.forEach(point => {
+        const option = document.createElement('option');
+        option.value = point.Name;
+        option.textContent = point.Name;
+        if (point.Description) {
+          option.textContent += ` (${point.Description})`;
+        }
+        select.appendChild(option);
+      });
+    }
+
+    function openManagePointsModal() {
+      renderSamplePointsList();
+      document.getElementById('manage-points-modal').classList.add('show');
+    }
+
+    function closeManagePointsModal() {
+      document.getElementById('manage-points-modal').classList.remove('show');
+    }
+
+    function renderSamplePointsList() {
+      const list = document.getElementById('points-list');
+      
+      if (samplePoints.length === 0) {
+        list.innerHTML = '<p style="text-align:center; color:var(--text3); padding:20px;">No sample points yet. Add your first one below!</p>';
+        return;
+      }
+      
+      list.innerHTML = samplePoints.map(point => `
+        <div class="point-item">
+          <div class="point-info">
+            <div class="point-name">${point.Name}</div>
+            <div class="point-desc">${point.Description || 'No description'}</div>
+          </div>
+          <div class="point-actions">
+            <button class="point-action-btn edit" onclick='editSamplePoint(${JSON.stringify(point)})'>✏️</button>
+            <button class="point-action-btn delete" onclick='confirmDeletePoint(${JSON.stringify(point)})'>🗑️</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openAddPointModal() {
+      document.getElementById('point-modal-title').textContent = 'Add Sample Point';
+      document.getElementById('point-submit-btn').textContent = 'Save Sample Point';
+      document.getElementById('edit-point-row-index').value = '';
+      document.getElementById('point-form').reset();
+      document.getElementById('add-point-modal').classList.add('show');
+    }
+
+    function closeAddPointModal() {
+      document.getElementById('add-point-modal').classList.remove('show');
+      document.getElementById('point-form').reset();
+      currentPoint = null;
+    }
+
+    function editSamplePoint(point) {
+      currentPoint = point;
+      document.getElementById('point-name').value = point.Name;
+      document.getElementById('point-description').value = point.Description || '';
+      document.getElementById('edit-point-row-index').value = point._rowIndex;
+      document.getElementById('point-modal-title').textContent = 'Edit Sample Point';
+      document.getElementById('point-submit-btn').textContent = 'Update Sample Point';
+      document.getElementById('add-point-modal').classList.add('show');
+    }
+
+    async function submitSamplePoint(event) {
+      event.preventDefault();
+      
+      if (!token) {
+        showToast('❌ Not authenticated');
+        return;
+      }
+      
+      const name = document.getElementById('point-name').value.trim();
+      const description = document.getElementById('point-description').value.trim();
+      const editRowIndex = document.getElementById('edit-point-row-index').value;
+      const isEditMode = editRowIndex !== '';
+      
+      if (!name) {
+        showToast('⚠️ Name is required');
+        return;
+      }
+      
+      showLoading();
+      
+      const id = isEditMode ? currentPoint.ID : Date.now();
+      const rowData = [id, name, description, 'TRUE'];
+      
+      try {
+        if (isEditMode) {
+          const range = `${SAMPLE_POINTS_SHEET}!A${editRowIndex}:D${editRowIndex}`;
+          const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
+          
+          const response = await fetch(url, {
+            method: 'PUT',
+            headers: {
+              'Authorization': 'Bearer ' + token,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ values: [rowData] })
+          });
+          
+          if (!response.ok) throw new Error('Update failed');
+          
+          showToast('✅ Sample point updated!');
+        } else {
+          const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SAMPLE_POINTS_SHEET}!A:D:append?valueInputOption=USER_ENTERED`;
+          
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + token,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ values: [rowData] })
+          });
+          
+          if (!response.ok) throw new Error('Save failed');
+          
+          showToast('✅ Sample point added!');
+        }
+        
+        closeAddPointModal();
+        await loadSamplePoints();
+        renderSamplePointsList();
+        
+      } catch (err) {
+        console.error('Submit sample point error:', err);
+        showToast('❌ Failed to save');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function confirmDeletePoint(point) {
+      currentPoint = point;
+      document.getElementById('confirm-title').textContent = 'Delete Sample Point?';
+      document.getElementById('confirm-message').textContent = `Are you sure you want to delete "${point.Name}"? This will not affect existing test results.`;
+      document.getElementById('confirm-action-btn').onclick = deleteSamplePoint;
+      document.getElementById('confirm-modal').classList.add('show');
+    }
+
+    async function deleteSamplePoint() {
+      if (!currentPoint || !token || !pointsSheetId) {
+        showToast('❌ Cannot delete: missing data');
+        return;
+      }
+      
+      closeConfirmModal();
+      showLoading();
+      
+      const rowIndex = currentPoint._rowIndex;
+      
+      try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`;
+        
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            requests: [{
+              deleteDimension: {
+                range: {
+                  sheetId: pointsSheetId, // ✅ FIX: Use actual sheet ID
+                  dimension: 'ROWS',
+                  startIndex: rowIndex - 1,
+                  endIndex: rowIndex
+                }
+              }
+            }]
+          })
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Delete error response:', errorText);
+          throw new Error('Delete failed');
+        }
+        
+        showToast('✅ Sample point deleted!');
+        currentPoint = null;
+        await loadSamplePoints();
+        renderSamplePointsList();
+        
+      } catch (err) {
+        console.error('Delete sample point error:', err);
+        showToast('❌ Failed to delete: ' + err.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // ═══════════════════════════════════════
+    // CALENDAR FUNCTIONS
+    // ═══════════════════════════════════════
+    function renderCalendar() {
+      const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
+      
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                          'July', 'August', 'September', 'October', 'November', 'December'];
+      
+      document.getElementById('calendar-month').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+      
+      const daysContainer = document.getElementById('calendar-days');
+      daysContainer.innerHTML = '';
+      
+      const today = new Date();
+      const isCurrentMonth = currentMonth === today.getMonth() && currentYear === today.getFullYear();
+      
+      for (let i = firstDay - 1; i >= 0; i--) {
+        const day = daysInPrevMonth - i;
+        const dayEl = document.createElement('div');
+        dayEl.className = 'calendar-day other-month';
+        dayEl.textContent = day;
+        daysContainer.appendChild(dayEl);
+      }
+      
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dayEl = document.createElement('div');
+        dayEl.className = 'calendar-day';
+        dayEl.textContent = day;
+        
+        const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        
+        if (isCurrentMonth && day === today.getDate()) {
+          dayEl.classList.add('today');
+        }
+        
+        if (hasEntry(dateStr)) {
+          dayEl.classList.add('has-entry');
+        }
+        
+        dayEl.onclick = () => selectDate(dateStr);
+        daysContainer.appendChild(dayEl);
+      }
+      
+      const totalCells = daysContainer.children.length;
+      const remainingCells = 42 - totalCells;
+      for (let day = 1; day <= remainingCells; day++) {
+        const dayEl = document.createElement('div');
+        dayEl.className = 'calendar-day other-month';
+        dayEl.textContent = day;
+        daysContainer.appendChild(dayEl);
+      }
+    }
+
+    function prevMonth() {
+      currentMonth--;
+      if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+      }
+      renderCalendar();
+    }
+
+    function nextMonth() {
+      currentMonth++;
+      if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+      }
+      renderCalendar();
+    }
+
+    function hasEntry(dateStr) {
+      return entries.some(e => e.Date === dateStr);
+    }
+
+    function selectDate(dateStr) {
+      selectedDate = dateStr;
+      
+      document.querySelectorAll('.calendar-day').forEach(day => {
+        day.classList.remove('selected');
+        if (day.textContent === dateStr.split('-')[2] && !day.classList.contains('other-month')) {
+          day.classList.add('selected');
+        }
+      });
+      
+      const dayEntries = entries.filter(e => e.Date === dateStr);
+      
+      if (dayEntries.length > 0) {
+        displayEntries(dayEntries);
+      } else {
+        document.getElementById('entry-details').innerHTML = '';
+        showToast('No entries for this date');
+      }
+    }
+
+    function displayEntries(dayEntries) {
+      if (dayEntries.length === 0) {
+        document.getElementById('entry-details').innerHTML = '';
+        return;
+      }
+      
+      const detailsContainer = document.getElementById('entry-details');
+      detailsContainer.innerHTML = '';
+      
+      dayEntries.forEach((entry, index) => {
+        const entryCard = document.createElement('div');
+        entryCard.style.cssText = `
+          background: var(--bg);
+          border-radius: 18px;
+          box-shadow: var(--neu-out);
+          padding: 20px;
+          margin-bottom: 20px;
+        `;
+        
+        let weatherData = entry['Picture Weather'];
+        if (weatherData && weatherData !== 'N/A') {
+          try {
+            weatherData = JSON.parse(weatherData);
+          } catch (e) {
+            // Keep as string
+          }
+        }
+        
+        entryCard.innerHTML = `
+          <div class="entry-header" style="margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--shadow-d);">
+            <div class="entry-date" style="font-size:16px; font-weight:700; color:var(--text);">
+              ${new Date(entry.Date).toLocaleDateString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+              })}
+              ${dayEntries.length > 1 ? `<span style="color:var(--text3); font-size:12px; margin-left:8px;">Entry ${index + 1} of ${dayEntries.length}</span>` : ''}
+            </div>
+          </div>
+          
+          ${weatherData && weatherData !== 'N/A' ? `
+            <div class="entry-weather">
+              ${renderWeatherHTML(weatherData)}
+            </div>
+          ` : ''}
+          
+          <div class="entry-actions" style="display:flex; gap:10px; margin-bottom:16px;">
+            <button class="entry-btn edit" onclick='editEntryByIndex(${index})'>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline-block; vertical-align:middle; margin-right:6px;">
+                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Edit
+            </button>
+            <button class="entry-btn delete" onclick='confirmDeleteByIndex(${index})'>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline-block; vertical-align:middle; margin-right:6px;">
+                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Delete
+            </button>
+          </div>
+          
+          <div class="entry-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+            <div class="entry-item">
+              <div class="entry-label">Sample Point</div>
+              <div class="entry-value" style="font-size:14px">${entry['Sample Point'] || '—'}</div>
+            </div>
+            <div class="entry-item">
+              <div class="entry-label">pH</div>
+              <div class="entry-value">${entry.pH || '—'}</div>
+            </div>
+            <div class="entry-item">
+              <div class="entry-label">Conductivity</div>
+              <div class="entry-value" style="font-size:14px">${entry.Conductivity || '—'} µS/cm</div>
+            </div>
+            <div class="entry-item">
+              <div class="entry-label">Free Chlorine</div>
+              <div class="entry-value" style="font-size:14px">${entry['Free Chlorine (FRC)'] || '—'} mg/L</div>
+            </div>
+            <div class="entry-item">
+              <div class="entry-label">Iron</div>
+              <div class="entry-value" style="font-size:14px">${entry.Iron || '—'} mg/L</div>
+            </div>
+            <div class="entry-item">
+              <div class="entry-label">Hardness</div>
+              <div class="entry-value" style="font-size:14px">${entry.Hardness || '—'} mg/L</div>
+            </div>
+            <div class="entry-item">
+              <div class="entry-label">Turbidity</div>
+              <div class="entry-value" style="font-size:14px">${entry.Turbidity || '—'} NTU</div>
+            </div>
+          </div>
+          
+          ${entry.Picture ? `
+            <img class="entry-image" src="${entry.Picture}" alt="Test photo" style="display:block; width:100%; border-radius:12px; box-shadow:var(--neu-sm);">
+          ` : ''}
+        `;
+        
+        detailsContainer.appendChild(entryCard);
+      });
+      
+      window.currentDayEntries = dayEntries;
+    }
+
+    function renderWeatherHTML(weatherData) {
+      if (!weatherData || weatherData === 'N/A') {
+        return '<div class="weather-main"><div class="weather-icon-box">☀️</div><div class="weather-primary"><div class="weather-condition">No weather data</div></div></div>';
+      }
+      
+      if (typeof weatherData === 'string') {
+        return `
+          <div class="weather-main">
+            <div class="weather-icon-box">${getWeatherIcon(weatherData)}</div>
+            <div class="weather-primary">
+              <div class="weather-condition">${weatherData}</div>
+            </div>
+          </div>
+        `;
+      }
+      
+      return `
+        <div class="weather-main">
+          <div class="weather-icon-box">${getWeatherIcon(weatherData)}</div>
+          <div class="weather-primary">
+            <div class="weather-condition">${weatherData.condition}</div>
+            <div class="weather-temp">${weatherData.temp}°C</div>
+            <div class="weather-feels">Feels like ${weatherData.feelsLike}°C</div>
+          </div>
+        </div>
+        
+        <div class="weather-details">
+          <div class="weather-detail-item">
+            <div class="weather-detail-icon">💧</div>
+            <div class="weather-detail-info">
+              <div class="weather-detail-label">Humidity</div>
+              <div class="weather-detail-value">${weatherData.humidity}%</div>
+            </div>
+          </div>
+          
+          <div class="weather-detail-item">
+            <div class="weather-detail-icon">💨</div>
+            <div class="weather-detail-info">
+              <div class="weather-detail-label">Wind</div>
+              <div class="weather-detail-value">${weatherData.windSpeed} m/s ${getWindDirection(weatherData.windDeg)}</div>
+            </div>
+          </div>
+          
+          <div class="weather-detail-item">
+            <div class="weather-detail-icon">🌡️</div>
+            <div class="weather-detail-info">
+              <div class="weather-detail-label">Min / Max</div>
+              <div class="weather-detail-value">${weatherData.tempMin}° / ${weatherData.tempMax}°</div>
+            </div>
+          </div>
+          
+          <div class="weather-detail-item">
+            <div class="weather-detail-icon">🔽</div>
+            <div class="weather-detail-info">
+              <div class="weather-detail-label">Pressure</div>
+              <div class="weather-detail-value">${weatherData.pressure} hPa</div>
+            </div>
+          </div>
+          
+          ${weatherData.visibility ? `
+          <div class="weather-detail-item">
+            <div class="weather-detail-icon">👁️</div>
+            <div class="weather-detail-info">
+              <div class="weather-detail-label">Visibility</div>
+              <div class="weather-detail-value">${weatherData.visibility} km</div>
+            </div>
+          </div>
+          ` : ''}
+          
+          ${weatherData.location ? `
+          <div class="weather-detail-item">
+            <div class="weather-detail-icon">📍</div>
+            <div class="weather-detail-info">
+              <div class="weather-detail-label">Location</div>
+              <div class="weather-detail-value">${weatherData.location}</div>
+            </div>
+          </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    function editEntryByIndex(index) {
+      if (!window.currentDayEntries || !window.currentDayEntries[index]) {
+        showToast('⚠️ Entry not found');
+        return;
+      }
+      
+      currentEntry = window.currentDayEntries[index];
+      editCurrentEntry();
+    }
+
+    function confirmDeleteByIndex(index) {
+      if (!window.currentDayEntries || !window.currentDayEntries[index]) {
+        showToast('⚠️ Entry not found');
+        return;
+      }
+      
+      currentEntry = window.currentDayEntries[index];
+      confirmDelete();
+    }
+
+    // ═══════════════════════════════════════
+    // DATA FUNCTIONS
+    // ═══════════════════════════════════════
+    async function loadEntries() {
+      if (!token) return;
+      
+      try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:L`;
+        
+        const response = await fetch(url, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('Token expired');
+          }
+          throw new Error('Network error');
+        }
+        
+        const data = await response.json();
+        
+        if (data.values && data.values.length > 1) {
+          const headers = data.values[0];
+          entries = data.values.slice(1).map((row, index) => {
+            const obj = { _rowIndex: index + 2 };
+            headers.forEach((h, i) => {
+              obj[h] = row[i] || '';
+            });
+            return obj;
+          });
+          renderCalendar();
+          showToast(`✅ Loaded ${entries.length} entries`);
+        } else {
+          showToast('ℹ️ No entries yet');
+        }
+      } catch (err) {
+        console.error('Load entries error:', err);
+        if (err.message === 'Token expired') {
+          showToast('❌ Session expired');
+          setTimeout(() => window.location.href = 'index.html', 2000);
+        } else {
+          showToast('❌ Failed to load');
+        }
+      }
+    }
+
+    async function submitEntry(event) {
+      event.preventDefault();
+      
+      if (!token) {
+        showToast('❌ Not authenticated');
+        return;
+      }
+      
+      const date = document.getElementById('input-date').value;
+      const point = document.getElementById('input-point').value;
+      
+      if (!date || !point) {
+        showToast('⚠️ Date and Sample Point are required');
+        return;
+      }
+      
+      const editRowIndex = document.getElementById('edit-row-index').value;
+      const isEditMode = editRowIndex !== '';
+      
+      showLoading();
+      
+      const desc = document.getElementById('input-desc').value;
+      const pH = document.getElementById('input-ph').value;
+      const conductivity = document.getElementById('input-conductivity').value;
+      const chlorine = document.getElementById('input-chlorine').value;
+      const iron = document.getElementById('input-iron').value;
+      const hardness = document.getElementById('input-hardness').value;
+      const turbidity = document.getElementById('input-turbidity').value;
+      
+      // ✅ FIX: Weather fetch is now non-blocking
+      let weatherString = 'N/A';
+      getCurrentWeather().then(weatherData => {
+        if (weatherData) {
+          weatherString = JSON.stringify(weatherData);
+        }
+      }).catch(err => {
+        console.error('⚠️ Weather error (non-critical):', err);
+      });
+      
+      const imageFile = document.getElementById('input-image').files[0];
+      let imageUrl = '';
+      if (imageFile) {
+        try {
+          imageUrl = await resizeAndUploadImage(imageFile);
+        } catch (err) {
+          console.error('❌ Image error:', err);
+        }
+      } else if (isEditMode && currentEntry) {
+        imageUrl = currentEntry.Picture || '';
+      }
+      
+      const id = isEditMode ? currentEntry.ID : Date.now();
+      
+      const rowData = [
+        id, date, point, desc, pH, conductivity, chlorine, iron, hardness, turbidity, imageUrl, weatherString
+      ];
+      
+      try {
+        if (isEditMode) {
+          const range = `${SHEET_NAME}!A${editRowIndex}:L${editRowIndex}`;
+          const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
+          
+          const response = await fetch(url, {
+            method: 'PUT',
+            headers: {
+              'Authorization': 'Bearer ' + token,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ values: [rowData] })
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Update failed:', errorText);
+            throw new Error(`HTTP ${response.status}`);
+          }
+          
+          showToast('✅ Entry updated!');
+          closeAddModal();
+          await loadEntries();
+          setTimeout(() => selectDate(date), 500);
+          
+        } else {
+          const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:L:append?valueInputOption=USER_ENTERED`;
+          
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + token,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ values: [rowData] })
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Save failed:', errorText);
+            throw new Error(`HTTP ${response.status}`);
+          }
+          
+          showToast('✅ Entry saved!');
+          closeAddModal();
+          await loadEntries();
+          document.getElementById('entry-form').reset();
+        }
+        
+      } catch (err) {
+        console.error('❌ Submit error:', err);
+        showToast('❌ Save failed: ' + err.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function editCurrentEntry() {
+      if (!currentEntry) {
+        showToast('⚠️ No entry selected');
+        return;
+      }
+      
+      document.getElementById('input-date').value = currentEntry.Date;
+      document.getElementById('input-point').value = currentEntry['Sample Point'];
+      document.getElementById('input-desc').value = currentEntry.Description || '';
+      document.getElementById('input-ph').value = currentEntry.pH || '';
+      document.getElementById('input-conductivity').value = currentEntry.Conductivity || '';
+      document.getElementById('input-chlorine').value = currentEntry['Free Chlorine (FRC)'] || '';
+      document.getElementById('input-iron').value = currentEntry.Iron || '';
+      document.getElementById('input-hardness').value = currentEntry.Hardness || '';
+      document.getElementById('input-turbidity').value = currentEntry.Turbidity || '';
+      
+      if (currentEntry.Picture) {
+        const preview = document.getElementById('image-preview');
+        preview.src = currentEntry.Picture;
+        preview.classList.add('show');
+      }
+      
+      document.getElementById('edit-row-index').value = currentEntry._rowIndex;
+      document.getElementById('modal-title').textContent = 'Edit Test Entry';
+      document.getElementById('submit-btn').textContent = 'Update Entry';
+      
+      openAddModal();
+    }
+
+    function confirmDelete() {
+      if (!currentEntry) {
+        showToast('⚠️ No entry selected');
+        return;
+      }
+      document.getElementById('confirm-title').textContent = 'Delete Entry?';
+      document.getElementById('confirm-message').textContent = 'This will permanently delete this test result. This action cannot be undone.';
+      document.getElementById('confirm-action-btn').onclick = deleteCurrentEntry;
+      document.getElementById('confirm-modal').classList.add('show');
+    }
+
+    function closeConfirmModal() {
+      document.getElementById('confirm-modal').classList.remove('show');
+    }
+
+    // ✅ CRITICAL FIX: Delete with Correct Sheet ID
+    async function deleteCurrentEntry() {
+      if (!currentEntry || !token || !resultsSheetId) {
+        showToast('❌ Cannot delete: missing data');
+        closeConfirmModal();
+        return;
+      }
+      
+      closeConfirmModal();
+      showLoading();
+      
+      const rowIndex = currentEntry._rowIndex;
+      
+      try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`;
+        
+        console.log('🗑️ Deleting row:', rowIndex, 'from sheet ID:', resultsSheetId);
+        
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            requests: [{
+              deleteDimension: {
+                range: {
+                  sheetId: resultsSheetId, // ✅ FIX: Use actual sheet ID
+                  dimension: 'ROWS',
+                  startIndex: rowIndex - 1,
+                  endIndex: rowIndex
+                }
+              }
+            }]
+          })
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ Delete error response:', errorText);
+          throw new Error('Delete failed');
+        }
+        
+        const result = await response.json();
+        console.log('✅ Delete success:', result);
+        
+        showToast('✅ Entry deleted!');
+        document.getElementById('entry-details').innerHTML = '';
+        currentEntry = null;
+        await loadEntries();
+        
+      } catch (err) {
+        console.error('❌ Delete entry error:', err);
+        showToast('❌ Failed to delete: ' + err.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // ═══════════════════════════════════════
+    // IMAGE FUNCTIONS
+    // ═══════════════════════════════════════
+    function previewImage(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const preview = document.getElementById('image-preview');
+          preview.src = e.target.result;
+          preview.classList.add('show');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    async function resizeAndUploadImage(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 600;
+            const MAX_HEIGHT = 450;
+            
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+              }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            
+            if (resizedDataUrl.length > 50000) {
+              showToast('⚠️ Image too large');
+              resolve('');
+            } else {
+              resolve(resizedDataUrl);
+            }
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // ═══════════════════════════════════════
+    // WEATHER FUNCTIONS
+    // ═══════════════════════════════════════
+    async function getCurrentWeather() {
+      if (!WEATHER_API_KEY || WEATHER_API_KEY === 'YOUR_OPENWEATHER_API_KEY') {
+        return null;
+      }
+      
+      try {
+        const position = await new Promise((resolve, reject) => {
+          if (!navigator.geolocation) {
+            reject(new Error('Geolocation not supported'));
+            return;
+          }
+          
+          navigator.geolocation.getCurrentPosition(
+            resolve,
+            reject,
+            { 
+              enableHighAccuracy: false,
+              timeout: 5000, // ✅ FIX: Reduced timeout
+              maximumAge: 300000
+            }
+          );
+        });
+        
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`;
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error(`Weather API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        return {
+          condition: data.weather[0].main,
+          description: data.weather[0].description,
+          icon: data.weather[0].icon,
+          temp: Math.round(data.main.temp),
+          feelsLike: Math.round(data.main.feels_like),
+          tempMin: Math.round(data.main.temp_min),
+          tempMax: Math.round(data.main.temp_max),
+          humidity: data.main.humidity,
+          pressure: data.main.pressure,
+          windSpeed: data.wind.speed,
+          windDeg: data.wind.deg,
+          visibility: data.visibility ? Math.round(data.visibility / 1000) : null,
+          location: data.name,
+          timestamp: new Date().toISOString()
+        };
+        
+      } catch (err) {
+        console.error('❌ Weather error:', err);
+        return null;
+      }
+    }
+
+    function getWeatherIcon(weatherData) {
+      if (!weatherData) return '☀️';
+      
+      const iconMap = {
+        '01d': '☀️', '01n': '🌙',
+        '02d': '⛅', '02n': '☁️',
+        '03d': '☁️', '03n': '☁️',
+        '04d': '☁️', '04n': '☁️',
+        '09d': '🌧️', '09n': '🌧️',
+        '10d': '🌦️', '10n': '🌧️',
+        '11d': '⛈️', '11n': '⛈️',
+        '13d': '🌨️', '13n': '🌨️',
+        '50d': '🌫️', '50n': '🌫️'
+      };
+      
+      if (typeof weatherData === 'string') {
+        const w = weatherData.toLowerCase();
+        if (w.includes('rain')) return '🌧️';
+        if (w.includes('cloud')) return '☁️';
+        if (w.includes('sun') || w.includes('clear')) return '☀️';
+        if (w.includes('storm')) return '⛈️';
+        return '☀️';
+      }
+      
+      return iconMap[weatherData.icon] || '☀️';
+    }
+
+    function getWindDirection(degrees) {
+      const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+      const index = Math.round(degrees / 45) % 8;
+      return directions[index];
+    }
+
+    // ═══════════════════════════════════════
+    // UI FUNCTIONS
+    // ═══════════════════════════════════════
+    function goBack() {
+      window.location.href = 'index.html';
+    }
+
+    function openAddModal() {
+      document.getElementById('add-modal').classList.add('show');
+    }
+
+    function closeAddModal() {
+      document.getElementById('add-modal').classList.remove('show');
+      document.getElementById('entry-form').reset();
+      document.getElementById('edit-row-index').value = '';
+      document.getElementById('modal-title').textContent = 'New Test Entry';
+      document.getElementById('submit-btn').textContent = 'Save Entry';
+      document.getElementById('image-preview').classList.remove('show');
+    }
+
+    let toastTimer;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+    }
   </script>
 </body>
 </html>
