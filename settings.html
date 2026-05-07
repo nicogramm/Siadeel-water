@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0052A3">
+  <title>Settings - Siadeel Water</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f5f7fa; --bg2: #e9ecf1; --shadow-d: #c8d1dc; --shadow-l: #ffffff;
+      --text: #0052A3; --text2: #5a6c7d; --text3: #8b98a5;
+      --blue: #0052A3; --blue-d: #003d7a; --blue-l: #1a6bbf; --card: #f5f7fa;
+      --neu-out: 8px 8px 16px var(--shadow-d), -6px -6px 12px var(--shadow-l);
+      --neu-in:  inset 5px 5px 10px var(--shadow-d), inset -4px -4px 9px var(--shadow-l);
+      --neu-sm:  5px 5px 10px var(--shadow-d), -4px -4px 8px var(--shadow-l);
+      --neu-xs:  3px 3px 7px var(--shadow-d), -2px -2px 6px var(--shadow-l);
+    }
+    body.dark {
+      --bg: #0a1628; --bg2: #0f1e35; --shadow-d: #050b14; --shadow-l: #152a45;
+      --text: #4a9eff; --text2: #7ab3ff; --text3: #3d6a9e; --card: #0a1628;
+      --blue: #4a9eff; --blue-d: #2563eb; --blue-l: #60a5fa;
+    }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent }
+    html,body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; transition:background 0.4s,color 0.4s }
+    
+    .settings-page { display:flex; flex-direction:column; height:100dvh; width:100%; }
+    
+    /* Header with Wave Animation */
+    .settings-header {
+      background:#0052A3;
+      padding:14px 18px;
+      padding-top:calc(env(safe-area-inset-top,0px) + 14px);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      box-shadow:0 3px 10px rgba(0,0,0,0.15);
+      position:relative;
+      overflow:hidden;
+      z-index:10;
+    }
+    #header-wave-canvas {
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      pointer-events:none;
+      z-index:1;
+      opacity:0.3;
+    }
+    .settings-back {
+      width:36px;
+      height:36px;
+      border-radius:10px;
+      background:rgba(255,255,255,0.15);
+      border:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      transition:background 0.2s;
+      color:white;
+      position:relative;
+      z-index:2;
+    }
+    .settings-back:active { background:rgba(255,255,255,0.25); }
+    .settings-header h1 {
+      font-size:20px;
+      font-weight:700;
+      color:white;
+      letter-spacing:0.5px;
+      position:relative;
+      z-index:2;
+    }
+    .header-spacer { width:36px; }
+    
+    /* Content Area */
+    .settings-content {
+      flex:1;
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+      padding:20px 18px;
+      padding-bottom:calc(40px + env(safe-area-inset-bottom,0px));
+    }
+    .settings-section { margin-bottom:32px; }
+    .section-title {
+      font-size:11px;
+      font-weight:700;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      color:var(--text3);
+      margin-bottom:14px;
+      padding:0 4px;
+    }
+    .settings-card {
+      background:var(--bg);
+      border-radius:18px;
+      box-shadow:var(--neu-out);
+      padding:18px;
+      margin-bottom:12px;
+      transition:box-shadow 0.15s,transform 0.1s;
+    }
+    .settings-card.clickable { cursor:pointer; }
+    .settings-card.clickable:active {
+      box-shadow:var(--neu-in);
+      transform:scale(0.98);
+    }
+    
+    /* Profile Card */
+    .profile-card {
+      display:flex;
+      align-items:center;
+      gap:16px;
+      padding:20px;
+    }
+    .profile-avatar {
+      width:64px;
+      height:64px;
+      border-radius:50%;
+      object-fit:cover;
+      box-shadow:var(--neu-sm);
+      border:3px solid var(--bg);
+    }
+    .profile-info { flex:1; }
+    .profile-name {
+      font-size:18px;
+      font-weight:700;
+      color:var(--text);
+      margin-bottom:4px;
+      letter-spacing:-0.3px;
+    }
+    .profile-email {
+      font-size:13px;
+      color:var(--text2);
+      margin-bottom:8px;
+    }
+    .profile-role {
+      display:inline-block;
+      font-size:10px;
+      font-weight:600;
+      letter-spacing:1px;
+      text-transform:uppercase;
+      color:var(--blue);
+      background:var(--bg);
+      padding:4px 10px;
+      border-radius:8px;
+      box-shadow:var(--neu-xs);
+    }
+    
+    /* Setting Row */
+    .setting-row {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+    }
+    .setting-info {
+      display:flex;
+      align-items:center;
+      gap:14px;
+      flex:1;
+    }
+    .setting-icon {
+      width:40px;
+      height:40px;
+      border-radius:12px;
+      background:var(--bg);
+      box-shadow:var(--neu-xs);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--blue);
+      flex-shrink:0;
+    }
+    .setting-label {
+      font-size:15px;
+      font-weight:600;
+      color:var(--text);
+      margin-bottom:3px;
+    }
+    .setting-desc {
+      font-size:12px;
+      color:var(--text3);
+      line-height:1.4;
+    }
+    
+    /* Toggle Switch */
+    .toggle-switch {
+      position:relative;
+      width:52px;
+      height:30px;
+      flex-shrink:0;
+    }
+    .toggle-switch input { opacity:0; width:0; height:0; }
+    .toggle-slider {
+      position:absolute;
+      cursor:pointer;
+      top:0; left:0; right:0; bottom:0;
+      background:var(--bg);
+      box-shadow:var(--neu-in);
+      border-radius:30px;
+      transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    .toggle-slider:before {
+      position:absolute;
+      content:"";
+      height:24px;
+      width:24px;
+      left:3px;
+      bottom:3px;
+      background:var(--bg);
+      box-shadow:var(--neu-xs);
+      border-radius:50%;
+      transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    input:checked + .toggle-slider {
+      background:var(--blue);
+      box-shadow:inset 2px 2px 6px rgba(0,0,0,0.2);
+    }
+    input:checked + .toggle-slider:before {
+      transform:translateX(22px);
+      background:white;
+      box-shadow:0 2px 8px rgba(0,0,0,0.25);
+    }
+    
+    /* Select Dropdown */
+    .select-wrapper {
+      position:relative;
+      margin-top:14px;
+    }
+    .custom-select {
+      width:100%;
+      padding:14px 16px;
+      background:var(--bg);
+      border:none;
+      border-radius:14px;
+      box-shadow:var(--neu-in);
+      font-size:14px;
+      font-weight:500;
+      color:var(--text);
+      font-family:'Inter',sans-serif;
+      cursor:pointer;
+      outline:none;
+      appearance:none;
+      -webkit-appearance:none;
+      -moz-appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%230052A3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;
+      background-position:right 16px center;
+      padding-right:40px;
+    }
+    body.dark .custom-select {
+      background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234a9eff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
+    
+    /* Range Slider */
+    .range-wrapper {
+      margin-top:14px;
+    }
+    .range-slider {
+      width:100%;
+      height:8px;
+      border-radius:8px;
+      background:var(--bg);
+      box-shadow:var(--neu-in);
+      outline:none;
+      -webkit-appearance:none;
+      appearance:none;
+    }
+    .range-slider::-webkit-slider-thumb {
+      -webkit-appearance:none;
+      appearance:none;
+      width:24px;
+      height:24px;
+      border-radius:50%;
+      background:var(--bg);
+      box-shadow:var(--neu-sm);
+      cursor:pointer;
+    }
+    .range-slider::-moz-range-thumb {
+      width:24px;
+      height:24px;
+      border-radius:50%;
+      background:var(--bg);
+      box-shadow:var(--neu-sm);
+      cursor:pointer;
+      border:none;
+    }
+    .range-value {
+      display:flex;
+      justify-content:space-between;
+      margin-top:8px;
+      font-size:11px;
+      color:var(--text3);
+      font-weight:600;
+    }
+    .range-current {
+      color:var(--blue);
+      font-size:13px;
+    }
+    
+    /* Action Buttons */
+    .action-btn {
+      width:100%;
+      padding:16px;
+      background:var(--bg);
+      border:none;
+      border-radius:16px;
+      box-shadow:var(--neu-out);
+      font-size:15px;
+      font-weight:600;
+      color:var(--text);
+      font-family:'Inter',sans-serif;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      transition:box-shadow 0.15s,transform 0.1s;
+      margin-bottom:12px;
+    }
+    .action-btn:active {
+      box-shadow:var(--neu-in);
+      transform:scale(0.98);
+    }
+    .action-btn.danger {
+      color:#dc3545;
+    }
+    .action-btn.danger svg { stroke:#dc3545; }
+    .action-btn.primary {
+      color:var(--blue);
+    }
+    .action-btn.primary svg { stroke:var(--blue); }
+    
+    /* Footer */
+    .settings-footer {
+      text-align:center;
+      padding:30px 0 20px;
+      margin-top:20px;
+    }
+    .footer-logo {
+      margin-bottom:12px;
+      display:flex;
+      justify-content:center;
+      opacity:0.4;
+    }
+    .footer-text {
+      font-size:12px;
+      font-weight:600;
+      color:var(--text2);
+      margin-bottom:4px;
+    }
+    .footer-subtext {
+      font-size:10px;
+      color:var(--text3);
+      letter-spacing:1.5px;
+      text-transform:uppercase;
+    }
+    
+    /* Toast Notification */
+    .toast {
+      position:fixed;
+      bottom:calc(30px + env(safe-area-inset-bottom,0px));
+      left:50%;
+      transform:translateX(-50%);
+      background:var(--bg);
+      border-radius:14px;
+      box-shadow:var(--neu-out);
+      border-left:4px solid var(--blue);
+      padding:14px 24px;
+      font-size:13px;
+      font-weight:500;
+      color:var(--text);
+      z-index:300;
+      white-space:nowrap;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity 0.3s;
+      max-width:90%;
+    }
+    .toast.show { opacity:1; }
+  </style>
+</head>
+<body>
+  <div class="settings-page">
+    <!-- Header with Wave Animation -->
+    <div class="settings-header">
+      <canvas id="header-wave-canvas"></canvas>
+      <button class="settings-back" onclick="goBack()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <h1>Settings</h1>
+      <div class="header-spacer"></div>
+    </div>
+
+    <!-- Content -->
+    <div class="settings-content">
+      <!-- Profile Section -->
+      <div class="settings-section">
+        <div class="section-title">Profile</div>
+        <div class="settings-card profile-card">
+          <img class="profile-avatar" id="user-avatar" src="" alt="User">
+          <div class="profile-info">
+            <div class="profile-name" id="user-name">—</div>
+            <div class="profile-email" id="user-email">—</div>
+            <span class="profile-role">Authorized User</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Appearance Section -->
+      <div class="settings-section">
+        <div class="section-title">Appearance</div>
+        
+        <!-- Dark Mode Toggle -->
+        <div class="settings-card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="setting-label">Dark Mode</div>
+                <div class="setting-desc">Blue-based dark theme for comfortable viewing</div>
+              </div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="theme-toggle" onchange="toggleTheme()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Font Family -->
+        <div class="settings-card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M4 7V4h16v3M9 20h6M12 4v16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="setting-label">Font Family</div>
+                <div class="setting-desc">Choose your preferred display font</div>
+              </div>
+            </div>
+          </div>
+          <div class="select-wrapper">
+            <select class="custom-select" id="font-select" onchange="changeFont()">
+              <option value="Inter">Inter (Default)</option>
+              <option value="Roboto">Roboto</option>
+              <option value="Open Sans">Open Sans</option>
+              <option value="Poppins">Poppins</option>
+              <option value="Montserrat">Montserrat</option>
+              <option value="Lato">Lato</option>
+              <option value="Source Sans Pro">Source Sans Pro</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Font Size -->
+        <div class="settings-card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                  <path d="M21 21l-4.35-4.35M11 8v6M8 11h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="setting-label">Font Size</div>
+                <div class="setting-desc">Adjust text size for better readability</div>
+              </div>
+            </div>
+          </div>
+          <div class="range-wrapper">
+            <input type="range" class="range-slider" id="font-size-slider" min="12" max="18" value="14" step="1" oninput="changeFontSize(this.value)">
+            <div class="range-value">
+              <span>Small</span>
+              <span class="range-current" id="font-size-value">14px</span>
+              <span>Large</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data & Sync Section -->
+      <div class="settings-section">
+        <div class="section-title">Data & Sync</div>
+        
+        <!-- Auto Refresh -->
+        <div class="settings-card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118.8-4.3M22 12.5a10 10 0 01-18.8 4.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="setting-label">Auto Refresh</div>
+                <div class="setting-desc">Automatically update dashboard data every 5 minutes</div>
+              </div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="auto-refresh-toggle" checked onchange="toggleAutoRefresh()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Pull to Refresh -->
+        <div class="settings-card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 5v14M19 12l-7 7-7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="setting-label">Pull to Refresh</div>
+                <div class="setting-desc">Swipe down on dashboard to manually refresh data</div>
+              </div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="ptr-toggle" checked onchange="togglePTR()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Offline Mode -->
+        <div class="settings-card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                  <path d="M1 1l22 22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="setting-label">Offline Mode</div>
+                <div class="setting-desc">Cache data for offline access</div>
+              </div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="offline-toggle" checked onchange="toggleOffline()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Clear Cache Button -->
+        <button class="action-btn primary" onclick="clearCache()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Clear Cache
+        </button>
+      </div>
+
+      <!-- Notifications Section -->
+      <div class="settings-section">
+        <div class="section-title">Notifications</div>
+        
+        <!-- Push Notifications -->
+        <div class="settings-card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="setting-label">Push Notifications</div>
+                <div class="setting-desc">Receive alerts for important updates</div>
+              </div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="notif-toggle" onchange="toggleNotifications()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Email Notifications -->
+        <div class="settings-card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2"/>
+                  <path d="M22 6l-10 7L2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="setting-label">Email Notifications</div>
+                <div class="setting-desc">Get daily summary reports via email</div>
+              </div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="email-toggle" onchange="toggleEmail()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Section -->
+      <div class="settings-section">
+        <div class="section-title">Security & Privacy</div>
+        
+        <!-- Session Timeout -->
+        <div class="settings-card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                  <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="setting-label">Session Timeout</div>
+                <div class="setting-desc">Auto sign-out after inactivity</div>
+              </div>
+            </div>
+          </div>
+          <div class="select-wrapper">
+            <select class="custom-select" id="timeout-select" onchange="changeTimeout()">
+              <option value="15">15 minutes</option>
+              <option value="30" selected>30 minutes</option>
+              <option value="60">1 hour</option>
+              <option value="120">2 hours</option>
+              <option value="0">Never</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Privacy Mode -->
+        <div class="settings-card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="setting-label">Privacy Mode</div>
+                <div class="setting-desc">Hide sensitive data in screenshots</div>
+              </div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="privacy-toggle" onchange="togglePrivacy()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- About Section -->
+      <div class="settings-section">
+        <div class="section-title">About</div>
+        
+        <!-- App Version -->
+        <div class="settings-card clickable" onclick="checkUpdates()">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                  <path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="setting-label">App Version</div>
+                <div class="setting-desc">1.0.3 - Tap to check for updates</div>
+              </div>
+            </div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M9 18l6-6-6-6" stroke="var(--text3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- GitHub -->
+        <div class="settings-card clickable" onclick="openGitHub()">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="setting-label">Source Code</div>
+                <div class="setting-desc">View project on GitHub</div>
+              </div>
+            </div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" stroke="var(--text3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Help & Support -->
+        <div class="settings-card clickable" onclick="openSupport()">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                  <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="setting-label">Help & Support</div>
+                <div class="setting-desc">Get help or report an issue</div>
+              </div>
+            </div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M9 18l6-6-6-6" stroke="var(--text3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Terms & Privacy -->
+        <div class="settings-card clickable" onclick="openTerms()">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="setting-label">Terms & Privacy</div>
+                <div class="setting-desc">Read our terms of service and privacy policy</div>
+              </div>
+            </div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M9 18l6-6-6-6" stroke="var(--text3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions Section -->
+      <div class="settings-section">
+        <div class="section-title">Actions</div>
+        
+        <button class="action-btn primary" onclick="exportData()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Export Data
+        </button>
+
+        <button class="action-btn danger" onclick="signOut()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Sign Out
+        </button>
+      </div>
+
+      <!-- Footer -->
+      <div class="settings-footer">
+        <div class="footer-logo">
+          <svg width="40" height="15" viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,40 Q100,25 200,40 T400,40" stroke="var(--text3)" stroke-width="10" fill="none" stroke-linecap="round"/>
+            <path d="M0,60 Q100,45 200,60 T400,60" stroke="var(--text3)" stroke-width="10" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="footer-text">Siadeel Water © 2024</div>
+        <div class="footer-subtext">Treatment & Supply Services</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ═══════════════════════════════════════
+    // WAVE ANIMATION FOR HEADER
+    // ═══════════════════════════════════════
+    (function initHeaderWaves() {
+      var canvas = document.getElementById('header-wave-canvas');
+      var ctx = canvas.getContext('2d');
+      var animId = null;
+      var dpr = Math.max(1, window.devicePixelRatio || 1);
+
+      function resize() {
+        var header = canvas.parentElement;
+        var W = header.offsetWidth;
+        var H = header.offsetHeight;
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        canvas.style.width = W + 'px';
+        canvas.style.height = H + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      var WAVES = [
+        { yBase: 0.5, amp1: 3, amp2: 2, freq1: 0.015, freq2: 0.030, speed: 0.3, alpha: 0.15, color: '255,255,255' },
+        { yBase: 0.7, amp1: 4, amp2: 2, freq1: 0.012, freq2: 0.025, speed: 0.4, alpha: 0.20, color: '180,230,255' }
+      ];
+
+      function loop(ts) {
+        var t = ts / 1000;
+        var W = canvas.width / dpr;
+        var H = canvas.height / dpr;
+        ctx.clearRect(0, 0, W, H);
+
+        for (var i = 0; i < WAVES.length; i++) {
+          var layer = WAVES[i];
+          var yCenter = H * layer.yBase;
+          var phase = t * layer.speed;
+
+          ctx.beginPath();
+          ctx.moveTo(0, H);
+          for (var x = 0; x <= W; x += 2) {
+            var y = yCenter
+              + Math.sin(x * layer.freq1 + phase * 2.0) * layer.amp1
+              + Math.sin(x * layer.freq2 - phase * 1.4) * layer.amp2;
+            if (x === 0) ctx.lineTo(0, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.lineTo(W, H);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(' + layer.color + ',' + layer.alpha + ')';
+          ctx.fill();
+        }
+
+        animId = requestAnimationFrame(loop);
+      }
+
+      window.addEventListener('resize', resize);
+      resize();
+      animId = requestAnimationFrame(loop);
+    })();
+
+    // ═══════════════════════════════════════
+    // INITIALIZATION
+    // ═══════════════════════════════════════
+    let isDark = false;
+    let toastTimer;
+
+    (function init() {
+      // Load user info
+      document.getElementById('user-avatar').src = localStorage.getItem('siadeel-picture') || '';
+      document.getElementById('user-name').textContent = localStorage.getItem('siadeel-name') || 'User';
+      document.getElementById('user-email').textContent = localStorage.getItem('siadeel-email') || '';
+
+      // Load saved preferences
+      isDark = localStorage.getItem('siadeel-theme') === 'dark';
+      document.getElementById('theme-toggle').checked = isDark;
+      applyTheme(isDark);
+
+      const savedFont = localStorage.getItem('siadeel-font') || 'Inter';
+      document.getElementById('font-select').value = savedFont;
+      if (savedFont !== 'Inter') changeFont();
+
+      const savedSize = localStorage.getItem('siadeel-font-size') || '14';
+      document.getElementById('font-size-slider').value = savedSize;
+      document.getElementById('font-size-value').textContent = savedSize + 'px';
+      document.body.style.fontSize = savedSize + 'px';
+
+      document.getElementById('auto-refresh-toggle').checked = localStorage.getItem('siadeel-auto-refresh') !== 'false';
+      document.getElementById('ptr-toggle').checked = localStorage.getItem('siadeel-ptr') !== 'false';
+      document.getElementById('offline-toggle').checked = localStorage.getItem('siadeel-offline') !== 'false';
+      document.getElementById('notif-toggle').checked = localStorage.getItem('siadeel-notif') === 'true';
+      document.getElementById('email-toggle').checked = localStorage.getItem('siadeel-email') === 'true';
+      document.getElementById('privacy-toggle').checked = localStorage.getItem('siadeel-privacy') === 'true';
+      document.getElementById('timeout-select').value = localStorage.getItem('siadeel-timeout') || '30';
+    })();
+
+    // ═══════════════════════════════════════
+    // FUNCTIONS
+    // ═══════════════════════════════════════
+    
+    function goBack() {
+      window.location.href = 'index.html';
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function applyTheme(dark) {
+      isDark = dark;
+      document.body.classList.toggle('dark', dark);
+      localStorage.setItem('siadeel-theme', dark ? 'dark' : 'light');
+    }
+
+    function toggleTheme() {
+      const checked = document.getElementById('theme-toggle').checked;
+      applyTheme(checked);
+      showToast(checked ? '🌙 Dark mode enabled' : '☀️ Light mode enabled');
+    }
+
+    function changeFont() {
+      const font = document.getElementById('font-select').value;
+      document.body.style.fontFamily = `'${font}', sans-serif`;
+      localStorage.setItem('siadeel-font', font);
+
+      if (!document.getElementById('custom-font-link')) {
+        const link = document.createElement('link');
+        link.id = 'custom-font-link';
+        link.rel = 'stylesheet';
+        link.href = `https://fonts.googleapis.com/css2?family=${font.replace(' ', '+')}:wght@300;400;500;600;700&display=swap`;
+        document.head.appendChild(link);
+      }
+
+      showToast(`✓ Font changed to ${font}`);
+    }
+
+    function changeFontSize(size) {
+      document.getElementById('font-size-value').textContent = size + 'px';
+      document.body.style.fontSize = size + 'px';
+      localStorage.setItem('siadeel-font-size', size);
+    }
+
+    function toggleAutoRefresh() {
+      const checked = document.getElementById('auto-refresh-toggle').checked;
+      localStorage.setItem('siadeel-auto-refresh', checked);
+      showToast(checked ? '✓ Auto refresh enabled' : '✗ Auto refresh disabled');
+    }
+
+    function togglePTR() {
+      const checked = document.getElementById('ptr-toggle').checked;
+      localStorage.setItem('siadeel-ptr', checked);
+      showToast(checked ? '✓ Pull to refresh enabled' : '✗ Pull to refresh disabled');
+    }
+
+    function toggleOffline() {
+      const checked = document.getElementById('offline-toggle').checked;
+      localStorage.setItem('siadeel-offline', checked);
+      showToast(checked ? '✓ Offline mode enabled' : '✗ Offline mode disabled');
+    }
+
+    function toggleNotifications() {
+      const checked = document.getElementById('notif-toggle').checked;
+      localStorage.setItem('siadeel-notif', checked);
+
+      if (checked && 'Notification' in window) {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            showToast('🔔 Notifications enabled');
+          } else {
+            document.getElementById('notif-toggle').checked = false;
+            showToast('❌ Notification permission denied');
+          }
+        });
+      } else {
+        showToast('🔕 Notifications disabled');
+      }
+    }
+
+    function toggleEmail() {
+      const checked = document.getElementById('email-toggle').checked;
+      localStorage.setItem('siadeel-email', checked);
+      showToast(checked ? '📧 Email notifications enabled' : '✗ Email notifications disabled');
+    }
+
+    function togglePrivacy() {
+      const checked = document.getElementById('privacy-toggle').checked;
+      localStorage.setItem('siadeel-privacy', checked);
+      showToast(checked ? '🔒 Privacy mode enabled' : '🔓 Privacy mode disabled');
+    }
+
+    function changeTimeout() {
+      const timeout = document.getElementById('timeout-select').value;
+      localStorage.setItem('siadeel-timeout', timeout);
+      showToast(`⏱️ Session timeout set to ${timeout === '0' ? 'Never' : timeout + ' minutes'}`);
+    }
+
+    function clearCache() {
+      if (confirm('Clear all cached data? You will need to sign in again.')) {
+        localStorage.clear();
+        sessionStorage.clear();
+
+        if ('caches' in window) {
+          caches.keys().then(names => {
+            names.forEach(name => caches.delete(name));
+          });
+        }
+
+        showToast('✓ Cache cleared. Redirecting...');
+        setTimeout(() => window.location.href = 'index.html', 1500);
+      }
+    }
+
+    function checkUpdates() {
+      showToast('✓ You are using the latest version (1.0.3)');
+    }
+
+    function openGitHub() {
+      window.open('https://github.com/yourusername/siadeel-water', '_blank');
+    }
+
+    function openSupport() {
+      showToast('📧 Support: siadeel.homes@gmail.com');
+    }
+
+    function openTerms() {
+      showToast('📄 Terms & Privacy - Coming soon');
+    }
+
+    function exportData() {
+      showToast('📊 Export feature - Coming soon');
+    }
+
+    function signOut() {
+      if (confirm('Sign out from Siadeel Water?')) {
+        localStorage.removeItem('siadeel-token');
+        localStorage.removeItem('siadeel-token-expiry');
+        localStorage.removeItem('siadeel-name');
+        localStorage.removeItem('siadeel-email');
+        localStorage.removeItem('siadeel-picture');
+
+        showToast('👋 Signed out successfully');
+        setTimeout(() => window.location.href = 'index.html', 1000);
+      }
+    }
+  </script>
+</body>
+</html>
