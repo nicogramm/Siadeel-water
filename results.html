@@ -17,6 +17,7 @@
       --text: #0052A3; --text2: #5a6c7d; --text3: #8b98a5;
       --blue: #0052A3; --blue-d: #003d7a; --blue-l: #1a6bbf; --card: #f5f7fa;
       --red: #e74c3c; --red-d: #c0392b; --green: #27ae60; --green-d: #229954;
+      --orange: #f39c12; --purple: #9b59b6; --teal: #16a085;
       --neu-out: 8px 8px 16px var(--shadow-d), -6px -6px 12px var(--shadow-l);
       --neu-in:  inset 5px 5px 10px var(--shadow-d), inset -4px -4px 9px var(--shadow-l);
       --neu-sm:  5px 5px 10px var(--shadow-d), -4px -4px 8px var(--shadow-l);
@@ -90,7 +91,6 @@
       letter-spacing:0.5px; position:relative; z-index:2;
     }
     
-    /* ✅ BAGO: Header Actions Group */
     .header-actions {
       display:flex;
       gap:8px;
@@ -577,17 +577,136 @@
     .trend-stable { color:var(--text2); }
     .trend-stable::after { content:' →'; font-size:10px; }
     
-    .trends-chart {
+    /* ✅ BAGO: Chart Container with Landscape Support */
+    .trends-chart-container {
       background:var(--bg);
       border-radius:12px;
       box-shadow:var(--neu-xs);
       padding:16px;
-      height:200px;
+      position:relative;
+    }
+    
+    .chart-header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:12px;
+    }
+    
+    .chart-title {
+      font-size:14px;
+      font-weight:700;
+      color:var(--text);
+    }
+    
+    .chart-expand-btn {
+      width:32px;
+      height:32px;
+      border-radius:8px;
+      background:var(--bg);
+      border:none;
+      box-shadow:var(--neu-xs);
+      color:var(--text);
+      cursor:pointer;
+      font-size:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transition:box-shadow 0.15s, transform 0.1s;
+    }
+    
+    .chart-expand-btn:active {
+      box-shadow:var(--neu-in);
+      transform:scale(0.95);
+    }
+    
+    .trends-chart {
+      height:250px;
+      position:relative;
     }
     
     .trends-chart canvas {
       width:100% !important;
       height:100% !important;
+    }
+    
+    /* ✅ BAGO: Fullscreen Chart Modal */
+    .chart-fullscreen-modal {
+      position:fixed;
+      top:0;
+      left:0;
+      right:0;
+      bottom:0;
+      background:var(--bg);
+      z-index:200;
+      display:none;
+      flex-direction:column;
+      padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);
+    }
+    
+    .chart-fullscreen-modal.show {
+      display:flex;
+    }
+    
+    .chart-fullscreen-header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:16px 20px;
+      background:var(--bg);
+      box-shadow:var(--neu-sm);
+    }
+    
+    .chart-fullscreen-title {
+      font-size:16px;
+      font-weight:700;
+      color:var(--text);
+    }
+    
+    .chart-fullscreen-close {
+      width:36px;
+      height:36px;
+      border-radius:10px;
+      background:var(--bg);
+      border:none;
+      box-shadow:var(--neu-xs);
+      color:var(--text);
+      cursor:pointer;
+      font-size:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    
+    .chart-fullscreen-body {
+      flex:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      overflow:hidden;
+    }
+    
+    .chart-fullscreen-canvas-wrapper {
+      width:100%;
+      height:100%;
+      position:relative;
+    }
+    
+    .chart-fullscreen-canvas-wrapper canvas {
+      width:100% !important;
+      height:100% !important;
+    }
+    
+    /* ✅ Landscape orientation specific styles */
+    @media screen and (orientation: landscape) {
+      .chart-fullscreen-body {
+        padding:10px 20px;
+      }
+      
+      .trends-chart {
+        height:300px;
+      }
     }
   </style>
 </head>
@@ -606,7 +725,6 @@
       </button>
       <h1>Test Results</h1>
       
-      <!-- ✅ BAGO: Header Actions Group -->
       <div class="header-actions">
         <button class="trends-btn" onclick="openTrendsModal()">📊</button>
         <button class="add-btn" onclick="openAddModal()">+</button>
@@ -754,7 +872,7 @@
   </div>
 
   <!-- ═══════════════════════════════════════
-       ✅ BAGO: TRENDS MODAL
+       ✅ TRENDS MODAL (Updated with Expand Button)
        ═══════════════════════════════════════ -->
   <div class="modal" id="trends-modal">
     <div class="modal-content trends-modal-content">
@@ -763,7 +881,6 @@
         <button class="modal-close" onclick="closeTrendsModal()">×</button>
       </div>
       
-      <!-- Filters -->
       <div class="trends-filters">
         <div class="form-group">
           <label class="form-label">Sample Point</label>
@@ -785,7 +902,6 @@
         </div>
       </div>
       
-      <!-- Horizontal Scrolling Table -->
       <div class="trends-table-wrapper">
         <table class="trends-table" id="trends-table">
           <thead>
@@ -798,9 +914,28 @@
         </table>
       </div>
       
-      <!-- Mini Chart -->
-      <div class="trends-chart">
-        <canvas id="trends-chart-canvas"></canvas>
+      <!-- ✅ BAGO: Chart with Expand Button -->
+      <div class="trends-chart-container">
+        <div class="chart-header">
+          <div class="chart-title">Trend Visualization</div>
+          <button class="chart-expand-btn" onclick="openFullscreenChart()" title="Expand chart">⛶</button>
+        </div>
+        <div class="trends-chart">
+          <canvas id="trends-chart-canvas"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ BAGO: Fullscreen Chart Modal -->
+  <div class="chart-fullscreen-modal" id="chart-fullscreen-modal">
+    <div class="chart-fullscreen-header">
+      <div class="chart-fullscreen-title" id="chart-fullscreen-title">Trend Chart</div>
+      <button class="chart-fullscreen-close" onclick="closeFullscreenChart()">×</button>
+    </div>
+    <div class="chart-fullscreen-body">
+      <div class="chart-fullscreen-canvas-wrapper">
+        <canvas id="chart-fullscreen-canvas"></canvas>
       </div>
     </div>
   </div>
@@ -822,7 +957,7 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const CODE_VERSION = '2.3';
+    const CODE_VERSION = '2.4';
     console.log('🚀 Code version:', CODE_VERSION);
     
     // ═══════════════════════════════════════
@@ -844,6 +979,9 @@
     let isDark = false;
     let resultsSheetId = null;
     let pointsSheetId = null;
+    
+    // ✅ BAGO: Chart data storage for fullscreen
+    let currentChartData = null;
 
     // ═══════════════════════════════════════
     // LOADING STATE MANAGEMENT
@@ -2154,22 +2292,35 @@
         tbody.appendChild(row);
       });
       
-      updateTrendsChart(dates, points, filteredEntries, selectedParam);
+      // ✅ Store chart data and draw
+      currentChartData = {
+        dates: dates,
+        points: points,
+        entries: filteredEntries,
+        parameter: selectedParam
+      };
+      
+      drawChart('trends-chart-canvas', currentChartData);
     }
 
-    function updateTrendsChart(dates, points, entries, parameter) {
-      const canvas = document.getElementById('trends-chart-canvas');
+    // ✅ BAGO: Unified Chart Drawing Function
+    function drawChart(canvasId, chartData) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      
       const ctx = canvas.getContext('2d');
+      const { dates, points, entries, parameter } = chartData;
       
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-      canvas.height = canvas.offsetHeight * window.devicePixelRatio;
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = canvas.offsetWidth * dpr;
+      canvas.height = canvas.offsetHeight * dpr;
+      ctx.scale(dpr, dpr);
       
       const width = canvas.offsetWidth;
       const height = canvas.offsetHeight;
-      const padding = 40;
+      const padding = 50;
       
       const allValues = [];
       points.forEach(point => {
@@ -2195,6 +2346,7 @@
       const maxValue = Math.max(...allValues);
       const valueRange = maxValue - minValue || 1;
       
+      // ✅ Grid lines
       ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--shadow-d');
       ctx.lineWidth = 1;
       
@@ -2207,21 +2359,41 @@
         
         const value = maxValue - (valueRange * i / 4);
         ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text3');
-        ctx.font = '10px Inter';
+        ctx.font = '11px Inter';
         ctx.textAlign = 'right';
-        ctx.fillText(value.toFixed(1), padding - 5, y + 3);
+        ctx.fillText(value.toFixed(1), padding - 8, y + 4);
       }
       
-      const colors = ['#0052A3', '#27ae60', '#e74c3c', '#f39c12', '#9b59b6'];
+      // ✅ X-axis labels
+      ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text3');
+      ctx.font = '10px Inter';
+      ctx.textAlign = 'center';
       
+      dates.forEach((date, index) => {
+        const x = padding + (width - 2 * padding) * (index / (dates.length - 1 || 1));
+        const dateObj = new Date(date);
+        const label = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        ctx.fillText(label, x, height - padding + 20);
+      });
+      
+      // ✅ Color palette
+      const colors = [
+        getComputedStyle(document.body).getPropertyValue('--blue'),
+        getComputedStyle(document.body).getPropertyValue('--green'),
+        getComputedStyle(document.body).getPropertyValue('--red'),
+        getComputedStyle(document.body).getPropertyValue('--orange'),
+        getComputedStyle(document.body).getPropertyValue('--purple'),
+        getComputedStyle(document.body).getPropertyValue('--teal')
+      ];
+      
+      // ✅ Draw lines for each sample point
       points.forEach((point, pointIndex) => {
         const color = colors[pointIndex % colors.length];
         ctx.strokeStyle = color;
         ctx.fillStyle = color;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 3;
         
-        ctx.beginPath();
-        let firstPoint = true;
+        const pointData = [];
         
         dates.forEach((date, dateIndex) => {
           const entry = entries.find(e => 
@@ -2233,40 +2405,106 @@
             const x = padding + (width - 2 * padding) * (dateIndex / (dates.length - 1 || 1));
             const y = padding + (height - 2 * padding) * (1 - (value - minValue) / valueRange);
             
-            if (firstPoint) {
-              ctx.moveTo(x, y);
-              firstPoint = false;
-            } else {
-              ctx.lineTo(x, y);
-            }
-            
-            ctx.beginPath();
-            ctx.arc(x, y, 4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.closePath();
+            pointData.push({ x, y, value });
           }
         });
         
-        ctx.stroke();
+        // ✅ Draw line connecting points
+        if (pointData.length > 0) {
+          ctx.beginPath();
+          ctx.moveTo(pointData[0].x, pointData[0].y);
+          
+          for (let i = 1; i < pointData.length; i++) {
+            ctx.lineTo(pointData[i].x, pointData[i].y);
+          }
+          
+          ctx.stroke();
+          
+          // ✅ Draw data points
+          pointData.forEach(point => {
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.closePath();
+            
+            // ✅ Value labels
+            ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text');
+            ctx.font = 'bold 10px Inter';
+            ctx.textAlign = 'center';
+            ctx.fillText(point.value.toFixed(1), point.x, point.y - 10);
+          });
+        }
       });
       
-      const legendY = height - 10;
+      // ✅ Legend
+      const legendY = 20;
       let legendX = padding;
+      
+      ctx.font = '12px Inter';
       
       points.forEach((point, index) => {
         const color = colors[index % colors.length];
         
         ctx.fillStyle = color;
-        ctx.fillRect(legendX, legendY - 8, 12, 12);
+        ctx.fillRect(legendX, legendY - 8, 14, 14);
         
-        ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text2');
-        ctx.font = '11px Inter';
+        ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text');
         ctx.textAlign = 'left';
-        ctx.fillText(point, legendX + 16, legendY);
+        ctx.fillText(point, legendX + 18, legendY + 3);
         
-        legendX += ctx.measureText(point).width + 30;
+        legendX += ctx.measureText(point).width + 35;
       });
     }
+
+    // ✅ BAGO: Fullscreen Chart Functions
+    function openFullscreenChart() {
+      if (!currentChartData) {
+        showToast('⚠️ No chart data available');
+        return;
+      }
+      
+      const modal = document.getElementById('chart-fullscreen-modal');
+      const title = document.getElementById('chart-fullscreen-title');
+      
+      title.textContent = `${currentChartData.parameter} Trend`;
+      
+      modal.classList.add('show');
+      
+      // ✅ Small delay to ensure canvas is rendered
+      setTimeout(() => {
+        drawChart('chart-fullscreen-canvas', currentChartData);
+      }, 100);
+    }
+
+    function closeFullscreenChart() {
+      document.getElementById('chart-fullscreen-modal').classList.remove('show');
+    }
+
+    // ✅ Redraw charts on orientation change
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        if (currentChartData) {
+          drawChart('trends-chart-canvas', currentChartData);
+          
+          const fullscreenModal = document.getElementById('chart-fullscreen-modal');
+          if (fullscreenModal.classList.contains('show')) {
+            drawChart('chart-fullscreen-canvas', currentChartData);
+          }
+        }
+      }, 200);
+    });
+
+    // ✅ Redraw charts on window resize
+    window.addEventListener('resize', () => {
+      if (currentChartData) {
+        drawChart('trends-chart-canvas', currentChartData);
+        
+        const fullscreenModal = document.getElementById('chart-fullscreen-modal');
+        if (fullscreenModal.classList.contains('show')) {
+          drawChart('chart-fullscreen-canvas', currentChartData);
+        }
+      }
+    });
 
     // ═══════════════════════════════════════
     // UI FUNCTIONS
