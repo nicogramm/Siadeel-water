@@ -488,7 +488,7 @@
     .toast.show { opacity:1; }
     
     /* ═══════════════════════════════════════
-       ✅ TRENDS MODAL STYLES
+       TRENDS MODAL STYLES
        ═══════════════════════════════════════ */
     
     .trends-modal-content {
@@ -577,7 +577,6 @@
     .trend-stable { color:var(--text2); }
     .trend-stable::after { content:' →'; font-size:10px; }
     
-    /* ✅ BAGO: Chart Container with Landscape Support */
     .trends-chart-container {
       background:var(--bg);
       border-radius:12px;
@@ -630,7 +629,7 @@
       height:100% !important;
     }
     
-    /* ✅ BAGO: Fullscreen Chart Modal */
+    /* ✅ FULLSCREEN CHART MODAL - LANDSCAPE OPTIMIZED */
     .chart-fullscreen-modal {
       position:fixed;
       top:0;
@@ -641,7 +640,6 @@
       z-index:200;
       display:none;
       flex-direction:column;
-      padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);
     }
     
     .chart-fullscreen-modal.show {
@@ -652,21 +650,22 @@
       display:flex;
       align-items:center;
       justify-content:space-between;
-      padding:16px 20px;
+      padding:12px 16px;
       background:var(--bg);
       box-shadow:var(--neu-sm);
+      flex-shrink:0;
     }
     
     .chart-fullscreen-title {
-      font-size:16px;
+      font-size:14px;
       font-weight:700;
       color:var(--text);
     }
     
     .chart-fullscreen-close {
-      width:36px;
-      height:36px;
-      border-radius:10px;
+      width:32px;
+      height:32px;
+      border-radius:8px;
       background:var(--bg);
       border:none;
       box-shadow:var(--neu-xs);
@@ -681,31 +680,129 @@
     .chart-fullscreen-body {
       flex:1;
       display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:20px;
       overflow:hidden;
     }
     
-    .chart-fullscreen-canvas-wrapper {
-      width:100%;
-      height:100%;
-      position:relative;
+    /* ✅ PORTRAIT MODE - Chart on top, table below */
+    @media screen and (orientation: portrait) {
+      .chart-fullscreen-body {
+        flex-direction:column;
+      }
+      
+      .chart-fullscreen-canvas-wrapper {
+        flex:1;
+        min-height:40%;
+        padding:16px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+      }
+      
+      .chart-fullscreen-data-wrapper {
+        flex:1;
+        overflow:auto;
+        padding:16px;
+        border-top:2px solid var(--shadow-d);
+      }
+    }
+    
+    /* ✅ LANDSCAPE MODE - Chart left, table right (side by side) */
+    @media screen and (orientation: landscape) {
+      .chart-fullscreen-body {
+        flex-direction:row;
+      }
+      
+      .chart-fullscreen-canvas-wrapper {
+        flex:1.2;
+        padding:12px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+      }
+      
+      .chart-fullscreen-data-wrapper {
+        flex:1;
+        overflow:auto;
+        padding:12px;
+        border-left:2px solid var(--shadow-d);
+      }
+      
+      .chart-fullscreen-header {
+        padding:8px 12px;
+      }
+      
+      .chart-fullscreen-title {
+        font-size:13px;
+      }
     }
     
     .chart-fullscreen-canvas-wrapper canvas {
-      width:100% !important;
-      height:100% !important;
+      max-width:100%;
+      max-height:100%;
+      width:auto !important;
+      height:auto !important;
     }
     
-    /* ✅ Landscape orientation specific styles */
+    /* ✅ Data Table in Fullscreen */
+    .fullscreen-data-table {
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      font-size:12px;
+    }
+    
+    .fullscreen-data-table th,
+    .fullscreen-data-table td {
+      padding:8px 10px;
+      text-align:center;
+      border-bottom:1px solid var(--shadow-d);
+      white-space:nowrap;
+    }
+    
+    .fullscreen-data-table th {
+      background:var(--blue);
+      color:white;
+      font-weight:700;
+      position:sticky;
+      top:0;
+      z-index:2;
+    }
+    
+    .fullscreen-data-table th:first-child {
+      text-align:left;
+      position:sticky;
+      left:0;
+      z-index:3;
+    }
+    
+    .fullscreen-data-table td:first-child {
+      text-align:left;
+      font-weight:600;
+      background:var(--bg);
+      position:sticky;
+      left:0;
+      z-index:1;
+      box-shadow:2px 0 4px rgba(0,0,0,0.1);
+    }
+    
+    .fullscreen-data-table td.value-cell {
+      font-weight:600;
+      color:var(--blue);
+    }
+    
+    .fullscreen-data-table td.empty-cell {
+      color:var(--text3);
+      font-style:italic;
+    }
+    
     @media screen and (orientation: landscape) {
-      .chart-fullscreen-body {
-        padding:10px 20px;
+      .fullscreen-data-table {
+        font-size:11px;
       }
       
-      .trends-chart {
-        height:300px;
+      .fullscreen-data-table th,
+      .fullscreen-data-table td {
+        padding:6px 8px;
       }
     }
   </style>
@@ -871,9 +968,7 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════
-       ✅ TRENDS MODAL (Updated with Expand Button)
-       ═══════════════════════════════════════ -->
+  <!-- Trends Modal -->
   <div class="modal" id="trends-modal">
     <div class="modal-content trends-modal-content">
       <div class="modal-header">
@@ -914,7 +1009,6 @@
         </table>
       </div>
       
-      <!-- ✅ BAGO: Chart with Expand Button -->
       <div class="trends-chart-container">
         <div class="chart-header">
           <div class="chart-title">Trend Visualization</div>
@@ -927,7 +1021,7 @@
     </div>
   </div>
 
-  <!-- ✅ BAGO: Fullscreen Chart Modal -->
+  <!-- ✅ Fullscreen Chart Modal with Data Table -->
   <div class="chart-fullscreen-modal" id="chart-fullscreen-modal">
     <div class="chart-fullscreen-header">
       <div class="chart-fullscreen-title" id="chart-fullscreen-title">Trend Chart</div>
@@ -936,6 +1030,17 @@
     <div class="chart-fullscreen-body">
       <div class="chart-fullscreen-canvas-wrapper">
         <canvas id="chart-fullscreen-canvas"></canvas>
+      </div>
+      <div class="chart-fullscreen-data-wrapper">
+        <table class="fullscreen-data-table" id="fullscreen-data-table">
+          <thead>
+            <tr id="fullscreen-table-header">
+              <th>Sample Point</th>
+            </tr>
+          </thead>
+          <tbody id="fullscreen-table-body">
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -957,7 +1062,7 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const CODE_VERSION = '2.4';
+    const CODE_VERSION = '2.6';
     console.log('🚀 Code version:', CODE_VERSION);
     
     // ═══════════════════════════════════════
@@ -979,8 +1084,6 @@
     let isDark = false;
     let resultsSheetId = null;
     let pointsSheetId = null;
-    
-    // ✅ BAGO: Chart data storage for fullscreen
     let currentChartData = null;
 
     // ═══════════════════════════════════════
@@ -1484,9 +1587,6 @@
       detailsContainer.innerHTML = '';
       
       dayEntries.forEach((entry, index) => {
-        console.log(`🔍 Processing entry ${index + 1}:`, entry);
-        console.log(`🌤️ Weather data raw:`, entry['Picture Weather']);
-        
         const entryCard = document.createElement('div');
         entryCard.style.cssText = `
           background: var(--bg);
@@ -1497,20 +1597,14 @@
         `;
         
         let weatherData = entry['Picture Weather'];
-        console.log('🔍 Weather data type:', typeof weatherData);
-        console.log('🔍 Weather data value:', weatherData);
         
         if (weatherData && weatherData !== 'N/A' && weatherData.trim() !== '') {
           try {
             weatherData = JSON.parse(weatherData);
-            console.log('✅ Weather parsed successfully:', weatherData);
           } catch (e) {
-            console.error('❌ Weather parse error:', e);
-            console.log('📝 Raw weather string:', weatherData);
             weatherData = null;
           }
         } else {
-          console.warn('⚠️ No weather data or N/A');
           weatherData = null;
         }
         
@@ -1586,7 +1680,6 @@
       });
       
       window.currentDayEntries = dayEntries;
-      console.log('✅ displayEntries() completed');
     }
 
     function renderWeatherHTML(weatherData) {
@@ -1716,10 +1809,6 @@
         if (data.values && data.values.length > 1) {
           const headers = data.values[0];
           
-          console.log('📋 RAW HEADERS from API:', headers);
-          console.log('📋 Header count:', headers.length);
-          console.log('📋 Column L (index 11):', headers[11]);
-          
           entries = data.values.slice(1).map((row, index) => {
             const obj = { _rowIndex: index + 2 };
             
@@ -1734,13 +1823,6 @@
             
             return obj;
           });
-          
-          if (entries.length > 0) {
-            console.log('🔍 First entry object:', entries[0]);
-            console.log('🔍 All keys:', Object.keys(entries[0]));
-            console.log('🔍 Picture Weather key exists?', 'Picture Weather' in entries[0]);
-            console.log('🔍 Picture Weather value:', entries[0]['Picture Weather']);
-          }
           
           renderCalendar();
           showToast(`✅ Loaded ${entries.length} entries`);
@@ -1789,13 +1871,9 @@
       
       let weatherString = 'N/A';
       try {
-        console.log('🌤️ Fetching weather...');
         const weatherData = await getCurrentWeather();
         if (weatherData) {
           weatherString = JSON.stringify(weatherData);
-          console.log('✅ Weather captured:', weatherString);
-        } else {
-          console.warn('⚠️ No weather data available');
         }
       } catch (err) {
         console.error('⚠️ Weather error (non-critical):', err);
@@ -1805,9 +1883,7 @@
       let imageUrl = '';
       if (imageFile) {
         try {
-          console.log('📷 Processing image...');
           imageUrl = await resizeAndUploadImage(imageFile);
-          console.log('✅ Image processed');
         } catch (err) {
           console.error('❌ Image error:', err);
         }
@@ -1820,9 +1896,6 @@
       const rowData = [
         id, date, point, desc, pH, conductivity, chlorine, iron, hardness, turbidity, imageUrl, weatherString
       ];
-      
-      console.log('📤 Saving row data:', rowData);
-      console.log('🔍 Weather in row data:', rowData[11]);
       
       try {
         if (isEditMode) {
@@ -1838,13 +1911,8 @@
             body: JSON.stringify({ values: [rowData] })
           });
           
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error('❌ Update failed:', errorText);
-            throw new Error(`HTTP ${response.status}`);
-          }
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
           
-          console.log('✅ Entry updated successfully');
           showToast('✅ Entry updated!');
           
         } else {
@@ -1859,29 +1927,19 @@
             body: JSON.stringify({ values: [rowData] })
           });
           
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error('❌ Save failed:', errorText);
-            throw new Error(`HTTP ${response.status}`);
-          }
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
           
-          console.log('✅ Entry saved successfully');
           showToast('✅ Entry saved!');
         }
         
         closeAddModal();
         document.getElementById('entry-form').reset();
         
-        console.log('🔄 Reloading entries...');
         await loadEntries();
-        console.log('✅ Entries reloaded, count:', entries.length);
         
-        console.log('📅 Selecting date:', date);
         const dayEntries = entries.filter(e => e.Date === date);
-        console.log('📊 Found entries for date:', dayEntries.length);
         
         if (dayEntries.length > 0) {
-          console.log('🔍 First entry weather:', dayEntries[0]['Picture Weather']);
           displayEntries(dayEntries);
           
           document.querySelectorAll('.calendar-day').forEach(day => {
@@ -1891,8 +1949,6 @@
               day.classList.add('selected');
             }
           });
-        } else {
-          console.warn('⚠️ No entries found for date:', date);
         }
         
       } catch (err) {
@@ -1962,8 +2018,6 @@
       try {
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`;
         
-        console.log('🗑️ Deleting row:', rowIndex, 'from sheet ID:', resultsSheetId);
-        
         const response = await fetch(url, {
           method: 'POST',
           headers: {
@@ -1984,14 +2038,7 @@
           })
         });
         
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('❌ Delete error response:', errorText);
-          throw new Error('Delete failed');
-        }
-        
-        const result = await response.json();
-        console.log('✅ Delete success:', result);
+        if (!response.ok) throw new Error('Delete failed');
         
         showToast('✅ Entry deleted!');
         document.getElementById('entry-details').innerHTML = '';
@@ -2072,18 +2119,13 @@
     // WEATHER FUNCTIONS
     // ═══════════════════════════════════════
     async function getCurrentWeather() {
-      console.log('🌤️ getCurrentWeather() — START');
-      
       if (!WEATHER_API_KEY || WEATHER_API_KEY === 'YOUR_OPENWEATHER_API_KEY') {
-        console.warn('⚠️ No API key configured');
         return null;
       }
       
       let lat, lon;
       
       try {
-        console.log('📍 Requesting geolocation permission...');
-        
         const position = await new Promise((resolve, reject) => {
           if (!navigator.geolocation) {
             reject(new Error('Geolocation not supported'));
@@ -2091,14 +2133,8 @@
           }
           
           navigator.geolocation.getCurrentPosition(
-            (pos) => {
-              console.log('✅ Geolocation granted:', pos.coords.latitude, pos.coords.longitude);
-              resolve(pos);
-            },
-            (error) => {
-              console.warn('⚠️ Geolocation denied or failed:', error.message);
-              reject(error);
-            },
+            (pos) => resolve(pos),
+            (error) => reject(error),
             { 
               enableHighAccuracy: false,
               timeout: 8000,
@@ -2111,7 +2147,6 @@
         lon = position.coords.longitude;
         
       } catch (geoError) {
-        console.warn('⚠️ Using fallback location (Manila)');
         lat = 14.5995;
         lon = 120.9842;
       }
@@ -2119,18 +2154,11 @@
       try {
         const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`;
         
-        console.log('🌐 Fetching weather from:', url);
-        
         const response = await fetch(url);
         
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('❌ Weather API error:', response.status, errorText);
-          throw new Error(`Weather API error: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Weather API error: ${response.status}`);
         
         const data = await response.json();
-        console.log('✅ Weather data received:', data);
         
         const weatherResult = {
           condition: data.weather[0].main,
@@ -2149,7 +2177,6 @@
           timestamp: new Date().toISOString()
         };
         
-        console.log('✅ Weather object created:', weatherResult);
         return weatherResult;
         
       } catch (apiError) {
@@ -2192,7 +2219,7 @@
     }
 
     // ═══════════════════════════════════════
-    // ✅ TRENDS MODAL FUNCTIONS
+    // TRENDS MODAL FUNCTIONS
     // ═══════════════════════════════════════
     
     function openTrendsModal() {
@@ -2292,7 +2319,6 @@
         tbody.appendChild(row);
       });
       
-      // ✅ Store chart data and draw
       currentChartData = {
         dates: dates,
         points: points,
@@ -2303,7 +2329,6 @@
       drawChart('trends-chart-canvas', currentChartData);
     }
 
-    // ✅ BAGO: Unified Chart Drawing Function
     function drawChart(canvasId, chartData) {
       const canvas = document.getElementById(canvasId);
       if (!canvas) return;
@@ -2346,7 +2371,6 @@
       const maxValue = Math.max(...allValues);
       const valueRange = maxValue - minValue || 1;
       
-      // ✅ Grid lines
       ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--shadow-d');
       ctx.lineWidth = 1;
       
@@ -2364,7 +2388,6 @@
         ctx.fillText(value.toFixed(1), padding - 8, y + 4);
       }
       
-      // ✅ X-axis labels
       ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text3');
       ctx.font = '10px Inter';
       ctx.textAlign = 'center';
@@ -2376,7 +2399,6 @@
         ctx.fillText(label, x, height - padding + 20);
       });
       
-      // ✅ Color palette
       const colors = [
         getComputedStyle(document.body).getPropertyValue('--blue'),
         getComputedStyle(document.body).getPropertyValue('--green'),
@@ -2386,7 +2408,6 @@
         getComputedStyle(document.body).getPropertyValue('--teal')
       ];
       
-      // ✅ Draw lines for each sample point
       points.forEach((point, pointIndex) => {
         const color = colors[pointIndex % colors.length];
         ctx.strokeStyle = color;
@@ -2409,7 +2430,6 @@
           }
         });
         
-        // ✅ Draw line connecting points
         if (pointData.length > 0) {
           ctx.beginPath();
           ctx.moveTo(pointData[0].x, pointData[0].y);
@@ -2420,14 +2440,12 @@
           
           ctx.stroke();
           
-          // ✅ Draw data points
           pointData.forEach(point => {
             ctx.beginPath();
             ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
             ctx.fill();
             ctx.closePath();
             
-            // ✅ Value labels
             ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text');
             ctx.font = 'bold 10px Inter';
             ctx.textAlign = 'center';
@@ -2436,7 +2454,6 @@
         }
       });
       
-      // ✅ Legend
       const legendY = 20;
       let legendX = padding;
       
@@ -2456,7 +2473,7 @@
       });
     }
 
-    // ✅ BAGO: Fullscreen Chart Functions
+    // ✅ FULLSCREEN CHART FUNCTIONS
     function openFullscreenChart() {
       if (!currentChartData) {
         showToast('⚠️ No chart data available');
@@ -2470,9 +2487,9 @@
       
       modal.classList.add('show');
       
-      // ✅ Small delay to ensure canvas is rendered
       setTimeout(() => {
         drawChart('chart-fullscreen-canvas', currentChartData);
+        buildFullscreenDataTable(currentChartData);
       }, 100);
     }
 
@@ -2480,7 +2497,56 @@
       document.getElementById('chart-fullscreen-modal').classList.remove('show');
     }
 
-    // ✅ Redraw charts on orientation change
+    // ✅ BUILD DATA TABLE IN FULLSCREEN
+    function buildFullscreenDataTable(chartData) {
+      const { dates, points, entries, parameter } = chartData;
+      
+      const headerRow = document.getElementById('fullscreen-table-header');
+      headerRow.innerHTML = '<th>Sample Point</th>';
+      
+      dates.forEach(date => {
+        const th = document.createElement('th');
+        const dateObj = new Date(date);
+        th.textContent = dateObj.toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric' 
+        });
+        headerRow.appendChild(th);
+      });
+      
+      const tbody = document.getElementById('fullscreen-table-body');
+      tbody.innerHTML = '';
+      
+      points.forEach(point => {
+        const row = document.createElement('tr');
+        
+        const pointCell = document.createElement('td');
+        pointCell.textContent = point;
+        row.appendChild(pointCell);
+        
+        dates.forEach(date => {
+          const entry = entries.find(e => 
+            e['Sample Point'] === point && e.Date === date
+          );
+          
+          const cell = document.createElement('td');
+          
+          if (entry && entry[parameter]) {
+            const value = parseFloat(entry[parameter]);
+            cell.className = 'value-cell';
+            cell.textContent = value.toFixed(2);
+          } else {
+            cell.className = 'empty-cell';
+            cell.textContent = '—';
+          }
+          
+          row.appendChild(cell);
+        });
+        
+        tbody.appendChild(row);
+      });
+    }
+
     window.addEventListener('orientationchange', () => {
       setTimeout(() => {
         if (currentChartData) {
@@ -2494,7 +2560,6 @@
       }, 200);
     });
 
-    // ✅ Redraw charts on window resize
     window.addEventListener('resize', () => {
       if (currentChartData) {
         drawChart('trends-chart-canvas', currentChartData);
