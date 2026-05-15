@@ -33,7 +33,6 @@
     *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent }
     html,body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; transition:background 0.4s,color 0.4s }
     
-    /* ✅ BAGO: Loading Overlay */
     .loading-overlay {
       position: fixed;
       top: 0;
@@ -90,14 +89,23 @@
       font-size:20px; font-weight:700; color:white;
       letter-spacing:0.5px; position:relative; z-index:2;
     }
-    .add-btn {
+    
+    /* ✅ BAGO: Header Actions Group */
+    .header-actions {
+      display:flex;
+      gap:8px;
+      position:relative;
+      z-index:2;
+    }
+    
+    .trends-btn, .add-btn {
       width:36px; height:36px; border-radius:10px;
       background:rgba(255,255,255,0.15); border:none;
       display:flex; align-items:center; justify-content:center;
       cursor:pointer; transition:background 0.2s; color:white;
-      position:relative; z-index:2; font-size:24px; font-weight:300;
+      font-size:20px; font-weight:300;
     }
-    .add-btn:active { background:rgba(255,255,255,0.25); }
+    .trends-btn:active, .add-btn:active { background:rgba(255,255,255,0.25); }
     
     .results-content {
       flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
@@ -478,10 +486,112 @@
       pointer-events:none; transition:opacity 0.3s; max-width:90%;
     }
     .toast.show { opacity:1; }
+    
+    /* ═══════════════════════════════════════
+       ✅ TRENDS MODAL STYLES
+       ═══════════════════════════════════════ */
+    
+    .trends-modal-content {
+      max-height:90vh;
+      display:flex;
+      flex-direction:column;
+    }
+    
+    .trends-filters {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-bottom:16px;
+      padding-bottom:16px;
+      border-bottom:1px solid var(--shadow-d);
+    }
+    
+    .trends-table-wrapper {
+      overflow-x:auto;
+      overflow-y:auto;
+      max-height:400px;
+      border-radius:12px;
+      box-shadow:var(--neu-in);
+      margin-bottom:16px;
+      -webkit-overflow-scrolling:touch;
+    }
+    
+    .trends-table {
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      font-size:13px;
+    }
+    
+    .trends-table th,
+    .trends-table td {
+      padding:10px 14px;
+      text-align:center;
+      border-bottom:1px solid var(--shadow-d);
+      white-space:nowrap;
+      background:var(--bg);
+    }
+    
+    .trends-table th {
+      font-weight:700;
+      color:white;
+      position:sticky;
+      top:0;
+      z-index:2;
+      background:var(--blue);
+    }
+    
+    .trends-table .sticky-col {
+      position:sticky;
+      left:0;
+      z-index:3;
+      background:var(--blue);
+      font-weight:700;
+      text-align:left;
+      min-width:120px;
+    }
+    
+    .trends-table tbody .sticky-col {
+      background:var(--bg);
+      color:var(--text);
+      font-weight:600;
+      box-shadow:2px 0 4px rgba(0,0,0,0.1);
+    }
+    
+    .trends-table td.value-cell {
+      font-weight:600;
+      color:var(--blue);
+    }
+    
+    .trends-table td.empty-cell {
+      color:var(--text3);
+      font-style:italic;
+    }
+    
+    .trend-up { color:var(--green); }
+    .trend-up::after { content:' ↗'; font-size:10px; }
+    
+    .trend-down { color:var(--red); }
+    .trend-down::after { content:' ↘'; font-size:10px; }
+    
+    .trend-stable { color:var(--text2); }
+    .trend-stable::after { content:' →'; font-size:10px; }
+    
+    .trends-chart {
+      background:var(--bg);
+      border-radius:12px;
+      box-shadow:var(--neu-xs);
+      padding:16px;
+      height:200px;
+    }
+    
+    .trends-chart canvas {
+      width:100% !important;
+      height:100% !important;
+    }
   </style>
 </head>
 <body>
-  <!-- ✅ BAGO: Loading Overlay -->
   <div class="loading-overlay" id="loading-overlay">
     <div class="loading-spinner"></div>
   </div>
@@ -495,7 +605,12 @@
         </svg>
       </button>
       <h1>Test Results</h1>
-      <button class="add-btn" onclick="openAddModal()">+</button>
+      
+      <!-- ✅ BAGO: Header Actions Group -->
+      <div class="header-actions">
+        <button class="trends-btn" onclick="openTrendsModal()">📊</button>
+        <button class="add-btn" onclick="openAddModal()">+</button>
+      </div>
     </div>
 
     <div class="results-content">
@@ -638,6 +753,58 @@
     </div>
   </div>
 
+  <!-- ═══════════════════════════════════════
+       ✅ BAGO: TRENDS MODAL
+       ═══════════════════════════════════════ -->
+  <div class="modal" id="trends-modal">
+    <div class="modal-content trends-modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Parameter Trends</div>
+        <button class="modal-close" onclick="closeTrendsModal()">×</button>
+      </div>
+      
+      <!-- Filters -->
+      <div class="trends-filters">
+        <div class="form-group">
+          <label class="form-label">Sample Point</label>
+          <select class="form-select" id="trends-point" onchange="updateTrendsTable()">
+            <option value="">All Points</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Parameter</label>
+          <select class="form-select" id="trends-parameter" onchange="updateTrendsTable()">
+            <option value="pH">pH</option>
+            <option value="Conductivity">Conductivity</option>
+            <option value="Free Chlorine (FRC)">Free Chlorine</option>
+            <option value="Iron">Iron</option>
+            <option value="Hardness">Hardness</option>
+            <option value="Turbidity">Turbidity</option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- Horizontal Scrolling Table -->
+      <div class="trends-table-wrapper">
+        <table class="trends-table" id="trends-table">
+          <thead>
+            <tr id="trends-header-row">
+              <th class="sticky-col">Sample Point</th>
+            </tr>
+          </thead>
+          <tbody id="trends-body">
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Mini Chart -->
+      <div class="trends-chart">
+        <canvas id="trends-chart-canvas"></canvas>
+      </div>
+    </div>
+  </div>
+
   <!-- Confirm Delete Modal -->
   <div class="confirm-modal" id="confirm-modal">
     <div class="confirm-content">
@@ -655,8 +822,9 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const CODE_VERSION = '2.2';  // ← ADD THIS LINE
-  console.log('🚀 Code version:', CODE_VERSION);
+    const CODE_VERSION = '2.3';
+    console.log('🚀 Code version:', CODE_VERSION);
+    
     // ═══════════════════════════════════════
     // CONFIGURATION
     // ═══════════════════════════════════════
@@ -674,10 +842,12 @@
     let currentPoint = null;
     let token = null;
     let isDark = false;
-    let resultsSheetId = null; // ✅ BAGO: Store actual sheet ID
-    let pointsSheetId = null;  // ✅ BAGO: Store points sheet ID
+    let resultsSheetId = null;
+    let pointsSheetId = null;
 
-    // ✅ BAGO: Loading State Management
+    // ═══════════════════════════════════════
+    // LOADING STATE MANAGEMENT
+    // ═══════════════════════════════════════
     function showLoading() {
       document.getElementById('loading-overlay').classList.add('show');
     }
@@ -687,7 +857,7 @@
     }
 
     // ═══════════════════════════════════════
-    // ✅ CRITICAL FIX: Get Actual Sheet IDs
+    // GET SHEET IDs
     // ═══════════════════════════════════════
     async function getSheetIds() {
       if (!token) return;
@@ -820,7 +990,6 @@
       
       showLoading();
       
-      // ✅ CRITICAL: Get sheet IDs first
       await getSheetIds();
       
       renderCalendar();
@@ -1038,7 +1207,7 @@
             requests: [{
               deleteDimension: {
                 range: {
-                  sheetId: pointsSheetId, // ✅ FIX: Use actual sheet ID
+                  sheetId: pointsSheetId,
                   dimension: 'ROWS',
                   startIndex: rowIndex - 1,
                   endIndex: rowIndex
@@ -1166,122 +1335,121 @@
     }
 
     function displayEntries(dayEntries) {
-  console.log('🎨 displayEntries() called with', dayEntries.length, 'entries');
-  
-  if (dayEntries.length === 0) {
-    document.getElementById('entry-details').innerHTML = '';
-    return;
-  }
-  
-  const detailsContainer = document.getElementById('entry-details');
-  detailsContainer.innerHTML = '';
-  
-  dayEntries.forEach((entry, index) => {
-    console.log(`🔍 Processing entry ${index + 1}:`, entry);
-    console.log(`🌤️ Weather data raw:`, entry['Picture Weather']);
-    
-    const entryCard = document.createElement('div');
-    entryCard.style.cssText = `
-      background: var(--bg);
-      border-radius: 18px;
-      box-shadow: var(--neu-out);
-      padding: 20px;
-      margin-bottom: 20px;
-    `;
-    
-    // ✅ CRITICAL FIX: Parse weather data properly
-    let weatherData = entry['Picture Weather'];
-    console.log('🔍 Weather data type:', typeof weatherData);
-    console.log('🔍 Weather data value:', weatherData);
-    
-    if (weatherData && weatherData !== 'N/A' && weatherData.trim() !== '') {
-      try {
-        weatherData = JSON.parse(weatherData);
-        console.log('✅ Weather parsed successfully:', weatherData);
-      } catch (e) {
-        console.error('❌ Weather parse error:', e);
-        console.log('📝 Raw weather string:', weatherData);
-        weatherData = null;
+      console.log('🎨 displayEntries() called with', dayEntries.length, 'entries');
+      
+      if (dayEntries.length === 0) {
+        document.getElementById('entry-details').innerHTML = '';
+        return;
       }
-    } else {
-      console.warn('⚠️ No weather data or N/A');
-      weatherData = null;
+      
+      const detailsContainer = document.getElementById('entry-details');
+      detailsContainer.innerHTML = '';
+      
+      dayEntries.forEach((entry, index) => {
+        console.log(`🔍 Processing entry ${index + 1}:`, entry);
+        console.log(`🌤️ Weather data raw:`, entry['Picture Weather']);
+        
+        const entryCard = document.createElement('div');
+        entryCard.style.cssText = `
+          background: var(--bg);
+          border-radius: 18px;
+          box-shadow: var(--neu-out);
+          padding: 20px;
+          margin-bottom: 20px;
+        `;
+        
+        let weatherData = entry['Picture Weather'];
+        console.log('🔍 Weather data type:', typeof weatherData);
+        console.log('🔍 Weather data value:', weatherData);
+        
+        if (weatherData && weatherData !== 'N/A' && weatherData.trim() !== '') {
+          try {
+            weatherData = JSON.parse(weatherData);
+            console.log('✅ Weather parsed successfully:', weatherData);
+          } catch (e) {
+            console.error('❌ Weather parse error:', e);
+            console.log('📝 Raw weather string:', weatherData);
+            weatherData = null;
+          }
+        } else {
+          console.warn('⚠️ No weather data or N/A');
+          weatherData = null;
+        }
+        
+        entryCard.innerHTML = `
+          <div class="entry-header" style="margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--shadow-d);">
+            <div class="entry-date" style="font-size:16px; font-weight:700; color:var(--text);">
+              ${new Date(entry.Date).toLocaleDateString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+              })}
+              ${dayEntries.length > 1 ? `<span style="color:var(--text3); font-size:12px; margin-left:8px;">Entry ${index + 1} of ${dayEntries.length}</span>` : ''}
+            </div>
+          </div>
+          
+          ${weatherData ? `
+            <div class="entry-weather">
+              ${renderWeatherHTML(weatherData)}
+            </div>
+          ` : '<div style="padding:12px; background:var(--bg2); border-radius:12px; margin-bottom:16px; text-align:center; color:var(--text3); font-size:13px;">No weather data available</div>'}
+          
+          <div class="entry-actions" style="display:flex; gap:10px; margin-bottom:16px;">
+            <button class="entry-btn edit" onclick='editEntryByIndex(${index})'>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline-block; vertical-align:middle; margin-right:6px;">
+                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Edit
+            </button>
+            <button class="entry-btn delete" onclick='confirmDeleteByIndex(${index})'>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline-block; vertical-align:middle; margin-right:6px;">
+                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Delete
+            </button>
+          </div>
+          
+          <div class="entry-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+            <div class="entry-item">
+              <div class="entry-label">Sample Point</div>
+              <div class="entry-value" style="font-size:14px">${entry['Sample Point'] || '—'}</div>
+            </div>
+            <div class="entry-item">
+              <div class="entry-label">pH</div>
+              <div class="entry-value">${entry.pH || '—'}</div>
+            </div>
+            <div class="entry-item">
+              <div class="entry-label">Conductivity</div>
+              <div class="entry-value" style="font-size:14px">${entry.Conductivity || '—'} µS/cm</div>
+            </div>
+            <div class="entry-item">
+              <div class="entry-label">Free Chlorine</div>
+              <div class="entry-value" style="font-size:14px">${entry['Free Chlorine (FRC)'] || '—'} mg/L</div>
+            </div>
+            <div class="entry-item">
+              <div class="entry-label">Iron</div>
+              <div class="entry-value" style="font-size:14px">${entry.Iron || '—'} mg/L</div>
+            </div>
+            <div class="entry-item">
+              <div class="entry-label">Hardness</div>
+              <div class="entry-value" style="font-size:14px">${entry.Hardness || '—'} mg/L</div>
+            </div>
+            <div class="entry-item">
+              <div class="entry-label">Turbidity</div>
+              <div class="entry-value" style="font-size:14px">${entry.Turbidity || '—'} NTU</div>
+            </div>
+          </div>
+          
+          ${entry.Picture ? `
+            <img class="entry-image" src="${entry.Picture}" alt="Test photo" style="display:block; width:100%; border-radius:12px; box-shadow:var(--neu-sm);">
+          ` : ''}
+        `;
+        
+        detailsContainer.appendChild(entryCard);
+      });
+      
+      window.currentDayEntries = dayEntries;
+      console.log('✅ displayEntries() completed');
     }
-    
-    entryCard.innerHTML = `
-      <div class="entry-header" style="margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--shadow-d);">
-        <div class="entry-date" style="font-size:16px; font-weight:700; color:var(--text);">
-          ${new Date(entry.Date).toLocaleDateString('en-US', {
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-          })}
-          ${dayEntries.length > 1 ? `<span style="color:var(--text3); font-size:12px; margin-left:8px;">Entry ${index + 1} of ${dayEntries.length}</span>` : ''}
-        </div>
-      </div>
-      
-      ${weatherData ? `
-        <div class="entry-weather">
-          ${renderWeatherHTML(weatherData)}
-        </div>
-      ` : '<div style="padding:12px; background:var(--bg2); border-radius:12px; margin-bottom:16px; text-align:center; color:var(--text3); font-size:13px;">No weather data available</div>'}
-      
-      <div class="entry-actions" style="display:flex; gap:10px; margin-bottom:16px;">
-        <button class="entry-btn edit" onclick='editEntryByIndex(${index})'>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline-block; vertical-align:middle; margin-right:6px;">
-            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Edit
-        </button>
-        <button class="entry-btn delete" onclick='confirmDeleteByIndex(${index})'>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline-block; vertical-align:middle; margin-right:6px;">
-            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Delete
-        </button>
-      </div>
-      
-      <div class="entry-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
-        <div class="entry-item">
-          <div class="entry-label">Sample Point</div>
-          <div class="entry-value" style="font-size:14px">${entry['Sample Point'] || '—'}</div>
-        </div>
-        <div class="entry-item">
-          <div class="entry-label">pH</div>
-          <div class="entry-value">${entry.pH || '—'}</div>
-        </div>
-        <div class="entry-item">
-          <div class="entry-label">Conductivity</div>
-          <div class="entry-value" style="font-size:14px">${entry.Conductivity || '—'} µS/cm</div>
-        </div>
-        <div class="entry-item">
-          <div class="entry-label">Free Chlorine</div>
-          <div class="entry-value" style="font-size:14px">${entry['Free Chlorine (FRC)'] || '—'} mg/L</div>
-        </div>
-        <div class="entry-item">
-          <div class="entry-label">Iron</div>
-          <div class="entry-value" style="font-size:14px">${entry.Iron || '—'} mg/L</div>
-        </div>
-        <div class="entry-item">
-          <div class="entry-label">Hardness</div>
-          <div class="entry-value" style="font-size:14px">${entry.Hardness || '—'} mg/L</div>
-        </div>
-        <div class="entry-item">
-          <div class="entry-label">Turbidity</div>
-          <div class="entry-value" style="font-size:14px">${entry.Turbidity || '—'} NTU</div>
-        </div>
-      </div>
-      
-      ${entry.Picture ? `
-        <img class="entry-image" src="${entry.Picture}" alt="Test photo" style="display:block; width:100%; border-radius:12px; box-shadow:var(--neu-sm);">
-      ` : ''}
-    `;
-    
-    detailsContainer.appendChild(entryCard);
-  });
-  
-  window.currentDayEntries = dayEntries;
-  console.log('✅ displayEntries() completed');
-}
 
     function renderWeatherHTML(weatherData) {
       if (!weatherData || weatherData === 'N/A') {
@@ -1389,226 +1557,213 @@
     // DATA FUNCTIONS
     // ═══════════════════════════════════════
     async function loadEntries() {
-  if (!token) return;
-  
-  try {
-    // ✅ Explicitly request A1:L (with row limit for safety)
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A1:L1000`;
-    
-    const response = await fetch(url, {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
-    
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error('Token expired');
-      }
-      throw new Error('Network error');
-    }
-    
-    const data = await response.json();
-    
-    if (data.values && data.values.length > 1) {
-      const headers = data.values[0];
+      if (!token) return;
       
-      // ✅ CRITICAL: Log headers to verify
-      console.log('📋 RAW HEADERS from API:', headers);
-      console.log('📋 Header count:', headers.length);
-      console.log('📋 Column L (index 11):', headers[11]);
-      
-      entries = data.values.slice(1).map((row, index) => {
-        const obj = { _rowIndex: index + 2 };
+      try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A1:L1000`;
         
-        // ✅ CRITICAL FIX: Map exactly 12 columns (indices 0-11)
-        for (let i = 0; i < 12; i++) {
-          const header = headers[i];
-          const value = row[i] || '';
-          
-          if (header) {  // Only map if header exists
-            obj[header] = value;
+        const response = await fetch(url, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('Token expired');
           }
+          throw new Error('Network error');
         }
         
-        return obj;
-      });
-      
-      // ✅ DIAGNOSTIC: Verify first entry
-      if (entries.length > 0) {
-        console.log('🔍 First entry object:', entries[0]);
-        console.log('🔍 All keys:', Object.keys(entries[0]));
-        console.log('🔍 Picture Weather key exists?', 'Picture Weather' in entries[0]);
-        console.log('🔍 Picture Weather value:', entries[0]['Picture Weather']);
-      }
-      
-      renderCalendar();
-      showToast(`✅ Loaded ${entries.length} entries`);
-    } else {
-      showToast('ℹ️ No entries yet');
-    }
-  } catch (err) {
-    console.error('Load entries error:', err);
-    if (err.message === 'Token expired') {
-      showToast('❌ Session expired');
-      setTimeout(() => window.location.href = 'index.html', 2000);
-    } else {
-      showToast('❌ Failed to load');
-    }
-  }
-}
-
-
-
-
-  async function submitEntry(event) {
-  event.preventDefault();
-  
-  if (!token) {
-    showToast('❌ Not authenticated');
-    return;
-  }
-  
-  const date = document.getElementById('input-date').value;
-  const point = document.getElementById('input-point').value;
-  
-  if (!date || !point) {
-    showToast('⚠️ Date and Sample Point are required');
-    return;
-  }
-  
-  const editRowIndex = document.getElementById('edit-row-index').value;
-  const isEditMode = editRowIndex !== '';
-  
-  showLoading();
-  
-  const desc = document.getElementById('input-desc').value;
-  const pH = document.getElementById('input-ph').value;
-  const conductivity = document.getElementById('input-conductivity').value;
-  const chlorine = document.getElementById('input-chlorine').value;
-  const iron = document.getElementById('input-iron').value;
-  const hardness = document.getElementById('input-hardness').value;
-  const turbidity = document.getElementById('input-turbidity').value;
-  
-  // ✅ Weather fetch with fallback
-  let weatherString = 'N/A';
-  try {
-    console.log('🌤️ Fetching weather...');
-    const weatherData = await getCurrentWeather();
-    if (weatherData) {
-      weatherString = JSON.stringify(weatherData);
-      console.log('✅ Weather captured:', weatherString);
-    } else {
-      console.warn('⚠️ No weather data available');
-    }
-  } catch (err) {
-    console.error('⚠️ Weather error (non-critical):', err);
-  }
-  
-  // Process image
-  const imageFile = document.getElementById('input-image').files[0];
-  let imageUrl = '';
-  if (imageFile) {
-    try {
-      console.log('📷 Processing image...');
-      imageUrl = await resizeAndUploadImage(imageFile);
-      console.log('✅ Image processed');
-    } catch (err) {
-      console.error('❌ Image error:', err);
-    }
-  } else if (isEditMode && currentEntry) {
-    imageUrl = currentEntry.Picture || '';
-  }
-  
-  const id = isEditMode ? currentEntry.ID : Date.now();
-  
-  const rowData = [
-    id, date, point, desc, pH, conductivity, chlorine, iron, hardness, turbidity, imageUrl, weatherString
-  ];
-  
-  console.log('📤 Saving row data:', rowData);
-  console.log('🔍 Weather in row data:', rowData[11]);
-  
-  try {
-    if (isEditMode) {
-      const range = `${SHEET_NAME}!A${editRowIndex}:L${editRowIndex}`;
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
-      
-      const response = await fetch(url, {
-        method: 'PUT',
-        headers: {
-          'Authorization': 'Bearer ' + token,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ values: [rowData] })
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Update failed:', errorText);
-        throw new Error(`HTTP ${response.status}`);
-      }
-      
-      console.log('✅ Entry updated successfully');
-      showToast('✅ Entry updated!');
-      
-    } else {
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:L:append?valueInputOption=USER_ENTERED`;
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + token,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ values: [rowData] })
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Save failed:', errorText);
-        throw new Error(`HTTP ${response.status}`);
-      }
-      
-      console.log('✅ Entry saved successfully');
-      showToast('✅ Entry saved!');
-    }
-    
-    // ✅ CRITICAL FIX: Close modal first, then reload and display
-    closeAddModal();
-    document.getElementById('entry-form').reset();
-    
-    // ✅ Reload entries from Google Sheets
-    console.log('🔄 Reloading entries...');
-    await loadEntries();
-    console.log('✅ Entries reloaded, count:', entries.length);
-    
-    // ✅ Force display the date's entries
-    console.log('📅 Selecting date:', date);
-    const dayEntries = entries.filter(e => e.Date === date);
-    console.log('📊 Found entries for date:', dayEntries.length);
-    
-    if (dayEntries.length > 0) {
-      console.log('🔍 First entry weather:', dayEntries[0]['Picture Weather']);
-      displayEntries(dayEntries);
-      
-      // ✅ Highlight the calendar day
-      document.querySelectorAll('.calendar-day').forEach(day => {
-        day.classList.remove('selected');
-        const dayNum = date.split('-')[2];
-        if (day.textContent === dayNum && !day.classList.contains('other-month')) {
-          day.classList.add('selected');
+        const data = await response.json();
+        
+        if (data.values && data.values.length > 1) {
+          const headers = data.values[0];
+          
+          console.log('📋 RAW HEADERS from API:', headers);
+          console.log('📋 Header count:', headers.length);
+          console.log('📋 Column L (index 11):', headers[11]);
+          
+          entries = data.values.slice(1).map((row, index) => {
+            const obj = { _rowIndex: index + 2 };
+            
+            for (let i = 0; i < 12; i++) {
+              const header = headers[i];
+              const value = row[i] || '';
+              
+              if (header) {
+                obj[header] = value;
+              }
+            }
+            
+            return obj;
+          });
+          
+          if (entries.length > 0) {
+            console.log('🔍 First entry object:', entries[0]);
+            console.log('🔍 All keys:', Object.keys(entries[0]));
+            console.log('🔍 Picture Weather key exists?', 'Picture Weather' in entries[0]);
+            console.log('🔍 Picture Weather value:', entries[0]['Picture Weather']);
+          }
+          
+          renderCalendar();
+          showToast(`✅ Loaded ${entries.length} entries`);
+        } else {
+          showToast('ℹ️ No entries yet');
         }
-      });
-    } else {
-      console.warn('⚠️ No entries found for date:', date);
+      } catch (err) {
+        console.error('Load entries error:', err);
+        if (err.message === 'Token expired') {
+          showToast('❌ Session expired');
+          setTimeout(() => window.location.href = 'index.html', 2000);
+        } else {
+          showToast('❌ Failed to load');
+        }
+      }
     }
-    
-  } catch (err) {
-    console.error('❌ Submit error:', err);
-    showToast('❌ Save failed: ' + err.message);
-  } finally {
-    hideLoading();
-  }
-}
+
+    async function submitEntry(event) {
+      event.preventDefault();
+      
+      if (!token) {
+        showToast('❌ Not authenticated');
+        return;
+      }
+      
+      const date = document.getElementById('input-date').value;
+      const point = document.getElementById('input-point').value;
+      
+      if (!date || !point) {
+        showToast('⚠️ Date and Sample Point are required');
+        return;
+      }
+      
+      const editRowIndex = document.getElementById('edit-row-index').value;
+      const isEditMode = editRowIndex !== '';
+      
+      showLoading();
+      
+      const desc = document.getElementById('input-desc').value;
+      const pH = document.getElementById('input-ph').value;
+      const conductivity = document.getElementById('input-conductivity').value;
+      const chlorine = document.getElementById('input-chlorine').value;
+      const iron = document.getElementById('input-iron').value;
+      const hardness = document.getElementById('input-hardness').value;
+      const turbidity = document.getElementById('input-turbidity').value;
+      
+      let weatherString = 'N/A';
+      try {
+        console.log('🌤️ Fetching weather...');
+        const weatherData = await getCurrentWeather();
+        if (weatherData) {
+          weatherString = JSON.stringify(weatherData);
+          console.log('✅ Weather captured:', weatherString);
+        } else {
+          console.warn('⚠️ No weather data available');
+        }
+      } catch (err) {
+        console.error('⚠️ Weather error (non-critical):', err);
+      }
+      
+      const imageFile = document.getElementById('input-image').files[0];
+      let imageUrl = '';
+      if (imageFile) {
+        try {
+          console.log('📷 Processing image...');
+          imageUrl = await resizeAndUploadImage(imageFile);
+          console.log('✅ Image processed');
+        } catch (err) {
+          console.error('❌ Image error:', err);
+        }
+      } else if (isEditMode && currentEntry) {
+        imageUrl = currentEntry.Picture || '';
+      }
+      
+      const id = isEditMode ? currentEntry.ID : Date.now();
+      
+      const rowData = [
+        id, date, point, desc, pH, conductivity, chlorine, iron, hardness, turbidity, imageUrl, weatherString
+      ];
+      
+      console.log('📤 Saving row data:', rowData);
+      console.log('🔍 Weather in row data:', rowData[11]);
+      
+      try {
+        if (isEditMode) {
+          const range = `${SHEET_NAME}!A${editRowIndex}:L${editRowIndex}`;
+          const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
+          
+          const response = await fetch(url, {
+            method: 'PUT',
+            headers: {
+              'Authorization': 'Bearer ' + token,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ values: [rowData] })
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Update failed:', errorText);
+            throw new Error(`HTTP ${response.status}`);
+          }
+          
+          console.log('✅ Entry updated successfully');
+          showToast('✅ Entry updated!');
+          
+        } else {
+          const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:L:append?valueInputOption=USER_ENTERED`;
+          
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + token,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ values: [rowData] })
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Save failed:', errorText);
+            throw new Error(`HTTP ${response.status}`);
+          }
+          
+          console.log('✅ Entry saved successfully');
+          showToast('✅ Entry saved!');
+        }
+        
+        closeAddModal();
+        document.getElementById('entry-form').reset();
+        
+        console.log('🔄 Reloading entries...');
+        await loadEntries();
+        console.log('✅ Entries reloaded, count:', entries.length);
+        
+        console.log('📅 Selecting date:', date);
+        const dayEntries = entries.filter(e => e.Date === date);
+        console.log('📊 Found entries for date:', dayEntries.length);
+        
+        if (dayEntries.length > 0) {
+          console.log('🔍 First entry weather:', dayEntries[0]['Picture Weather']);
+          displayEntries(dayEntries);
+          
+          document.querySelectorAll('.calendar-day').forEach(day => {
+            day.classList.remove('selected');
+            const dayNum = date.split('-')[2];
+            if (day.textContent === dayNum && !day.classList.contains('other-month')) {
+              day.classList.add('selected');
+            }
+          });
+        } else {
+          console.warn('⚠️ No entries found for date:', date);
+        }
+        
+      } catch (err) {
+        console.error('❌ Submit error:', err);
+        showToast('❌ Save failed: ' + err.message);
+      } finally {
+        hideLoading();
+      }
+    }
 
     function editCurrentEntry() {
       if (!currentEntry) {
@@ -1654,7 +1809,6 @@
       document.getElementById('confirm-modal').classList.remove('show');
     }
 
-    // ✅ CRITICAL FIX: Delete with Correct Sheet ID
     async function deleteCurrentEntry() {
       if (!currentEntry || !token || !resultsSheetId) {
         showToast('❌ Cannot delete: missing data');
@@ -1682,7 +1836,7 @@
             requests: [{
               deleteDimension: {
                 range: {
-                  sheetId: resultsSheetId, // ✅ FIX: Use actual sheet ID
+                  sheetId: resultsSheetId,
                   dimension: 'ROWS',
                   startIndex: rowIndex - 1,
                   endIndex: rowIndex
@@ -1779,98 +1933,93 @@
     // ═══════════════════════════════════════
     // WEATHER FUNCTIONS
     // ═══════════════════════════════════════
-    // ═══════════════════════════════════════
-// WEATHER FUNCTIONS — ✅ IMPROVED WITH FALLBACK
-// ═══════════════════════════════════════
-async function getCurrentWeather() {
-  console.log('🌤️ getCurrentWeather() — START');
-  
-  if (!WEATHER_API_KEY || WEATHER_API_KEY === 'YOUR_OPENWEATHER_API_KEY') {
-    console.warn('⚠️ No API key configured');
-    return null;
-  }
-  
-  let lat, lon;
-  
-  try {
-    // ✅ TRY: Get user's actual location
-    console.log('📍 Requesting geolocation permission...');
-    
-    const position = await new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error('Geolocation not supported'));
-        return;
+    async function getCurrentWeather() {
+      console.log('🌤️ getCurrentWeather() — START');
+      
+      if (!WEATHER_API_KEY || WEATHER_API_KEY === 'YOUR_OPENWEATHER_API_KEY') {
+        console.warn('⚠️ No API key configured');
+        return null;
       }
       
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          console.log('✅ Geolocation granted:', pos.coords.latitude, pos.coords.longitude);
-          resolve(pos);
-        },
-        (error) => {
-          console.warn('⚠️ Geolocation denied or failed:', error.message);
-          reject(error);
-        },
-        { 
-          enableHighAccuracy: false,
-          timeout: 8000,
-          maximumAge: 300000
+      let lat, lon;
+      
+      try {
+        console.log('📍 Requesting geolocation permission...');
+        
+        const position = await new Promise((resolve, reject) => {
+          if (!navigator.geolocation) {
+            reject(new Error('Geolocation not supported'));
+            return;
+          }
+          
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              console.log('✅ Geolocation granted:', pos.coords.latitude, pos.coords.longitude);
+              resolve(pos);
+            },
+            (error) => {
+              console.warn('⚠️ Geolocation denied or failed:', error.message);
+              reject(error);
+            },
+            { 
+              enableHighAccuracy: false,
+              timeout: 8000,
+              maximumAge: 300000
+            }
+          );
+        });
+        
+        lat = position.coords.latitude;
+        lon = position.coords.longitude;
+        
+      } catch (geoError) {
+        console.warn('⚠️ Using fallback location (Manila)');
+        lat = 14.5995;
+        lon = 120.9842;
+      }
+      
+      try {
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`;
+        
+        console.log('🌐 Fetching weather from:', url);
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ Weather API error:', response.status, errorText);
+          throw new Error(`Weather API error: ${response.status}`);
         }
-      );
-    });
-    
-    lat = position.coords.latitude;
-    lon = position.coords.longitude;
-    
-  } catch (geoError) {
-    // ✅ FALLBACK: Use Manila coordinates if geolocation fails
-    console.warn('⚠️ Using fallback location (Manila)');
-    lat = 14.5995;
-    lon = 120.9842;
-  }
-  
-  try {
-    // ✅ Fetch weather data
-    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`;
-    
-    console.log('🌐 Fetching weather from:', url);
-    
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Weather API error:', response.status, errorText);
-      throw new Error(`Weather API error: ${response.status}`);
+        
+        const data = await response.json();
+        console.log('✅ Weather data received:', data);
+        
+        const weatherResult = {
+          condition: data.weather[0].main,
+          description: data.weather[0].description,
+          icon: data.weather[0].icon,
+          temp: Math.round(data.main.temp),
+          feelsLike: Math.round(data.main.feels_like),
+          tempMin: Math.round(data.main.temp_min),
+          tempMax: Math.round(data.main.temp_max),
+          humidity: data.main.humidity,
+          pressure: data.main.pressure,
+          windSpeed: data.wind.speed,
+          windDeg: data.wind.deg,
+          visibility: data.visibility ? Math.round(data.visibility / 1000) : null,
+          location: data.name,
+          timestamp: new Date().toISOString()
+        };
+        
+        console.log('✅ Weather object created:', weatherResult);
+        return weatherResult;
+        
+      } catch (apiError) {
+        console.error('❌ Weather fetch failed:', apiError);
+        return null;
+      }
     }
-    
-    const data = await response.json();
-    console.log('✅ Weather data received:', data);
-    
-    const weatherResult = {
-      condition: data.weather[0].main,
-      description: data.weather[0].description,
-      icon: data.weather[0].icon,
-      temp: Math.round(data.main.temp),
-      feelsLike: Math.round(data.main.feels_like),
-      tempMin: Math.round(data.main.temp_min),
-      tempMax: Math.round(data.main.temp_max),
-      humidity: data.main.humidity,
-      pressure: data.main.pressure,
-      windSpeed: data.wind.speed,
-      windDeg: data.wind.deg,
-      visibility: data.visibility ? Math.round(data.visibility / 1000) : null,
-      location: data.name,
-      timestamp: new Date().toISOString()
-    };
-    
-    console.log('✅ Weather object created:', weatherResult);
-    return weatherResult;
-    
-  } catch (apiError) {
-    console.error('❌ Weather fetch failed:', apiError);
-    return null;
-  }
-}
+
     function getWeatherIcon(weatherData) {
       if (!weatherData) return '☀️';
       
@@ -1902,6 +2051,221 @@ async function getCurrentWeather() {
       const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
       const index = Math.round(degrees / 45) % 8;
       return directions[index];
+    }
+
+    // ═══════════════════════════════════════
+    // ✅ TRENDS MODAL FUNCTIONS
+    // ═══════════════════════════════════════
+    
+    function openTrendsModal() {
+      populateTrendsFilters();
+      updateTrendsTable();
+      document.getElementById('trends-modal').classList.add('show');
+    }
+
+    function closeTrendsModal() {
+      document.getElementById('trends-modal').classList.remove('show');
+    }
+
+    function populateTrendsFilters() {
+      const pointSelect = document.getElementById('trends-point');
+      pointSelect.innerHTML = '<option value="">All Points</option>';
+      
+      samplePoints.forEach(point => {
+        const option = document.createElement('option');
+        option.value = point.Name;
+        option.textContent = point.Name;
+        pointSelect.appendChild(option);
+      });
+    }
+
+    function updateTrendsTable() {
+      const selectedPoint = document.getElementById('trends-point').value;
+      const selectedParam = document.getElementById('trends-parameter').value;
+      
+      let filteredEntries = entries;
+      if (selectedPoint) {
+        filteredEntries = entries.filter(e => e['Sample Point'] === selectedPoint);
+      }
+      
+      const dates = [...new Set(filteredEntries.map(e => e.Date))].sort();
+      
+      const points = selectedPoint 
+        ? [selectedPoint]
+        : [...new Set(filteredEntries.map(e => e['Sample Point']))];
+      
+      const headerRow = document.getElementById('trends-header-row');
+      headerRow.innerHTML = '<th class="sticky-col">Sample Point</th>';
+      
+      dates.forEach(date => {
+        const th = document.createElement('th');
+        const dateObj = new Date(date);
+        th.textContent = dateObj.toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric' 
+        });
+        headerRow.appendChild(th);
+      });
+      
+      const tbody = document.getElementById('trends-body');
+      tbody.innerHTML = '';
+      
+      points.forEach(point => {
+        const row = document.createElement('tr');
+        
+        const pointCell = document.createElement('td');
+        pointCell.className = 'sticky-col';
+        pointCell.textContent = point;
+        row.appendChild(pointCell);
+        
+        const values = [];
+        dates.forEach(date => {
+          const entry = filteredEntries.find(e => 
+            e['Sample Point'] === point && e.Date === date
+          );
+          
+          const cell = document.createElement('td');
+          
+          if (entry && entry[selectedParam]) {
+            const value = parseFloat(entry[selectedParam]);
+            cell.className = 'value-cell';
+            cell.textContent = value.toFixed(2);
+            values.push(value);
+            
+            if (values.length > 1) {
+              const prevValue = values[values.length - 2];
+              const diff = value - prevValue;
+              const percentChange = Math.abs((diff / prevValue) * 100);
+              
+              if (percentChange > 5) {
+                cell.classList.add(diff > 0 ? 'trend-up' : 'trend-down');
+              } else {
+                cell.classList.add('trend-stable');
+              }
+            }
+          } else {
+            cell.className = 'empty-cell';
+            cell.textContent = '—';
+          }
+          
+          row.appendChild(cell);
+        });
+        
+        tbody.appendChild(row);
+      });
+      
+      updateTrendsChart(dates, points, filteredEntries, selectedParam);
+    }
+
+    function updateTrendsChart(dates, points, entries, parameter) {
+      const canvas = document.getElementById('trends-chart-canvas');
+      const ctx = canvas.getContext('2d');
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+      canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      
+      const width = canvas.offsetWidth;
+      const height = canvas.offsetHeight;
+      const padding = 40;
+      
+      const allValues = [];
+      points.forEach(point => {
+        dates.forEach(date => {
+          const entry = entries.find(e => 
+            e['Sample Point'] === point && e.Date === date
+          );
+          if (entry && entry[parameter]) {
+            allValues.push(parseFloat(entry[parameter]));
+          }
+        });
+      });
+      
+      if (allValues.length === 0) {
+        ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text3');
+        ctx.font = '14px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText('No data to display', width / 2, height / 2);
+        return;
+      }
+      
+      const minValue = Math.min(...allValues);
+      const maxValue = Math.max(...allValues);
+      const valueRange = maxValue - minValue || 1;
+      
+      ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--shadow-d');
+      ctx.lineWidth = 1;
+      
+      for (let i = 0; i <= 4; i++) {
+        const y = padding + (height - 2 * padding) * (i / 4);
+        ctx.beginPath();
+        ctx.moveTo(padding, y);
+        ctx.lineTo(width - padding, y);
+        ctx.stroke();
+        
+        const value = maxValue - (valueRange * i / 4);
+        ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text3');
+        ctx.font = '10px Inter';
+        ctx.textAlign = 'right';
+        ctx.fillText(value.toFixed(1), padding - 5, y + 3);
+      }
+      
+      const colors = ['#0052A3', '#27ae60', '#e74c3c', '#f39c12', '#9b59b6'];
+      
+      points.forEach((point, pointIndex) => {
+        const color = colors[pointIndex % colors.length];
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = 2;
+        
+        ctx.beginPath();
+        let firstPoint = true;
+        
+        dates.forEach((date, dateIndex) => {
+          const entry = entries.find(e => 
+            e['Sample Point'] === point && e.Date === date
+          );
+          
+          if (entry && entry[parameter]) {
+            const value = parseFloat(entry[parameter]);
+            const x = padding + (width - 2 * padding) * (dateIndex / (dates.length - 1 || 1));
+            const y = padding + (height - 2 * padding) * (1 - (value - minValue) / valueRange);
+            
+            if (firstPoint) {
+              ctx.moveTo(x, y);
+              firstPoint = false;
+            } else {
+              ctx.lineTo(x, y);
+            }
+            
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.closePath();
+          }
+        });
+        
+        ctx.stroke();
+      });
+      
+      const legendY = height - 10;
+      let legendX = padding;
+      
+      points.forEach((point, index) => {
+        const color = colors[index % colors.length];
+        
+        ctx.fillStyle = color;
+        ctx.fillRect(legendX, legendY - 8, 12, 12);
+        
+        ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text2');
+        ctx.font = '11px Inter';
+        ctx.textAlign = 'left';
+        ctx.fillText(point, legendX + 16, legendY);
+        
+        legendX += ctx.measureText(point).width + 30;
+      });
     }
 
     // ═══════════════════════════════════════
