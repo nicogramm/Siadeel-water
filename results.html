@@ -629,7 +629,9 @@
       height:100% !important;
     }
     
-    /* ✅ FULLSCREEN CHART MODAL - LANDSCAPE OPTIMIZED */
+    /* ═══════════════════════════════════════
+       ✅ FULLSCREEN CHART MODAL - LANDSCAPE OPTIMIZED
+       ═══════════════════════════════════════ */
     .chart-fullscreen-modal {
       position:fixed;
       top:0;
@@ -644,6 +646,22 @@
     
     .chart-fullscreen-modal.show {
       display:flex;
+    }
+    
+    /* ✅ FULLSCREEN MODE - Hide browser UI */
+    .chart-fullscreen-modal:-webkit-full-screen {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .chart-fullscreen-modal:-moz-full-screen {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .chart-fullscreen-modal:fullscreen {
+      width: 100%;
+      height: 100%;
     }
     
     .chart-fullscreen-header {
@@ -675,6 +693,12 @@
       display:flex;
       align-items:center;
       justify-content:center;
+      transition:box-shadow 0.15s, transform 0.1s;
+    }
+    
+    .chart-fullscreen-close:active {
+      box-shadow:var(--neu-in);
+      transform:scale(0.95);
     }
     
     .chart-fullscreen-body {
@@ -696,6 +720,7 @@
         display:flex;
         align-items:center;
         justify-content:center;
+        background:var(--bg);
       }
       
       .chart-fullscreen-data-wrapper {
@@ -703,6 +728,29 @@
         overflow:auto;
         padding:16px;
         border-top:2px solid var(--shadow-d);
+        background:var(--bg);
+      }
+      
+      /* ✅ Rotate hint for portrait users */
+      .rotate-hint {
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:8px;
+        padding:8px 16px;
+        background:var(--blue);
+        color:white;
+        font-size:12px;
+        font-weight:600;
+        border-radius:8px;
+        margin:8px auto;
+        max-width:fit-content;
+        animation:pulse 2s ease-in-out infinite;
+      }
+      
+      @keyframes pulse {
+        0%, 100% { opacity:1; }
+        50% { opacity:0.7; }
       }
     }
     
@@ -713,11 +761,12 @@
       }
       
       .chart-fullscreen-canvas-wrapper {
-        flex:1.2;
+        flex:1.5;
         padding:12px;
         display:flex;
         align-items:center;
         justify-content:center;
+        background:var(--bg);
       }
       
       .chart-fullscreen-data-wrapper {
@@ -725,6 +774,8 @@
         overflow:auto;
         padding:12px;
         border-left:2px solid var(--shadow-d);
+        background:var(--bg);
+        max-height:100%;
       }
       
       .chart-fullscreen-header {
@@ -733,6 +784,17 @@
       
       .chart-fullscreen-title {
         font-size:13px;
+      }
+      
+      .chart-fullscreen-close {
+        width:28px;
+        height:28px;
+        font-size:18px;
+      }
+      
+      /* ✅ Hide rotate hint in landscape */
+      .rotate-hint {
+        display:none;
       }
     }
     
@@ -1029,6 +1091,9 @@
     </div>
     <div class="chart-fullscreen-body">
       <div class="chart-fullscreen-canvas-wrapper">
+        <div class="rotate-hint">
+          🔄 Rotate your device to landscape for better view
+        </div>
         <canvas id="chart-fullscreen-canvas"></canvas>
       </div>
       <div class="chart-fullscreen-data-wrapper">
@@ -1062,7 +1127,7 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const CODE_VERSION = '2.6';
+    const CODE_VERSION = '2.7'; // ✅ UPDATED VERSION
     console.log('🚀 Code version:', CODE_VERSION);
     
     // ═══════════════════════════════════════
@@ -2473,8 +2538,10 @@
       });
     }
 
-    // ✅ FULLSCREEN CHART FUNCTIONS
-    function openFullscreenChart() {
+    // ═══════════════════════════════════════
+    // ✅ FULLSCREEN CHART FUNCTIONS (UPDATED)
+    // ═══════════════════════════════════════
+    async function openFullscreenChart() {
       if (!currentChartData) {
         showToast('⚠️ No chart data available');
         return;
@@ -2487,6 +2554,37 @@
       
       modal.classList.add('show');
       
+      // ✅ TRY TO REQUEST FULLSCREEN + LANDSCAPE ORIENTATION
+      try {
+        // Step 1: Request fullscreen mode
+        if (modal.requestFullscreen) {
+          await modal.requestFullscreen();
+        } else if (modal.webkitRequestFullscreen) { // Safari
+          await modal.webkitRequestFullscreen();
+        } else if (modal.msRequestFullscreen) { // IE11
+          await modal.msRequestFullscreen();
+        }
+        
+        // Step 2: Request landscape orientation (if supported)
+        if (screen.orientation && screen.orientation.lock) {
+          try {
+            await screen.orientation.lock('landscape');
+            console.log('✅ Locked to landscape mode');
+          } catch (err) {
+            console.warn('⚠️ Orientation lock not supported:', err);
+            showToast('💡 Manually rotate your device to landscape');
+          }
+        } else {
+          console.warn('⚠️ Screen Orientation API not supported');
+          showToast('💡 Please rotate your device to landscape');
+        }
+        
+      } catch (err) {
+        console.error('❌ Fullscreen/orientation error:', err);
+        showToast('⚠️ Please allow fullscreen and rotate device');
+      }
+      
+      // Render chart and table
       setTimeout(() => {
         drawChart('chart-fullscreen-canvas', currentChartData);
         buildFullscreenDataTable(currentChartData);
@@ -2494,7 +2592,29 @@
     }
 
     function closeFullscreenChart() {
-      document.getElementById('chart-fullscreen-modal').classList.remove('show');
+      const modal = document.getElementById('chart-fullscreen-modal');
+      modal.classList.remove('show');
+      
+      // ✅ EXIT FULLSCREEN AND UNLOCK ORIENTATION
+      try {
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        }
+        
+        // Unlock orientation (allow auto-rotation again)
+        if (screen.orientation && screen.orientation.unlock) {
+          screen.orientation.unlock();
+          console.log('✅ Orientation unlocked');
+        }
+        
+      } catch (err) {
+        console.error('❌ Exit fullscreen error:', err);
+      }
     }
 
     // ✅ BUILD DATA TABLE IN FULLSCREEN
@@ -2547,6 +2667,7 @@
       });
     }
 
+    // ✅ HANDLE ORIENTATION CHANGE AND WINDOW RESIZE
     window.addEventListener('orientationchange', () => {
       setTimeout(() => {
         if (currentChartData) {
