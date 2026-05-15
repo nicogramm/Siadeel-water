@@ -630,7 +630,7 @@
     }
     
     /* ═══════════════════════════════════════
-       ✅ FULLSCREEN CHART MODAL - LANDSCAPE OPTIMIZED
+       ✅ FULLSCREEN CHART MODAL - OPTIMIZED LANDSCAPE
        ═══════════════════════════════════════ */
     .chart-fullscreen-modal {
       position:fixed;
@@ -648,7 +648,6 @@
       display:flex;
     }
     
-    /* ✅ FULLSCREEN MODE - Hide browser UI */
     .chart-fullscreen-modal:-webkit-full-screen {
       width: 100%;
       height: 100%;
@@ -672,6 +671,7 @@
       background:var(--bg);
       box-shadow:var(--neu-sm);
       flex-shrink:0;
+      z-index:10;
     }
     
     .chart-fullscreen-title {
@@ -704,34 +704,35 @@
     .chart-fullscreen-body {
       flex:1;
       display:flex;
-      overflow:hidden;
+      flex-direction:column;
+      overflow-y:auto;
+      overflow-x:hidden;
+      -webkit-overflow-scrolling:touch;
     }
     
-    /* ✅ PORTRAIT MODE - Chart on top, table below */
+    /* ✅ PORTRAIT MODE - Chart on top, table below (scrollable) */
     @media screen and (orientation: portrait) {
       .chart-fullscreen-body {
         flex-direction:column;
       }
       
       .chart-fullscreen-canvas-wrapper {
-        flex:1;
-        min-height:40%;
+        min-height:50vh;
         padding:16px;
         display:flex;
+        flex-direction:column;
         align-items:center;
         justify-content:center;
         background:var(--bg);
+        flex-shrink:0;
       }
       
       .chart-fullscreen-data-wrapper {
-        flex:1;
-        overflow:auto;
         padding:16px;
         border-top:2px solid var(--shadow-d);
         background:var(--bg);
       }
       
-      /* ✅ Rotate hint for portrait users */
       .rotate-hint {
         display:flex;
         align-items:center;
@@ -743,8 +744,7 @@
         font-size:12px;
         font-weight:600;
         border-radius:8px;
-        margin:8px auto;
-        max-width:fit-content;
+        margin-bottom:12px;
         animation:pulse 2s ease-in-out infinite;
       }
       
@@ -754,30 +754,8 @@
       }
     }
     
-    /* ✅ LANDSCAPE MODE - Chart left, table right (side by side) */
+    /* ✅ LANDSCAPE MODE - Chart MAXIMIZED on top, table below (scrollable vertically) */
     @media screen and (orientation: landscape) {
-      .chart-fullscreen-body {
-        flex-direction:row;
-      }
-      
-      .chart-fullscreen-canvas-wrapper {
-        flex:1.5;
-        padding:12px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        background:var(--bg);
-      }
-      
-      .chart-fullscreen-data-wrapper {
-        flex:1;
-        overflow:auto;
-        padding:12px;
-        border-left:2px solid var(--shadow-d);
-        background:var(--bg);
-        max-height:100%;
-      }
-      
       .chart-fullscreen-header {
         padding:8px 12px;
       }
@@ -792,7 +770,31 @@
         font-size:18px;
       }
       
-      /* ✅ Hide rotate hint in landscape */
+      .chart-fullscreen-body {
+        flex-direction:column;
+      }
+      
+      /* ✅ CHART AREA - MAXIMIZED (takes ~70% of screen height) */
+      .chart-fullscreen-canvas-wrapper {
+        height:70vh;
+        min-height:70vh;
+        max-height:70vh;
+        padding:8px 16px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        background:var(--bg);
+        flex-shrink:0;
+      }
+      
+      /* ✅ TABLE AREA - Below chart (scrollable) */
+      .chart-fullscreen-data-wrapper {
+        padding:12px 16px;
+        background:var(--bg);
+        border-top:2px solid var(--shadow-d);
+        overflow-y:auto;
+      }
+      
       .rotate-hint {
         display:none;
       }
@@ -1083,19 +1085,22 @@
     </div>
   </div>
 
-  <!-- ✅ Fullscreen Chart Modal with Data Table -->
+  <!-- ✅ Fullscreen Chart Modal - OPTIMIZED LANDSCAPE LAYOUT -->
   <div class="chart-fullscreen-modal" id="chart-fullscreen-modal">
     <div class="chart-fullscreen-header">
       <div class="chart-fullscreen-title" id="chart-fullscreen-title">Trend Chart</div>
       <button class="chart-fullscreen-close" onclick="closeFullscreenChart()">×</button>
     </div>
     <div class="chart-fullscreen-body">
+      <!-- ✅ CHART AREA - MAXIMIZED (70% height in landscape) -->
       <div class="chart-fullscreen-canvas-wrapper">
         <div class="rotate-hint">
           🔄 Rotate your device to landscape for better view
         </div>
         <canvas id="chart-fullscreen-canvas"></canvas>
       </div>
+      
+      <!-- ✅ DATA TABLE - Below chart (scrollable) -->
       <div class="chart-fullscreen-data-wrapper">
         <table class="fullscreen-data-table" id="fullscreen-data-table">
           <thead>
@@ -1127,7 +1132,7 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const CODE_VERSION = '2.7'; // ✅ UPDATED VERSION
+    const CODE_VERSION = '2.8'; // ✅ UPDATED VERSION - OPTIMIZED LANDSCAPE
     console.log('🚀 Code version:', CODE_VERSION);
     
     // ═══════════════════════════════════════
@@ -1850,7 +1855,7 @@
     }
 
     // ═══════════════════════════════════════
-    // DATA FUNCTIONS
+    // DATA FUNCTIONS (CONTINUED IN NEXT MESSAGE DUE TO LENGTH)
     // ═══════════════════════════════════════
     async function loadEntries() {
       if (!token) return;
@@ -2539,7 +2544,7 @@
     }
 
     // ═══════════════════════════════════════
-    // ✅ FULLSCREEN CHART FUNCTIONS (UPDATED)
+    // ✅ FULLSCREEN CHART FUNCTIONS (OPTIMIZED)
     // ═══════════════════════════════════════
     async function openFullscreenChart() {
       if (!currentChartData) {
@@ -2556,16 +2561,14 @@
       
       // ✅ TRY TO REQUEST FULLSCREEN + LANDSCAPE ORIENTATION
       try {
-        // Step 1: Request fullscreen mode
         if (modal.requestFullscreen) {
           await modal.requestFullscreen();
-        } else if (modal.webkitRequestFullscreen) { // Safari
+        } else if (modal.webkitRequestFullscreen) {
           await modal.webkitRequestFullscreen();
-        } else if (modal.msRequestFullscreen) { // IE11
+        } else if (modal.msRequestFullscreen) {
           await modal.msRequestFullscreen();
         }
         
-        // Step 2: Request landscape orientation (if supported)
         if (screen.orientation && screen.orientation.lock) {
           try {
             await screen.orientation.lock('landscape');
@@ -2584,7 +2587,6 @@
         showToast('⚠️ Please allow fullscreen and rotate device');
       }
       
-      // Render chart and table
       setTimeout(() => {
         drawChart('chart-fullscreen-canvas', currentChartData);
         buildFullscreenDataTable(currentChartData);
@@ -2595,9 +2597,7 @@
       const modal = document.getElementById('chart-fullscreen-modal');
       modal.classList.remove('show');
       
-      // ✅ EXIT FULLSCREEN AND UNLOCK ORIENTATION
       try {
-        // Exit fullscreen
         if (document.exitFullscreen) {
           document.exitFullscreen();
         } else if (document.webkitExitFullscreen) {
@@ -2606,7 +2606,6 @@
           document.msExitFullscreen();
         }
         
-        // Unlock orientation (allow auto-rotation again)
         if (screen.orientation && screen.orientation.unlock) {
           screen.orientation.unlock();
           console.log('✅ Orientation unlocked');
@@ -2617,7 +2616,6 @@
       }
     }
 
-    // ✅ BUILD DATA TABLE IN FULLSCREEN
     function buildFullscreenDataTable(chartData) {
       const { dates, points, entries, parameter } = chartData;
       
@@ -2667,7 +2665,6 @@
       });
     }
 
-    // ✅ HANDLE ORIENTATION CHANGE AND WINDOW RESIZE
     window.addEventListener('orientationchange', () => {
       setTimeout(() => {
         if (currentChartData) {
